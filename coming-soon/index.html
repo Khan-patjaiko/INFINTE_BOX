@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infinite Box — Coming Soon</title>
+<meta name="description" content="Infinite Box — custom 3D printed parts for small businesses. Launching soon.">
+<link rel="icon" href="assets/img/icon-dark.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 96%;
+    --muted-foreground: 0 0% 53%;
+    --primary: 22 100% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 52 100% 50%;
+    --accent: 202 100% 50%;
+    --border: 0 0% 16%;
+    --muted: 0 0% 10%;
+    --success: 160 84% 39%;
+    --font-heading: "Space Grotesk", -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: "IBM Plex Mono", ui-monospace, "Courier New", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+  }
+
+  body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3 { font-family: var(--font-heading); margin: 0; }
+  p { margin: 0; }
+  a { color: inherit; }
+
+  /* Ambient background glow */
+  .glow {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 15% 20%, hsl(var(--primary) / 0.16), transparent 40%),
+      radial-gradient(circle at 85% 75%, hsl(var(--accent) / 0.14), transparent 42%),
+      radial-gradient(circle at 50% 100%, hsl(var(--secondary) / 0.06), transparent 50%);
+  }
+
+  .grid-lines {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.35;
+    background-image:
+      linear-gradient(hsl(var(--border) / 0.5) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--border) / 0.5) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse at center, black 0%, transparent 75%);
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 48px 24px;
+    gap: 40px;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+  }
+  .brand img { height: 64px; width: auto; }
+
+  .eyebrow {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: hsl(var(--primary));
+    font-family: var(--font-heading);
+  }
+
+  h1.headline {
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  h1.headline .accent { color: hsl(var(--primary)); }
+
+  .lede {
+    font-size: 15px;
+    line-height: 1.7;
+    color: hsl(var(--muted-foreground));
+    max-width: 460px;
+  }
+
+  /* Notify form */
+  .notify {
+    width: 100%;
+    max-width: 420px;
+  }
+  .notify-form {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .notify-form input[type="email"] {
+    flex: 1;
+    min-width: 200px;
+    background: hsl(var(--muted));
+    border: 1px solid hsl(var(--border));
+    border-radius: 6px;
+    padding: 13px 16px;
+    color: hsl(var(--foreground));
+    font-family: var(--font-body);
+    font-size: 14px;
+  }
+  .notify-form input[type="email"]:focus {
+    outline: none;
+    border-color: hsl(var(--primary));
+  }
+  .notify-form button {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    border: none;
+    border-radius: 6px;
+    padding: 13px 24px;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .notify-form button:hover { opacity: 0.9; }
+  .notify-form button:active { transform: scale(0.97); }
+  .notify-msg {
+    margin-top: 14px;
+    font-size: 13px;
+    display: none;
+  }
+  .notify-msg.show { display: block; }
+  .notify-msg.ok { color: hsl(var(--success)); }
+  .notify-msg.err { color: hsl(0 84% 65%); }
+
+  .capabilities {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 28px;
+    justify-content: center;
+  }
+  .capabilities span {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: hsl(var(--foreground) / 0.6);
+    white-space: nowrap;
+  }
+  .capabilities span::before {
+    content: "";
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: hsl(var(--primary));
+    margin-right: 10px;
+    vertical-align: middle;
+  }
+
+  footer.page-footer {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 24px;
+    font-size: 12px;
+    color: hsl(var(--muted-foreground) / 0.5);
+  }
+  footer.page-footer a { color: hsl(var(--muted-foreground) / 0.7); text-decoration: underline; }
+  footer.page-footer a:hover { color: hsl(var(--foreground)); }
+
+  @media (min-width: 640px) {
+    h1.headline { font-size: 52px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow"></div>
+<div class="grid-lines"></div>
+
+<main class="wrap">
+  <a class="brand" href="#" aria-label="Infinite Box">
+    <img src="assets/img/logo-light.png" alt="Infinite Box">
+  </a>
+
+  <div>
+    <p class="eyebrow" style="margin-bottom:20px;">Launching Soon</p>
+    <h1 class="headline">Something's printing.<br><span class="accent">Be first in line.</span></h1>
+    <p class="lede" style="margin:20px auto 0;">
+      Infinite Box is building a home for custom 3D printed parts — made to spec, shipped fast.
+      Leave your email and we'll let you know the moment we open the doors.
+    </p>
+  </div>
+
+  <div class="notify">
+    <form class="notify-form" id="notify-form" novalidate>
+      <input type="email" id="notify-email" placeholder="you@email.com" required autocomplete="email">
+      <button type="submit">Notify Me</button>
+    </form>
+    <p class="notify-msg" id="notify-msg"></p>
+  </div>
+
+  <div class="capabilities">
+    <span>FDM &amp; Resin Printing</span>
+    <span>Custom Orders Welcome</span>
+    <span>Ships Worldwide</span>
+  </div>
+</main>
+
+<footer class="page-footer">
+  <p>© 2026 Infinite Box. All rights reserved.</p>
+</footer>
+
+<script>
+  var EMAILS_KEY = "infinitebox_notify_emails";
+
+  document.getElementById("notify-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var input = document.getElementById("notify-email");
+    var msg = document.getElementById("notify-msg");
+    var email = input.value.trim();
+    var isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!isValid) {
+      msg.textContent = "Please enter a valid email address.";
+      msg.className = "notify-msg show err";
+      return;
+    }
+
+    try {
+      var list = JSON.parse(localStorage.getItem(EMAILS_KEY) || "[]");
+      if (list.indexOf(email) === -1) list.push(email);
+      localStorage.setItem(EMAILS_KEY, JSON.stringify(list));
+    } catch (err) {}
+
+    msg.textContent = "You're on the list — we'll email you at launch.";
+    msg.className = "notify-msg show ok";
+    input.value = "";
+  });
+</script>
+</body>
+</html>

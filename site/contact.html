@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — Infinite Box</title>
+<meta name="description" content="Get in touch with Infinite Box for quotes, order questions, or support.">
+<link rel="icon" href="assets/img/icon-dark.png">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Contact</p>
+      <h1>Talk to us</h1>
+      <p>Questions about an order, a quote, or materials? Send a message and we'll reply within one business day.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr;gap:64px;">
+        <form class="form-grid" onsubmit="return handleContactSubmit(event)" id="contact-form">
+          <div class="form-grid two-col">
+            <div class="field">
+              <label for="c-name">Name</label>
+              <input type="text" id="c-name" required>
+            </div>
+            <div class="field">
+              <label for="c-email">Email</label>
+              <input type="email" id="c-email" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="c-subject">Subject</label>
+            <select id="c-subject">
+              <option>Order status</option>
+              <option>Custom quote</option>
+              <option>Materials question</option>
+              <option>Something else</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="c-message">Message</label>
+            <textarea id="c-message" required></textarea>
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" id="c-submit">Send Message</button>
+          <p class="form-note" id="c-success" style="display:none;color:hsl(var(--success));">Message sent — we'll be in touch shortly.</p>
+          <p class="form-note" id="c-error" style="display:none;color:hsl(var(--destructive));">Sorry, your message couldn't be sent. Please try again.</p>
+        </form>
+
+        <div>
+          <p class="eyebrow">Direct</p>
+          <h2 style="margin-bottom:24px;">Other ways to reach us</h2>
+          <div class="pd-meta">
+            <div class="pd-meta-row"><span>Email</span><span>hello@infinite-box.co</span></div>
+            <div class="pd-meta-row"><span>Response time</span><span>Within 1 business day</span></div>
+            <div class="pd-meta-row"><span>Hours</span><span>Mon–Fri, 9am–6pm</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/partials.js"></script>
+<script>
+  async function handleContactSubmit(e) {
+    e.preventDefault();
+    var btn = document.getElementById("c-submit");
+    var successEl = document.getElementById("c-success");
+    var errorEl = document.getElementById("c-error");
+    successEl.style.display = "none";
+    errorEl.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+    try {
+      var res = await window.IBDB.from("contact_messages").insert({
+        name: document.getElementById("c-name").value,
+        email: document.getElementById("c-email").value,
+        subject: document.getElementById("c-subject").value,
+        message: document.getElementById("c-message").value
+      });
+      if (res.error) throw res.error;
+      document.getElementById("contact-form").reset();
+      successEl.style.display = "block";
+    } catch (err) {
+      console.error("Contact submit failed", err);
+      errorEl.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Send Message";
+    }
+    return false;
+  }
+</script>
+</body>
+</html>

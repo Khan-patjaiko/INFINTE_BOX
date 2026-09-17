@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create account — Infinite Box</title>
+<meta name="description" content="Create an Infinite Box account to track orders and custom quotes.">
+<link rel="icon" href="assets/img/icon-dark.png">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Account</p>
+      <h1>Create account</h1>
+      <p>Set up an account to check out faster and track your orders and quotes.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:48px;">
+    <div class="container">
+      <div class="auth-wrap">
+        <form class="form-grid" id="signup-form" onsubmit="return handleSignup(event)">
+          <div class="field">
+            <label for="full_name">Full name</label>
+            <input type="text" id="full_name" autocomplete="name">
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" required autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" required minlength="6" autocomplete="new-password">
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" id="signup-submit">Create account</button>
+          <p class="form-note" id="signup-success" style="display:none;color:hsl(var(--success));"></p>
+          <p class="form-note" id="signup-error" style="display:none;color:hsl(var(--destructive));"></p>
+        </form>
+        <p class="auth-alt">Already have an account? <a href="login.html">Log in</a></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/partials.js"></script>
+<script>
+  IBAuth.getUser().then(function (user) { if (user) window.location.href = "account.html"; });
+
+  async function handleSignup(e) {
+    e.preventDefault();
+    var btn = document.getElementById("signup-submit");
+    var successEl = document.getElementById("signup-success");
+    var errorEl = document.getElementById("signup-error");
+    successEl.style.display = "none";
+    errorEl.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "Creating…";
+    try {
+      var res = await IBAuth.signUp(
+        document.getElementById("email").value,
+        document.getElementById("password").value,
+        document.getElementById("full_name").value
+      );
+      if (res.error) throw res.error;
+      if (res.data && res.data.session) {
+        // Auto-confirmed: already logged in.
+        window.location.href = "account.html";
+        return false;
+      }
+      // Email confirmation required.
+      document.getElementById("signup-form").reset();
+      successEl.textContent = "Almost there — check your email to confirm your account, then log in.";
+      successEl.style.display = "block";
+    } catch (err) {
+      errorEl.textContent = err && err.message ? err.message : "Couldn't create your account. Please try again.";
+      errorEl.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Create account";
+    }
+    return false;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Product — Infinite Box</title>
+<link rel="icon" href="assets/img/icon-dark.png">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <div class="container">
+    <div class="product-detail" id="product-detail"></div>
+  </div>
+
+  <section class="section border-top">
+    <div class="container">
+      <div class="section-head">
+        <div><p class="eyebrow">You might also like</p><h2>More products</h2></div>
+      </div>
+      <div class="product-grid" id="related-grid"></div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/partials.js"></script>
+<script>
+  (function () {
+    var detail = document.getElementById("product-detail");
+    detail.innerHTML = '<p class="grid-status">Loading…</p>';
+
+    loadProducts().then(function () {
+      if (!PRODUCTS.length) {
+        detail.innerHTML = '<p class="grid-status">No products available.</p>';
+        return;
+      }
+      var params = new URLSearchParams(location.search);
+      var id = params.get("id") || PRODUCTS[0].id;
+      var p = getProduct(id) || PRODUCTS[0];
+
+      document.getElementById("page-title").textContent = p.name + " — Infinite Box";
+
+      var specsHtml = Object.keys(p.specs).map(function (k) {
+        return '<div class="pd-meta-row"><span>' + ibEscape(k) + '</span><span>' + ibEscape(p.specs[k]) + '</span></div>';
+      }).join("");
+
+      detail.innerHTML =
+        '<div class="pd-image">' + productThumbHTML(p) + '</div>' +
+        '<div class="pd-info">' +
+          '<p class="eyebrow">' + ibEscape(p.category) + '</p>' +
+          '<h1>' + ibEscape(p.name) + '</h1>' +
+          '<p class="pd-price">' + formatPrice(p.price) + '</p>' +
+          '<p class="pd-desc">' + ibEscape(p.description) + '</p>' +
+          '<div class="pd-meta">' + specsHtml + '</div>' +
+          '<div class="pd-actions">' +
+            '<div class="qty-input"><button type="button" data-qty="-1">−</button><input type="text" id="qty" value="1" readonly><button type="button" data-qty="1">+</button></div>' +
+            '<button class="btn btn-primary" id="add-to-cart-btn">Add to Cart</button>' +
+          '</div>' +
+          '<p class="add-msg" id="add-msg">Added to cart.</p>' +
+        '</div>';
+
+      var qtyInput = document.getElementById("qty");
+      document.querySelectorAll("[data-qty]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var val = Math.max(1, parseInt(qtyInput.value, 10) + parseInt(btn.dataset.qty, 10));
+          qtyInput.value = val;
+        });
+      });
+
+      document.getElementById("add-to-cart-btn").addEventListener("click", function () {
+        IB.addToCart(p.id, parseInt(qtyInput.value, 10));
+        var msg = document.getElementById("add-msg");
+        msg.classList.add("show");
+        setTimeout(function () { msg.classList.remove("show"); }, 2500);
+      });
+
+      var related = PRODUCTS.filter(function (x) { return x.id !== p.id; }).slice(0, 3);
+      document.getElementById("related-grid").innerHTML = related.map(productCardHTML).join("");
+    }).catch(function () {
+      detail.innerHTML = '<p class="grid-status">Couldn\'t load this product. Please refresh.</p>';
+    });
+  })();
+</script>
+</body>
+</html>

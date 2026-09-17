@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Log in — Infinite Box</title>
+<meta name="description" content="Log in to your Infinite Box account to view orders and quotes.">
+<link rel="icon" href="assets/img/icon-dark.png">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Account</p>
+      <h1>Log in</h1>
+      <p>Welcome back. Log in to track orders and custom quotes.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:48px;">
+    <div class="container">
+      <div class="auth-wrap">
+        <form class="form-grid" id="login-form" onsubmit="return handleLogin(event)">
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" required autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" required autocomplete="current-password">
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" id="login-submit">Log in</button>
+          <p class="form-note" id="login-error" style="display:none;color:hsl(var(--destructive));"></p>
+        </form>
+        <p class="auth-alt">Don't have an account? <a href="signup.html">Create one</a></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/partials.js"></script>
+<script>
+  function nextTarget() {
+    var params = new URLSearchParams(location.search);
+    var next = params.get("next");
+    return (next && /^[a-zA-Z0-9_-]+\.html$/.test(next)) ? next : "account.html";
+  }
+
+  // If already signed in, skip the form.
+  IBAuth.getUser().then(function (user) { if (user) window.location.href = nextTarget(); });
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    var btn = document.getElementById("login-submit");
+    var errorEl = document.getElementById("login-error");
+    errorEl.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = "Logging in…";
+    try {
+      var res = await IBAuth.signIn(
+        document.getElementById("email").value,
+        document.getElementById("password").value
+      );
+      if (res.error) throw res.error;
+      window.location.href = nextTarget();
+    } catch (err) {
+      errorEl.textContent = err && err.message ? err.message : "Login failed. Check your details and try again.";
+      errorEl.style.display = "block";
+      btn.disabled = false;
+      btn.textContent = "Log in";
+    }
+    return false;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Custom Orders — Infinite Box</title>
+<meta name="description" content="Send Infinite Box your design, sketch, or idea and get a custom 3D printing quote within 24 hours.">
+<link rel="icon" href="assets/img/icon-dark.png">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Custom Orders</p>
+      <h1>Got a design? Let's print it.</h1>
+      <p>Upload a file, describe what you need, and we'll get back to you with a quote and lead time within 24 hours.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr;gap:64px;" id="custom-layout">
+        <form class="form-grid" id="custom-form" onsubmit="return handleCustomSubmit(event)">
+          <div class="field-file">
+            <p style="margin-bottom:8px;font-weight:600;color:hsl(var(--foreground));">Drop your file here or click to browse</p>
+            <p>STL, STEP, OBJ, or images — max 50MB</p>
+            <input type="file" id="design-file" style="margin-top:16px;">
+          </div>
+
+          <div class="form-grid two-col">
+            <div class="field">
+              <label for="material">Preferred material</label>
+              <select id="material">
+                <option>PLA+</option>
+                <option>PETG</option>
+                <option>ABS</option>
+                <option>Nylon</option>
+                <option>TPU</option>
+                <option>Resin</option>
+                <option>Not sure — advise me</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="quantity">Quantity</label>
+              <input type="number" id="quantity" min="1" value="1">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="details">Project details</label>
+            <textarea id="details" placeholder="Dimensions, tolerances, intended use, finish, deadline..."></textarea>
+          </div>
+
+          <div class="form-grid two-col">
+            <div class="field">
+              <label for="name">Name</label>
+              <input type="text" id="name" required>
+            </div>
+            <div class="field">
+              <label for="email">Email</label>
+              <input type="email" id="email" required>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-block" type="submit" id="custom-submit">Request Quote</button>
+          <p class="form-note" id="form-success" style="display:none;color:hsl(var(--success));">Thanks — your request has been received. We'll email your quote within 24 hours.</p>
+          <p class="form-note" id="form-error" style="display:none;color:hsl(var(--destructive));">Sorry, something went wrong sending your request. Please try again.</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="section border-top" style="background:hsl(var(--muted));">
+    <div class="container">
+      <p class="eyebrow">How it works</p>
+      <h2 style="margin-bottom:64px;">From file to finished part</h2>
+      <div class="diff-grid">
+        <div class="diff-card">
+          <p class="diff-number">01</p>
+          <h3>Send your design</h3>
+          <p>Upload a 3D file, or describe your idea and we'll help you get it print-ready.</p>
+        </div>
+        <div class="diff-card">
+          <p class="diff-number">02</p>
+          <h3>Get a quote</h3>
+          <p>We review material, geometry, and quantity, then send pricing and lead time within 24 hours.</p>
+        </div>
+        <div class="diff-card">
+          <p class="diff-number">03</p>
+          <h3>We print &amp; ship</h3>
+          <p>Once approved, your parts go into production and ship in as little as 3 business days.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/partials.js"></script>
+<script>
+  async function handleCustomSubmit(e) {
+    e.preventDefault();
+    var btn = document.getElementById("custom-submit");
+    var successEl = document.getElementById("form-success");
+    var errorEl = document.getElementById("form-error");
+    successEl.style.display = "none";
+    errorEl.style.display = "none";
+
+    var fileInput = document.getElementById("design-file");
+    var file = fileInput.files[0];
+    if (file && file.size > 50 * 1024 * 1024) {
+      errorEl.textContent = "That file is larger than 50MB. Please upload a smaller file.";
+      errorEl.style.display = "block";
+      return false;
+    }
+
+    var fd = new FormData();
+    fd.append("name", document.getElementById("name").value);
+    fd.append("email", document.getElementById("email").value);
+    fd.append("material", document.getElementById("material").value);
+    fd.append("quantity", document.getElementById("quantity").value);
+    fd.append("details", document.getElementById("details").value);
+    if (file) fd.append("file", file);
+
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+    try {
+      var res = await window.IBDB.functions.invoke("submit-quote", { body: fd });
+      if (res.error) throw res.error;
+      document.getElementById("custom-form").reset();
+      successEl.style.display = "block";
+    } catch (err) {
+      console.error("Quote submit failed", err);
+      errorEl.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Request Quote";
+    }
+    return false;
+  }
+</script>
+</body>
+</html>

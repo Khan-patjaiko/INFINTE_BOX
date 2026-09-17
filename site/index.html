@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Infinite Box — Custom 3D Printed Parts for Small Businesses</title>
+<meta name="description" content="Precision FDM and resin 3D printing for small businesses. Send us your design — we'll handle the rest.">
+<link rel="icon" href="assets/img/icon-dark.png">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="hero">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <p class="eyebrow">infinite-box.co</p>
+        <h1>Custom 3D Parts.<br><span class="accent">Built to Spec.</span></h1>
+        <p class="lede">Precision FDM and resin printing for small businesses. Send us your design — we'll handle the rest.</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="shop.html">Shop Products
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="btn btn-outline" href="custom.html">Custom order</a>
+        </div>
+      </div>
+      <div class="hero-media">
+        <svg class="art" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="500" fill="hsl(0 0% 8%)"/>
+          <g opacity="0.9">
+            <rect x="90" y="150" width="220" height="220" rx="10" fill="none" stroke="#ff5a1f" stroke-width="2"/>
+            <circle cx="200" cy="260" r="60" fill="none" stroke="#ffd400" stroke-width="2"/>
+            <path d="M120 380 L280 380 L260 430 L140 430 Z" fill="none" stroke="#00a3ff" stroke-width="2"/>
+            <circle cx="200" cy="260" r="6" fill="#ff5a1f"/>
+          </g>
+        </svg>
+        <div class="fade"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="strip">
+    <div class="strip-inner">
+      <div class="strip-item">FDM &amp; Resin Printing<span class="strip-dot"></span></div>
+      <div class="strip-item">Lead time: 3–5 days<span class="strip-dot"></span></div>
+      <div class="strip-item">Custom orders welcome<span class="strip-dot"></span></div>
+      <div class="strip-item">Ships worldwide<span class="strip-dot"></span></div>
+      <div class="strip-item">Layer res: 0.05mm<span class="strip-dot"></span></div>
+      <div class="strip-item">10+ materials</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">Products</p>
+          <h2>Ready to ship</h2>
+        </div>
+        <a class="view-all" href="shop.html">View all
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+      <div class="product-grid" id="home-product-grid"></div>
+    </div>
+  </section>
+
+  <section class="section border-top" style="background: hsl(var(--muted));">
+    <div class="container">
+      <p class="eyebrow">Why us</p>
+      <h2 style="margin-bottom:64px;">Built different</h2>
+      <div class="diff-grid">
+        <div class="diff-card">
+          <p class="diff-number">01</p>
+          <h3>Engineered for function</h3>
+          <p>Every part is designed to perform, not just look good. We use the right material for the job — PLA, PETG, ABS, Nylon, TPU, or resin.</p>
+        </div>
+        <div class="diff-card">
+          <p class="diff-number">02</p>
+          <h3>Fast, reliable turnaround</h3>
+          <p>Most orders ship in 3–5 business days. Need it faster? We offer rush production for time-sensitive projects.</p>
+        </div>
+        <div class="diff-card">
+          <p class="diff-number">03</p>
+          <h3>Custom from the ground up</h3>
+          <p>Send us a file, a sketch, or just an idea. We'll work with you to produce exactly what your business needs.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section border-top">
+    <div class="container">
+      <div class="cta-block">
+        <p class="eyebrow">Get started</p>
+        <h2>Ready to order your parts?</h2>
+        <p>Upload your design or browse our catalogue. We'll quote you within 24 hours.</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href="shop.html">Get Started
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="btn btn-outline" href="custom.html">Request a custom quote</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/partials.js"></script>
+<script>
+  (function () {
+    var grid = document.getElementById("home-product-grid");
+    grid.innerHTML = '<p class="grid-status">Loading products…</p>';
+    loadProducts().then(function () {
+      grid.innerHTML = PRODUCTS.slice(0, 6).map(productCardHTML).join("");
+    }).catch(function () {
+      grid.innerHTML = '<p class="grid-status">Couldn\'t load products. Please refresh.</p>';
+    });
+  })();
+</script>
+</body>
+</html>

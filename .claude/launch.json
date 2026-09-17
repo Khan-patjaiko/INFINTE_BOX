@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "infinite-box-site",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "http-server", "site", "-p", "8790", "-c-1"],
+      "port": 8790
+    },
+    {
+      "name": "infinite-box-coming-soon",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--yes", "http-server", "coming-soon", "-p", "8791", "-c-1"],
+      "port": 8791
+    }
+  ]
+}

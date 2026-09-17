@@ -1,0 +1,20 @@
+# Dependencies (should never appear per HANDOVER.md — site is dependency-free)
+node_modules/
+package-lock.json
+
+# Secrets / env
+.env
+.env.*
+*.local
+
+# Supabase local
+supabase/.temp/
+supabase/.branches/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.idea/
+.vscode/

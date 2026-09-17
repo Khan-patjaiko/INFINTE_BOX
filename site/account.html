@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My account — Infinite Box</title>
+<link rel="icon" href="assets/img/icon-dark.png">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Account</p>
+      <div class="account-head">
+        <h1>My account</h1>
+        <button class="btn btn-outline" id="logout-btn">Log out</button>
+      </div>
+      <p id="account-greeting"></p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:32px;">
+    <div class="container">
+      <p class="eyebrow">Order history</p>
+      <h2 style="margin-bottom:32px;">Your orders</h2>
+      <div id="orders-container"><p class="grid-status">Loading your orders…</p></div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/partials.js"></script>
+<script>
+  (function () {
+    document.addEventListener("DOMContentLoaded", function () {
+      var btn = document.getElementById("logout-btn");
+      if (btn) btn.addEventListener("click", function () { IBAuth.signOut(); });
+    });
+
+    function money(cents) { return "$" + ((cents || 0) / 100).toFixed(2); }
+
+    function orderCardHTML(o) {
+      var date = new Date(o.created_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+      var items = (o.order_items || []).map(function (it) {
+        return '<div class="order-line"><span>' + ibEscape(it.name) + ' × ' + it.qty + '</span><span>' + money(it.unit_price_cents * it.qty) + '</span></div>';
+      }).join("");
+      var status = (o.status || "pending").toLowerCase();
+      return '<div class="order-card">' +
+        '<div class="order-card-head">' +
+          '<div><strong>Order ' + ibEscape(String(o.id).slice(0, 8)) + '</strong><br><span class="grid-status">' + date + '</span></div>' +
+          '<span class="order-status ' + status + '">' + ibEscape(status) + '</span>' +
+        '</div>' +
+        items +
+        '<div class="order-total"><span>Total</span><span>' + money(o.total_cents) + '</span></div>' +
+      '</div>';
+    }
+
+    async function loadOrders() {
+      var container = document.getElementById("orders-container");
+      try {
+        var res = await window.IBDB
+          .from("orders")
+          .select("*, order_items(*)")
+          .order("created_at", { ascending: false });
+        if (res.error) throw res.error;
+        var orders = res.data || [];
+        if (!orders.length) {
+          container.innerHTML =
+            '<div class="empty-state"><p>No orders yet.</p>' +
+            '<a class="btn btn-primary" href="shop.html">Start shopping</a></div>';
+          return;
+        }
+        container.innerHTML = orders.map(orderCardHTML).join("");
+      } catch (e) {
+        console.error("Failed to load orders", e);
+        container.innerHTML = '<p class="grid-status">Couldn\'t load your orders. Please refresh.</p>';
+      }
+    }
+
+    IBAuth.requireUser().then(function (user) {
+      if (!user) return; // requireUser already redirected
+      var name = (user.user_metadata && user.user_metadata.full_name) || user.email;
+      var greeting = document.getElementById("account-greeting");
+      if (greeting) greeting.textContent = "Signed in as " + name;
+      loadOrders();
+    });
+  })();
+</script>
+</body>
+</html>

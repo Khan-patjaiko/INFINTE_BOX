@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQ — Infinite Box</title>
+<meta name="description" content="Frequently asked questions about Infinite Box's 3D printing materials, lead times, and custom orders.">
+<link rel="icon" href="assets/img/icon-dark.png">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Support</p>
+      <h1>Frequently asked questions</h1>
+      <p>Can't find what you're looking for? <a href="contact.html" style="color:hsl(var(--primary));">Contact us</a> directly.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" style="max-width:800px;" id="faq-list"></div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/partials.js"></script>
+<script>
+  var FAQS = [
+    { q: "What materials do you print with?", a: "We work with PLA+, PETG, ABS, Nylon, TPU, and standard resin. Not sure what fits your part? Tell us the use case in your custom order and we'll recommend one." },
+    { q: "How long does an order take?", a: "Most in-stock products and standard custom orders ship in 3–5 business days. Nylon and larger resin jobs may take 5–7 days. Rush production is available on request." },
+    { q: "Is there a minimum order quantity?", a: "No. We print single parts and small batches alike — there's no minimum." },
+    { q: "What file formats do you accept for custom orders?", a: "STL, STEP, and OBJ are preferred. No file yet? Send a sketch, reference image, or written description and we'll help you get it print-ready." },
+    { q: "Do you ship internationally?", a: "Yes, we ship worldwide. Shipping cost and time are calculated at checkout or included in your custom quote." },
+    { q: "Can I get a sample before ordering in bulk?", a: "Absolutely — mention it in your custom order notes and we'll quote a single sample unit first." },
+    { q: "What if my part doesn't fit or fails?", a: "We stand behind our print quality. If a part is defective or doesn't match the agreed spec, contact us within 14 days for a reprint or refund." }
+  ];
+
+  var list = document.getElementById("faq-list");
+  list.innerHTML = FAQS.map(function (item, i) {
+    return '<div class="faq-item" data-index="' + i + '">' +
+      '<button class="faq-q"><span>' + item.q + '</span><span class="plus">+</span></button>' +
+      '<div class="faq-a"><p>' + item.a + '</p></div>' +
+    '</div>';
+  }).join("");
+
+  list.addEventListener("click", function (e) {
+    var btn = e.target.closest(".faq-q");
+    if (!btn) return;
+    btn.parentElement.classList.toggle("open");
+  });
+</script>
+</body>
+</html>

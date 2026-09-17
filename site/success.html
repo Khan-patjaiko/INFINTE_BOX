@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order confirmed — Infinite Box</title>
+<link rel="icon" href="assets/img/icon-dark.png">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Thank you</p>
+      <h1>Order confirmed</h1>
+      <p>Your payment went through and your order is in our queue. We've emailed your receipt — most orders print and ship within 3–5 business days.</p>
+      <div class="btn-row" style="margin-top:32px;">
+        <a class="btn btn-primary" href="shop.html">Continue shopping</a>
+        <a class="btn btn-outline" href="account.html" id="view-orders" style="display:none;">View my orders</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/partials.js"></script>
+<script>
+  // The order succeeded — clear the local cart.
+  try { localStorage.removeItem("infinitebox_cart"); } catch (e) {}
+  if (window.IB) IB.updateCartBadge();
+
+  // Offer the orders link to signed-in customers.
+  IBAuth.getUser().then(function (user) {
+    if (user) {
+      var link = document.getElementById("view-orders");
+      if (link) link.style.display = "";
+    }
+  });
+</script>
+</body>
+</html>

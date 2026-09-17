@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop — Infinite Box</title>
+<meta name="description" content="Browse ready-to-ship 3D printed parts from Infinite Box: enclosures, brackets, gears, resin details, and accessories.">
+<link rel="icon" href="assets/img/icon-dark.png">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Catalogue</p>
+      <h1>Shop</h1>
+      <p>Ready-to-ship parts, printed on demand. Pick a material and category, or send us a custom design for a quote.</p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:64px;">
+    <div class="container">
+      <div class="filter-bar" id="filter-bar"></div>
+      <div class="product-grid" id="shop-product-grid"></div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/icons.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/partials.js"></script>
+<script>
+  (function () {
+    var filterBar = document.getElementById("filter-bar");
+    var grid = document.getElementById("shop-product-grid");
+    grid.innerHTML = '<p class="grid-status">Loading products…</p>';
+
+    function renderGrid(category) {
+      var items = category === "All" ? PRODUCTS : PRODUCTS.filter(function (p) { return p.category === category; });
+      grid.innerHTML = items.length
+        ? items.map(productCardHTML).join("")
+        : '<p class="grid-status">No products in this category.</p>';
+    }
+
+    loadProducts().then(function () {
+      var categories = ["All"].concat(Array.from(new Set(PRODUCTS.map(function (p) { return p.category; }))));
+      filterBar.innerHTML = categories.map(function (c, i) {
+        return '<button class="filter-chip' + (i === 0 ? ' active' : '') + '" data-category="' + ibEscape(c) + '">' + ibEscape(c) + '</button>';
+      }).join("");
+
+      filterBar.addEventListener("click", function (e) {
+        var btn = e.target.closest(".filter-chip");
+        if (!btn) return;
+        filterBar.querySelectorAll(".filter-chip").forEach(function (b) { b.classList.remove("active"); });
+        btn.classList.add("active");
+        renderGrid(btn.dataset.category);
+      });
+
+      renderGrid("All");
+    }).catch(function () {
+      grid.innerHTML = '<p class="grid-status">Couldn\'t load products. Please refresh.</p>';
+    });
+  })();
+</script>
+</body>
+</html>
