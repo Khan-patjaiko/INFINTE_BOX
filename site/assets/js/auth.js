@@ -23,6 +23,14 @@
     return db().auth.signInWithPassword({ email: email, password: password });
   }
 
+  function signInWithGoogle(redirectPage) {
+    var target = new URL(redirectPage || "account.html", window.location.href);
+    return db().auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: target.href }
+    });
+  }
+
   async function signOut() {
     if (db()) { try { await db().auth.signOut(); } catch (e) {} }
     window.location.href = "index.html";
@@ -57,6 +65,7 @@
     getUser: getUser,
     signUp: signUp,
     signIn: signIn,
+    signInWithGoogle: signInWithGoogle,
     signOut: signOut,
     refreshHeader: refreshHeader,
     requireUser: requireUser
