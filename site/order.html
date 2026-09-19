@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order status — Infinite Box</title>
+<link rel="icon" href="assets/img/icon-dark.png">
+<link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">Order status</p>
+      <h1 id="order-heading">Your order</h1>
+      <p id="order-sub" class="grid-status"></p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0;">
+    <div class="container">
+      <div id="order-container" style="max-width:640px;"><p class="grid-status">Loading your order…</p></div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/supabase-client.js"></script>
+<script src="assets/js/products.js"></script>
+<script src="assets/js/main.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/partials.js"></script>
+<script>
+  (function () {
+    function money(cents) { return "$" + ((cents || 0) / 100).toFixed(2); }
+
+    function addressHTML(a) {
+      if (!a) return "";
+      var lines = [a.name, a.line1, a.line2, [a.city, a.state, a.postal_code].filter(Boolean).join(", "), a.country, a.phone]
+        .filter(Boolean).map(ibEscape);
+      return '<div class="order-address"><strong>Shipping to</strong><br>' + lines.join("<br>") + "</div>";
+    }
+
+    function orderHTML(o) {
+      var date = new Date(o.created_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+      var status = (o.status || "pending").toLowerCase();
+      var statusCopy = {
+        pending: "We're waiting on payment confirmation for this order.",
+        paid: "Payment received — your order is in our print queue.",
+        fulfilled: "Your order has shipped.",
+        cancelled: "This order was cancelled."
+      }[status] || "";
+      var items = (o.order_items || []).map(function (it) {
+        return '<div class="order-line"><span>' + ibEscape(it.name) + " × " + it.qty + "</span><span>" + money(it.unit_price_cents * it.qty) + "</span></div>";
+      }).join("");
+
+      document.getElementById("order-heading").textContent = "Order " + String(o.id).slice(0, 8);
+      document.getElementById("order-sub").textContent = date + (o.email ? " · " + o.email : "");
+
+      return '<div class="order-card">' +
+        '<div class="order-card-head">' +
+          "<div><strong>Status</strong></div>" +
+          '<span class="order-status ' + status + '">' + ibEscape(status) + "</span>" +
+        "</div>" +
+        (statusCopy ? '<p class="grid-status" style="margin-bottom:16px;">' + ibEscape(statusCopy) + "</p>" : "") +
+        items +
+        '<div class="order-total"><span>Total</span><span>' + money(o.total_cents) + "</span></div>" +
+      "</div>" +
+      addressHTML(o.shipping_address) +
+      '<div class="btn-row" style="margin-top:24px;">' +
+        '<a class="btn btn-outline" href="shop.html">Continue shopping</a>' +
+      "</div>";
+    }
+
+    function showError(message) {
+      document.getElementById("order-container").innerHTML =
+        '<div class="empty-state"><p>' + ibEscape(message) + "</p>" +
+        '<a class="btn btn-primary" href="shop.html">Back to shop</a></div>';
+    }
+
+    async function load() {
+      var container = document.getElementById("order-container");
+      var params = new URLSearchParams(location.search);
+      var id = params.get("id");
+      var sessionId = params.get("session_id");
+      if (!id && !sessionId) { showError("No order specified."); return; }
+
+      try {
+        var res = await window.IBDB.functions.invoke("get-order", {
+          body: id ? { id: id } : { session_id: sessionId }
+        });
+        if (res.error) throw res.error;
+        if (!res.data || !res.data.order) throw new Error("Order not found");
+        container.innerHTML = orderHTML(res.data.order);
+      } catch (e) {
+        console.error("Failed to load order", e);
+        showError("We couldn't find that order. If you just checked out, give it a moment and refresh.");
+      }
+    }
+
+    load();
+  })();
+</script>
+</body>
+</html>

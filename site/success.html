@@ -18,8 +18,8 @@
       <h1>Order confirmed</h1>
       <p>Your payment went through and your order is in our queue. We've emailed your receipt — most orders print and ship within 3–5 business days.</p>
       <div class="btn-row" style="margin-top:32px;">
+        <a class="btn btn-outline" href="#" id="my-order-link" style="display:none;">My order</a>
         <a class="btn btn-primary" href="shop.html">Continue shopping</a>
-        <a class="btn btn-outline" href="account.html" id="view-orders" style="display:none;">View my orders</a>
       </div>
     </div>
   </section>
@@ -39,13 +39,16 @@
   try { localStorage.removeItem("infinitebox_cart"); } catch (e) {}
   if (window.IB) IB.updateCartBadge();
 
-  // Offer the orders link to signed-in customers.
-  IBAuth.getUser().then(function (user) {
-    if (user) {
-      var link = document.getElementById("view-orders");
-      if (link) link.style.display = "";
+  // Stripe redirects here with ?session_id=... — use it to link straight to
+  // this order's status page (works for guests and signed-in customers alike).
+  var sessionId = new URLSearchParams(location.search).get("session_id");
+  if (sessionId) {
+    var link = document.getElementById("my-order-link");
+    if (link) {
+      link.href = "order.html?session_id=" + encodeURIComponent(sessionId);
+      link.style.display = "";
     }
-  });
+  }
 </script>
 </body>
 </html>

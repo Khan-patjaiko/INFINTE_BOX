@@ -56,14 +56,14 @@
         return '<div class="order-line"><span>' + ibEscape(it.name) + ' × ' + it.qty + '</span><span>' + money(it.unit_price_cents * it.qty) + '</span></div>';
       }).join("");
       var status = (o.status || "pending").toLowerCase();
-      return '<div class="order-card">' +
+      return '<a class="order-card" href="order.html?id=' + encodeURIComponent(o.id) + '" style="display:block;text-decoration:none;color:inherit;">' +
         '<div class="order-card-head">' +
           '<div><strong>Order ' + ibEscape(String(o.id).slice(0, 8)) + '</strong><br><span class="grid-status">' + date + '</span></div>' +
           '<span class="order-status ' + status + '">' + ibEscape(status) + '</span>' +
         '</div>' +
         items +
         '<div class="order-total"><span>Total</span><span>' + money(o.total_cents) + '</span></div>' +
-      '</div>';
+      '</a>';
     }
 
     async function loadOrders() {
