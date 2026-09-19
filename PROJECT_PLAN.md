@@ -1,13 +1,13 @@
 # Infinite Box — Project Plan (living roadmap)
 
-Last updated: 2026-09-18 · Source of truth for phases and tasks. Session history lives in
+Last updated: 2026-09-19 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
-## Where we are now (as of 2026-09-18)
+## Where we are now (as of 2026-09-19)
 
-**Overall: ~75% to a launchable v1.** The store works end-to-end locally except payments
-(inert until Stripe keys are set) and it is not deployed.
+**Overall: ~82% to a launchable v1.** The store works end-to-end locally including test-mode
+payments; it is not yet deployed (Hostinger hosting is purchased but nothing uploaded).
 
 | Area | Status |
 |---|---|
@@ -20,16 +20,16 @@ Tick boxes here as work lands; add a new phase rather than rewriting history.
 | Auth: email/password + `account.html` order history | ✅ Done |
 | Auth: Google OAuth | ⚠️ Provider enabled + button wired; **no Google user exists in `auth.users`** (checked 2026-09-18) — end-to-end sign-in still unconfirmed, needs a real re-test |
 | UI polish pass #1 (spacing scale, focus ring, mobile padding, nav animation) | ✅ Done |
-| Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ⚠️ Deployed, **inert** — no `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` |
-| Hosting | ⚠️ Decided (Hostinger), **not deployed** |
+| Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
+| Hosting | ⚠️ **Hostinger purchased**, not yet deployed |
 | Git | ⚠️ 1 commit; Handover #3 changes (4 files) + HANDOVER_2/3.md **uncommitted** |
 | Real product photography | ❌ None (SVG placeholders; frontend ready for `image_url`) |
 | Admin UI (manage products/orders/quotes) | ❌ None — DB has `is_admin` + policies, no page |
 | Email notifications (order confirmation, new quote alert) | ❌ None |
 | Coming-soon page email capture | ❌ localStorage only, not a real list |
 
-**Immediate blockers on the user side:** (1) Stripe account + test keys, (2) Hostinger
-account/domain, (3) product photos.
+**Immediate blockers on the user side:** (1) product photos, (2) upload `site/` to Hostinger
+`public_html` and point the domain at it.
 
 ---
 
@@ -93,16 +93,18 @@ Goal: clean state, everything known-good.
 - [ ] Remove the SQL-created test user (`testuser@infinitebox.dev`) or keep it deliberately and note it.
 - [ ] Smoke-test all 14 pages in the preview (console clean, header auth state correct).
 
-### Phase 8 — Payments go-live (test mode) (blocked on user: Stripe keys)
-- [ ] User creates Stripe account, gets `sk_test_…`.
-- [ ] User creates webhook → `https://ptwfidmlnuggxvqhimhe.supabase.co/functions/v1/stripe-webhook`, event `checkout.session.completed`, gets `whsec_…`.
-- [ ] Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` in Supabase → Edge Functions → Secrets.
-- [ ] Full test checkout with `4242 4242 4242 4242` → `success.html` → `orders.status = 'paid'` confirmed via SQL.
-- [ ] Verify `cancel.html` path preserves the cart.
-- [ ] Guest checkout: confirm order is created with `user_id = null` and email captured from Stripe.
-- [ ] Decide shipping model (flat $6.50 is hardcoded in the Edge Function) — keep or make it a `settings` row.
+### Phase 8 — Payments go-live (test mode) ✅ Done (2026-09-19)
+- [x] User created a Stripe account (sandbox/test mode), got `sk_test_…`.
+- [x] User created a webhook destination ("Your account" scope, Snapshot payload) → `https://ptwfidmlnuggxvqhimhe.supabase.co/functions/v1/stripe-webhook`, events `checkout.session.completed` + `checkout.session.expired`, got `whsec_…`.
+- [x] Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` in Supabase → Edge Functions → Secrets.
+- [x] Upgraded both Edge Functions to v3: Checkout now collects a real shipping address + phone (`shipping_address_collection`/`phone_number_collection`) and shows shipping as a proper Stripe shipping line instead of a fake line item; webhook now saves the collected address into `orders.shipping_address` and marks abandoned sessions `cancelled` on `checkout.session.expired`.
+- [x] Full test checkout with `4242 4242 4242 4242` → `success.html` → confirmed via SQL: `orders.status = 'paid'`, `stripe_payment_intent` set, `shipping_address` populated correctly, `order_items` row correct.
+- [x] Verified `cancel.html` path preserves the cart (added a 2nd product, opened Checkout, clicked Stripe's "Back", cart still showed the item).
+- [x] Guest checkout path confirmed structurally (order created with `user_id = null`, placeholder email overwritten by `customer_details.email` via the webhook — existing working design).
+- [ ] Decide shipping model (flat $6.50 is hardcoded in the Edge Function) — keep or make it a `settings` row. *(deferred, not blocking)*
+- Test rows created during verification (2 pending + 1 paid order) were deleted from `orders`/`order_items` afterward — sandbox is clean.
 
-### Phase 9 — Deployment to Hostinger (blocked on user: hosting/domain)
+### Phase 9 — Deployment to Hostinger (Hostinger hosting purchased; no other blocker)
 - [ ] Upload `site/` contents to `public_html` (FTP/File Manager). No build step.
 - [ ] Confirm HTTPS active.
 - [ ] Supabase → Auth → URL Configuration: add `https://<domain>/**` to Redirect URLs; set Site URL.
@@ -154,6 +156,6 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 
 1. **Phase 7** — now, no blockers.
 2. **Phase 11 (admin)** can start immediately in parallel with waiting on Stripe/Hostinger — it's pure code and unblocks the owner from needing the Supabase dashboard to manage products/quotes.
-3. **Phase 8 → 9** as soon as the user supplies Stripe keys and Hostinger access.
+3. **Phase 9** next — Hostinger is paid for and ready, just needs `site/` uploaded.
 4. **Phase 10 → 12 → 13** toward launch.
 
