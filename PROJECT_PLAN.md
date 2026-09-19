@@ -2,7 +2,8 @@
 
 Last updated: 2026-09-19 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
-[HANDOVER_4.md](HANDOVER_4.md).
+[HANDOVER_4.md](HANDOVER_4.md). How the system is built (four-layer architecture review) lives in
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
 ## Where we are now (as of 2026-09-19)
@@ -25,7 +26,8 @@ but nothing uploaded).
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
 | Hosting | ⚠️ **Hostinger purchased**, not yet deployed |
-| Git | ⚠️ Working tree clean, but local `main` is 3 commits **ahead of `origin/main`** (not pushed) as of 2026-09-19 |
+| Git | ⚠️ Local `main` is **ahead of `origin/main`** (not pushed) as of 2026-09-19 |
+| Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
 | Real product photography | ❌ None (SVG placeholders; frontend ready for `image_url`) |
 | Admin UI (manage products/orders/quotes) | ❌ None — DB has `is_admin` + policies, no page |
 | Email notifications (order confirmation, new quote alert) | ❌ None |
@@ -62,6 +64,11 @@ E-Commerce Web/
 │       ├── js/main.js             window.IB cart API, mobile nav
 │       ├── js/partials.js         HEADER_HTML / FOOTER_HTML injection (all pages)
 │       └── img/                   icon-/logo- dark/light PNGs
+├── supabase/                      ← backend source of truth (mirrors hosted project)
+│   ├── config.toml                project id, verify_jwt=false per function
+│   ├── migrations/*.sql           7 migrations (same versions as production)
+│   └── functions/<name>/index.ts  submit-quote · create-checkout-session · stripe-webhook · get-order
+├── docs/ARCHITECTURE.md           Four-layer architecture reference
 ├── coming-soon/index.html         Standalone pre-launch page (separate deploy, no backend)
 ├── Example/                       Original Airo export (reference only)
 ├── .claude/launch.json            preview servers: infinite-box-site :8790, infinite-box-coming-soon :8791
@@ -97,6 +104,9 @@ Goal: clean state, everything known-good.
 - [ ] Re-test Google sign-in from `login.html` in a real browser and confirm a `provider = google` row + `profiles.full_name` appear.
 - [ ] Remove the SQL-created test user (`testuser@infinitebox.dev`) or keep it deliberately and note it.
 - [ ] Smoke-test all 14 pages in the preview (console clean, header auth state correct).
+- [x] Architecture review (2026-09-19) → `docs/ARCHITECTURE.md`; exported migrations + Edge Functions into `supabase/`; pinned supabase-js CDN to `2.116.0` on all 15 pages.
+- [ ] Enable **Leaked Password Protection** in Supabase → Auth → Providers → Email (the only open security-advisor warning; user-side toggle).
+- [ ] Single source of truth for the shipping fee (currently `6.5` in `cart.html` and `650` in `create-checkout-session`).
 
 ### Phase 8 — Payments go-live (test mode) ✅ Done (2026-09-19)
 - [x] User created a Stripe account (sandbox/test mode), got `sk_test_…`.

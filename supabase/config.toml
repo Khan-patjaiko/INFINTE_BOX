@@ -1,0 +1,17 @@
+# Supabase project config (mirrors the hosted project ptwfidmlnuggxvqhimhe).
+# Kept in git so the backend is reproducible. See supabase/README.md.
+project_id = "ptwfidmlnuggxvqhimhe"
+
+# All functions handle auth themselves (guest checkout, Stripe webhook, optional
+# user attach), so gateway JWT verification is off — matches the deployed settings.
+[functions.submit-quote]
+verify_jwt = false
+
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.get-order]
+verify_jwt = false
