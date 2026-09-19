@@ -254,6 +254,8 @@ button { font-family: inherit; cursor: pointer; }
   border-radius: var(--radius-button);
   transition: all 0.15s;
   border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
 }
 .btn:active { transform: scale(0.97); }
 .btn-primary {
@@ -262,6 +264,7 @@ button { font-family: inherit; cursor: pointer; }
 }
 .btn-primary:hover { opacity: 0.9; }
 .btn-outline {
+  background: transparent;
   border-color: hsl(var(--border));
   color: hsl(var(--foreground) / 0.75);
   font-weight: 500;
@@ -763,7 +766,7 @@ button { font-family: inherit; cursor: pointer; }
 /* ---------- Account / order history ---------- */
 .account-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 40px; }
 .order-card { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
-.order-card-head { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.order-card-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .order-status { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; padding: 4px 10px; border-radius: 999px; background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); }
 .order-status.paid { background: hsl(var(--success) / 0.15); color: hsl(var(--success)); }
 .order-status.fulfilled { background: hsl(var(--accent) / 0.15); color: hsl(var(--accent)); }
