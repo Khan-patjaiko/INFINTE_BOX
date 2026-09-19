@@ -1,13 +1,15 @@
 # Infinite Box — Project Plan (living roadmap)
 
 Last updated: 2026-09-19 · Source of truth for phases and tasks. Session history lives in
-[HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md).
+[HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
+[HANDOVER_4.md](HANDOVER_4.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
 ## Where we are now (as of 2026-09-19)
 
-**Overall: ~82% to a launchable v1.** The store works end-to-end locally including test-mode
-payments; it is not yet deployed (Hostinger hosting is purchased but nothing uploaded).
+**Overall: ~85% to a launchable v1.** The store works end-to-end locally including test-mode
+payments and a per-order status page; it is not yet deployed (Hostinger hosting is purchased
+but nothing uploaded).
 
 | Area | Status |
 |---|---|
@@ -21,8 +23,9 @@ payments; it is not yet deployed (Hostinger hosting is purchased but nothing upl
 | Auth: Google OAuth | ⚠️ Provider enabled + button wired; **no Google user exists in `auth.users`** (checked 2026-09-18) — end-to-end sign-in still unconfirmed, needs a real re-test |
 | UI polish pass #1 (spacing scale, focus ring, mobile padding, nav animation) | ✅ Done |
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
+| Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
 | Hosting | ⚠️ **Hostinger purchased**, not yet deployed |
-| Git | ⚠️ 1 commit; Handover #3 changes (4 files) + HANDOVER_2/3.md **uncommitted** |
+| Git | ⚠️ Working tree clean, but local `main` is 3 commits **ahead of `origin/main`** (not pushed) as of 2026-09-19 |
 | Real product photography | ❌ None (SVG placeholders; frontend ready for `image_url`) |
 | Admin UI (manage products/orders/quotes) | ❌ None — DB has `is_admin` + policies, no page |
 | Email notifications (order confirmation, new quote alert) | ❌ None |
@@ -46,8 +49,9 @@ E-Commerce Web/
 │   ├── contact.html               Contact form
 │   ├── about.html · faq.html · materials.html   Static content
 │   ├── login.html · signup.html   Email/password + Google OAuth
-│   ├── account.html               Auth-guarded: profile + order history
-│   ├── success.html · cancel.html Stripe return pages
+│   ├── account.html               Auth-guarded: profile + order history (cards link to order.html)
+│   ├── order.html?id=<uuid> or ?session_id=<cs_...>  Single-order status (items, total, shipping address)
+│   ├── success.html · cancel.html Stripe return pages (success.html has a "My order" button → order.html)
 │   └── assets/
 │       ├── css/styles.css         Single stylesheet, HSL tokens, --space-* scale
 │       ├── js/config.js           Supabase URL + anon key (public)
@@ -68,15 +72,15 @@ Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read), custom-uploads (private)
 ├── Auth: email/password (confirmation on), Google OAuth
-└── Edge Functions: submit-quote ✅ · create-checkout-session ⚠️ · stripe-webhook ⚠️
+└── Edge Functions: submit-quote ✅ · create-checkout-session ✅ · stripe-webhook ✅ · get-order ✅ (v1, returns a single order for its owner or by Stripe session id)
 
 Nav: Shop · Custom Orders · About · Account/Log in · Cart · Shop Now
 Footer: Shop (All Products / Custom Orders / Materials) · Company (About / Contact / FAQ)
 ```
 
 **Planned additions (later phases):** `site/admin/` (products, orders, quotes dashboard),
-`site/orders.html?id=` (single order detail), optional `privacy.html` / `terms.html`
-(required for Stripe live mode + Google OAuth verification).
+optional `privacy.html` / `terms.html` (required for Stripe live mode + Google OAuth
+verification).
 
 ---
 
@@ -86,7 +90,8 @@ Phases 0–6 of the original plan are complete. Numbering continues from there.
 
 ### Phase 7 — Housekeeping & verification (now, ~1 session)
 Goal: clean state, everything known-good.
-- [ ] Commit Handover #3 working tree (`styles.css`, `auth.js`, `login.html`, `signup.html`) + `HANDOVER_2.md`, `HANDOVER_3.md`, `PROJECT_PLAN.md`; push to `origin/main`.
+- [x] Commit Handover #3 working tree (`styles.css`, `auth.js`, `login.html`, `signup.html`) + `HANDOVER_2.md`, `HANDOVER_3.md`, `PROJECT_PLAN.md` — done 2026-09-19 (Handover #4 session).
+- [ ] Push `main` to `origin/main` — local is 3 commits ahead as of 2026-09-19; not pushed yet (only push when the user asks).
 - [x] Fix CRLF warning: added `.gitattributes` (`* text=auto eol=lf`, PNGs binary).
 - [x] Supabase sanity check (2026-09-18): only `testuser@infinitebox.dev` (email provider) exists; **no Google user** → Google sign-in must be re-tested end-to-end. Tables otherwise clean (0 orders/quotes/messages, 8 products, 1 leftover test file in `custom-uploads`).
 - [ ] Re-test Google sign-in from `login.html` in a real browser and confirm a `provider = google` row + `profiles.full_name` appear.
@@ -103,6 +108,7 @@ Goal: clean state, everything known-good.
 - [x] Guest checkout path confirmed structurally (order created with `user_id = null`, placeholder email overwritten by `customer_details.email` via the webhook — existing working design).
 - [ ] Decide shipping model (flat $6.50 is hardcoded in the Edge Function) — keep or make it a `settings` row. *(deferred, not blocking)*
 - Test rows created during verification (2 pending + 1 paid order) were deleted from `orders`/`order_items` afterward — sandbox is clean.
+- One further test order (`9acb36b4…`, "Custom Enclosure", $30.50, `paid`) was placed by the user directly while testing the preview on 2026-09-19 — left in the database deliberately (not Claude's to delete). Clear it manually before launch, or ask Claude to.
 
 ### Phase 9 — Deployment to Hostinger (Hostinger hosting purchased; no other blocker)
 - [ ] Upload `site/` contents to `public_html` (FTP/File Manager). No build step.
@@ -131,7 +137,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 
 ### Phase 12 — Notifications & customer experience
 - [ ] Email on order paid (customer receipt) and on new quote/contact (owner alert) — Resend (or similar) called from `stripe-webhook` / `submit-quote` Edge Functions; API key as a secret.
-- [ ] `orders.html?id=` single-order detail page linked from `account.html`.
+- [x] Single-order detail page linked from `account.html` — done early, 2026-09-19: built as `order.html` (not `orders.html`) accepting `?id=` (signed-in, ownership-checked) or `?session_id=` (guest, straight off the Stripe redirect); see Handover #4.
 - [ ] Profile edit on `account.html` (name, phone, default shipping address).
 - [ ] Password reset flow (`reset-password.html` using Supabase `resetPasswordForEmail`).
 - [ ] Decide on Supabase email-confirmation setting for signup (keep on for prod; consider custom SMTP so emails don't come from Supabase's rate-limited default).
