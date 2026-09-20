@@ -520,7 +520,7 @@ button { font-family: inherit; cursor: pointer; }
   grid-template-columns: 1fr;
   gap: 48px;
 }
-@media (min-width: 768px) { .footer-grid { grid-template-columns: 2fr 1fr 1fr; } }
+@media (min-width: 768px) { .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; } }
 .footer-brand a.logo-lockup { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 16px; }
 .footer-brand a.logo-lockup img { height: 24px; width: auto; }
 .footer-brand a.logo-lockup .wordmark { font-family: var(--font-heading); font-weight: 700; font-size: 16px; letter-spacing: 0.02em; color: hsl(var(--foreground)); }
@@ -537,6 +537,8 @@ button { font-family: inherit; cursor: pointer; }
 .footer-col nav { display: flex; flex-direction: column; gap: 12px; }
 .footer-col nav a { font-size: 14px; color: hsl(var(--muted-foreground)); transition: color 0.15s; }
 .footer-col nav a:hover { color: #fff; }
+.footer-social a { display: inline-flex; align-items: center; gap: 10px; }
+.footer-social svg { width: 18px; height: 18px; flex-shrink: 0; }
 .footer-bottom {
   margin-top: 48px;
   padding-top: 24px;
