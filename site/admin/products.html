@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Products — Infinite Box Admin</title>
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="admin-page">
+    <div class="container">
+      <div class="admin-head">
+        <div><p class="eyebrow">Admin</p><h1>Products</h1></div>
+        <div class="btn-row"><button type="button" class="btn btn-primary btn-sm" id="new-btn">+ New product</button></div>
+      </div>
+
+      <div class="admin-toolbar">
+        <input type="search" id="search" placeholder="Search name, slug or category…">
+        <label class="grid-status" style="padding:0;display:flex;align-items:center;gap:8px;"><input type="checkbox" id="show-inactive"> Show inactive</label>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th></th><th>Product</th><th>Category</th><th>Material</th><th class="num">Price</th><th class="num">Sort</th><th>Status</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <p class="form-note">Changes appear on the store immediately. Inactive products are hidden from customers but keep their order history.</p>
+    </div>
+  </section>
+</main>
+
+<div class="drawer-backdrop" id="backdrop"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head"><h2 id="d-title">Product</h2><button type="button" class="drawer-close" id="d-close" aria-label="Close">×</button></div>
+  <form id="d-form" class="form-grid two" novalidate>
+    <div class="field span-2"><label for="f-name">Name</label><input type="text" id="f-name" required></div>
+    <div class="field"><label for="f-slug">Slug <span class="muted">(URL id)</span></label><input type="text" id="f-slug" required pattern="[a-z0-9-]+" placeholder="e.g. phone-stand"></div>
+    <div class="field"><label for="f-price">Price (USD)</label><input type="number" id="f-price" min="0" step="0.01" required></div>
+    <div class="field"><label for="f-category">Category</label><input type="text" id="f-category" list="category-list"><datalist id="category-list"></datalist></div>
+    <div class="field"><label for="f-material">Material</label><input type="text" id="f-material" placeholder="e.g. PETG"></div>
+    <div class="field span-2"><label for="f-description">Description</label><textarea id="f-description" rows="4" style="min-height:96px;"></textarea></div>
+    <div class="field span-2"><label for="f-specs">Specs <span class="muted">(one per line, <code>Label: value</code>)</span></label><textarea id="f-specs" rows="5" style="min-height:110px;font-size:13px;" placeholder="Material: PETG&#10;Layer height: 0.2mm&#10;Lead time: 3-5 days"></textarea></div>
+    <div class="field"><label for="f-icon">Placeholder icon</label><select id="f-icon"></select></div>
+    <div class="field"><label for="f-sort">Sort order</label><input type="number" id="f-sort" step="1" value="0"></div>
+    <div class="field span-2">
+      <label>Photo</label>
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
+        <div class="thumb" id="f-preview" style="width:88px;height:88px;border-radius:var(--radius);background:hsl(var(--product-img-bg));display:flex;align-items:center;justify-content:center;overflow:hidden;"></div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <input type="file" id="f-image" accept="image/png,image/jpeg,image/webp">
+          <button type="button" class="btn btn-outline btn-sm" id="f-image-clear" style="align-self:flex-start;">Remove photo</button>
+        </div>
+      </div>
+      <p class="form-note">JPG/PNG/WebP, up to 5 MB. Uploaded to the <code>product-images</code> bucket; the placeholder icon shows when there is no photo.</p>
+    </div>
+    <div class="field span-2"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="f-active" checked> Active (visible in the store)</label></div>
+    <div class="drawer-actions span-2">
+      <button type="submit" class="btn btn-primary btn-sm" id="d-save">Save</button>
+      <a class="btn btn-outline btn-sm" id="d-view" href="#" target="_blank" rel="noopener" style="display:none;">View in store</a>
+      <p class="form-note" id="d-error" style="display:none;color:hsl(var(--destructive));margin:0;align-self:center;"></p>
+    </div>
+  </form>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/products.js"></script>
+<script src="../assets/js/icons.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+  (function () {
+    var A = window.IBAdmin;
+    var all = [];
+    var current = null;       // row being edited (null = new)
+    var pendingImage = null;  // File chosen but not yet uploaded
+    var clearImage = false;   // "Remove photo" pressed
+    var search = "";
+    var showInactive = false;
+
+    function $(id) { return document.getElementById(id); }
+
+    function thumbHTML(p) {
+      if (p.image_url) return '<img src="' + ibEscape(p.image_url) + '" alt="">';
+      return typeof productIconSVG === "function" ? productIconSVG(p.icon_key) : "";
+    }
+
+    function render() {
+      var list = all.filter(function (p) {
+        if (!showInactive && !p.active) return false;
+        if (search && (p.name + " " + p.slug + " " + (p.category || "")).toLowerCase().indexOf(search) === -1) return false;
+        return true;
+      });
+      var tb = $("rows");
+      tb.innerHTML = list.length ? list.map(function (p) {
+        return '<tr data-id="' + p.id + '">' +
+          '<td style="width:60px;"><div class="thumb">' + thumbHTML(p) + '</div></td>' +
+          '<td>' + ibEscape(p.name) + '<br><span class="muted">' + ibEscape(p.slug) + '</span></td>' +
+          '<td>' + ibEscape(p.category || "—") + '</td>' +
+          '<td>' + ibEscape(p.material || "—") + '</td>' +
+          '<td class="num">' + A.money(p.price_cents) + '</td>' +
+          '<td class="num">' + p.sort + '</td>' +
+          '<td>' + (p.active ? '<span class="order-status paid">active</span>' : '<span class="order-status">inactive</span>') + '</td></tr>';
+      }).join("") : '<tr><td colspan="7" class="muted">No products match.</td></tr>';
+
+      var cats = Array.from(new Set(all.map(function (p) { return p.category; }).filter(Boolean)));
+      $("category-list").innerHTML = cats.map(function (c) { return '<option value="' + ibEscape(c) + '">'; }).join("");
+    }
+
+    function specsToText(specs) {
+      return Object.keys(specs || {}).map(function (k) { return k + ": " + specs[k]; }).join("\n");
+    }
+    function textToSpecs(text) {
+      var out = {};
+      text.split("\n").forEach(function (line) {
+        var i = line.indexOf(":");
+        if (i > 0) {
+          var k = line.slice(0, i).trim(), v = line.slice(i + 1).trim();
+          if (k) out[k] = v;
+        }
+      });
+      return out;
+    }
+    function slugify(s) {
+      return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    }
+
+    function updatePreview() {
+      var box = $("f-preview");
+      if (pendingImage) {
+        box.innerHTML = '<img src="' + URL.createObjectURL(pendingImage) + '" alt="" style="width:100%;height:100%;object-fit:cover;">';
+      } else if (current && current.image_url && !clearImage) {
+        box.innerHTML = '<img src="' + ibEscape(current.image_url) + '" alt="" style="width:100%;height:100%;object-fit:cover;">';
+      } else {
+        box.innerHTML = typeof productIconSVG === "function" ? productIconSVG($("f-icon").value) : "";
+      }
+      $("f-image-clear").style.display = (pendingImage || (current && current.image_url && !clearImage)) ? "" : "none";
+    }
+
+    function openDrawer(p) {
+      current = p || null;
+      pendingImage = null;
+      clearImage = false;
+      $("d-title").textContent = p ? "Edit product" : "New product";
+      $("f-name").value = p ? p.name : "";
+      $("f-slug").value = p ? p.slug : "";
+      $("f-price").value = p ? (p.price_cents / 100).toFixed(2) : "";
+      $("f-category").value = p ? (p.category || "") : "";
+      $("f-material").value = p ? (p.material || "") : "";
+      $("f-description").value = p ? (p.description || "") : "";
+      $("f-specs").value = p ? specsToText(p.specs) : "";
+      $("f-icon").value = p && p.icon_key ? p.icon_key : $("f-icon").options[0].value;
+      $("f-sort").value = p ? p.sort : (all.length ? Math.max.apply(null, all.map(function (x) { return x.sort; })) + 1 : 1);
+      $("f-active").checked = p ? !!p.active : true;
+      $("f-image").value = "";
+      $("d-error").style.display = "none";
+      var view = $("d-view");
+      view.style.display = p ? "" : "none";
+      if (p) view.href = "../product.html?id=" + encodeURIComponent(p.slug);
+      updatePreview();
+      $("drawer").classList.add("open");
+      $("drawer").setAttribute("aria-hidden", "false");
+      $("backdrop").classList.add("open");
+      $("f-name").focus();
+    }
+
+    function closeDrawer() {
+      $("drawer").classList.remove("open");
+      $("drawer").setAttribute("aria-hidden", "true");
+      $("backdrop").classList.remove("open");
+    }
+
+    function showError(msg) {
+      var el = $("d-error");
+      el.textContent = msg;
+      el.style.display = "";
+    }
+
+    async function uploadImage(file, slug) {
+      var ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      var path = slug + "-" + Date.now() + "." + ext;
+      var up = await window.IBDB.storage.from("product-images").upload(path, file, { contentType: file.type, upsert: false });
+      if (up.error) throw up.error;
+      return window.IBDB.storage.from("product-images").getPublicUrl(path).data.publicUrl;
+    }
+
+    async function save(e) {
+      e.preventDefault();
+      var name = $("f-name").value.trim();
+      var slug = $("f-slug").value.trim();
+      var price = parseFloat($("f-price").value);
+      if (!name) return showError("Name is required.");
+      if (!/^[a-z0-9-]+$/.test(slug)) return showError("Slug may only contain lowercase letters, numbers and dashes.");
+      if (!(price >= 0)) return showError("Enter a valid price.");
+      if (pendingImage && pendingImage.size > 5 * 1024 * 1024) return showError("Photo must be 5 MB or smaller.");
+
+      var btn = $("d-save");
+      btn.disabled = true;
+      $("d-error").style.display = "none";
+      try {
+        var patch = {
+          name: name,
+          slug: slug,
+          price_cents: Math.round(price * 100),
+          category: $("f-category").value.trim() || null,
+          material: $("f-material").value.trim() || null,
+          description: $("f-description").value.trim() || null,
+          specs: textToSpecs($("f-specs").value),
+          icon_key: $("f-icon").value,
+          sort: parseInt($("f-sort").value, 10) || 0,
+          active: $("f-active").checked
+        };
+        if (pendingImage) patch.image_url = await uploadImage(pendingImage, slug);
+        else if (clearImage) patch.image_url = null;
+
+        var res = current
+          ? await window.IBDB.from("products").update(patch).eq("id", current.id).select().single()
+          : await window.IBDB.from("products").insert(patch).select().single();
+        if (res.error) throw res.error;
+
+        if (current) Object.assign(current, res.data); else all.push(res.data);
+        all.sort(function (a, b) { return a.sort - b.sort; });
+        A.toast(current ? "Product saved." : "Product created.");
+        render();
+        closeDrawer();
+      } catch (err) {
+        console.error(err);
+        showError(/duplicate key/.test(err.message || "") ? "That slug is already used by another product." : "Couldn't save: " + (err.message || "unknown error"));
+      }
+      btn.disabled = false;
+    }
+
+    async function load() {
+      var res = await window.IBDB.from("products").select("*").order("sort", { ascending: true });
+      if (res.error) throw res.error;
+      all = res.data || [];
+      render();
+      var open = new URLSearchParams(location.search).get("open");
+      if (open) { var p = all.find(function (x) { return x.id === open; }); if (p) openDrawer(p); }
+    }
+
+    // Icon options come from icons.js so the list stays in sync with what the store can draw.
+    var iconKeys = (typeof PRODUCT_ICONS === "object" && PRODUCT_ICONS) ? Object.keys(PRODUCT_ICONS) : ["enclosure", "bracket", "shell", "detail", "cable", "gear", "tray", "stand"];
+    $("f-icon").innerHTML = iconKeys.map(function (k) { return '<option value="' + k + '">' + k + '</option>'; }).join("");
+
+    $("new-btn").addEventListener("click", function () { openDrawer(null); });
+    $("search").addEventListener("input", function (e) { search = e.target.value.trim().toLowerCase(); render(); });
+    $("show-inactive").addEventListener("change", function (e) { showInactive = e.target.checked; render(); });
+    $("rows").addEventListener("click", function (e) {
+      var tr = e.target.closest("tr[data-id]");
+      if (!tr) return;
+      var p = all.find(function (x) { return x.id === tr.dataset.id; });
+      if (p) openDrawer(p);
+    });
+    $("f-name").addEventListener("input", function () { if (!current) $("f-slug").value = slugify($("f-name").value); });
+    $("f-icon").addEventListener("change", updatePreview);
+    $("f-image").addEventListener("change", function (e) { pendingImage = e.target.files[0] || null; clearImage = false; updatePreview(); });
+    $("f-image-clear").addEventListener("click", function () { pendingImage = null; clearImage = true; $("f-image").value = ""; updatePreview(); });
+    $("d-form").addEventListener("submit", save);
+    $("d-close").addEventListener("click", closeDrawer);
+    $("backdrop").addEventListener("click", closeDrawer);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDrawer(); });
+
+    A.requireAdmin().then(function (user) {
+      if (!user) return;
+      load().catch(function (e) {
+        console.error("Products load failed", e);
+        $("rows").innerHTML = '<tr><td colspan="7" class="muted">Couldn\'t load products. Refresh to retry.</td></tr>';
+      });
+    });
+  })();
+</script>
+</body>
+</html>

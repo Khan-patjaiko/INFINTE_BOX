@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Orders — Infinite Box Admin</title>
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="admin-page">
+    <div class="container">
+      <div class="admin-head">
+        <div><p class="eyebrow">Admin</p><h1>Orders</h1></div>
+        <p class="grid-status" id="count"></p>
+      </div>
+
+      <div class="admin-toolbar" id="filters">
+        <button type="button" class="filter-chip active" data-status="">All</button>
+        <button type="button" class="filter-chip" data-status="paid">Paid</button>
+        <button type="button" class="filter-chip" data-status="fulfilled">Fulfilled</button>
+        <button type="button" class="filter-chip" data-status="pending">Pending</button>
+        <button type="button" class="filter-chip" data-status="cancelled">Cancelled</button>
+        <input type="search" id="search" placeholder="Search email or order id…" style="margin-left:auto;">
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Order</th><th>Customer</th><th>Items</th><th>Status</th><th class="num">Total</th><th>Date</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="drawer-backdrop" id="backdrop"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head"><h2 id="d-title">Order</h2><button type="button" class="drawer-close" id="d-close" aria-label="Close">×</button></div>
+  <div id="d-body"></div>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/products.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+  (function () {
+    var A = window.IBAdmin;
+    var STATUSES = ["pending", "paid", "fulfilled", "cancelled"];
+    var all = [];
+    var status = new URLSearchParams(location.search).get("status") || "";
+    var search = "";
+
+    function itemsSummary(o) {
+      var items = o.order_items || [];
+      var n = items.reduce(function (s, i) { return s + i.qty; }, 0);
+      var first = items[0] ? items[0].name : "";
+      return n + " × " + (items.length > 1 ? first + " +" + (items.length - 1) : first);
+    }
+
+    function render() {
+      var list = all.filter(function (o) {
+        if (status && o.status !== status) return false;
+        if (search && (o.email + " " + o.id).toLowerCase().indexOf(search) === -1) return false;
+        return true;
+      });
+      document.getElementById("count").textContent = list.length + " of " + all.length + " orders";
+      var tb = document.getElementById("rows");
+      tb.innerHTML = list.length ? list.map(function (o) {
+        return '<tr data-id="' + o.id + '">' +
+          '<td>' + ibEscape(o.id.slice(0, 8)) + '</td>' +
+          '<td>' + ibEscape(o.email) + '</td>' +
+          '<td class="muted">' + ibEscape(itemsSummary(o)) + '</td>' +
+          '<td>' + A.statusBadge(o.status) + '</td>' +
+          '<td class="num">' + A.money(o.total_cents) + '</td>' +
+          '<td class="muted">' + A.date(o.created_at) + '</td></tr>';
+      }).join("") : '<tr><td colspan="6" class="muted">No orders match.</td></tr>';
+    }
+
+    function addressHTML(a) {
+      if (!a) return '<span class="muted">No shipping address (checkout not completed).</span>';
+      var lines = [a.name, a.line1, a.line2, [a.city, a.state, a.postal_code].filter(Boolean).join(", "), a.country, a.phone]
+        .filter(Boolean).map(ibEscape);
+      return lines.join("<br>");
+    }
+
+    function openDrawer(id) {
+      var o = all.find(function (x) { return x.id === id; });
+      if (!o) return;
+      document.getElementById("d-title").textContent = "Order " + o.id.slice(0, 8);
+      var items = (o.order_items || []).map(function (it) {
+        return '<div class="order-line"><span>' + ibEscape(it.name) + ' × ' + it.qty + '</span><span>' + A.money(it.unit_price_cents * it.qty) + '</span></div>';
+      }).join("");
+      var opts = STATUSES.map(function (s) {
+        return '<option value="' + s + '"' + (s === o.status ? " selected" : "") + '>' + s + '</option>';
+      }).join("");
+      document.getElementById("d-body").innerHTML =
+        '<dl class="kv">' +
+          '<dt>Status</dt><dd>' + A.statusBadge(o.status) + '</dd>' +
+          '<dt>Placed</dt><dd>' + A.date(o.created_at, true) + '</dd>' +
+          '<dt>Customer</dt><dd><a href="mailto:' + ibEscape(o.email) + '">' + ibEscape(o.email) + '</a>' + (o.user_id ? "" : ' <span class="muted">(guest)</span>') + '</dd>' +
+          '<dt>Order id</dt><dd class="muted" style="font-size:12px;">' + ibEscape(o.id) + '</dd>' +
+          '<dt>Stripe</dt><dd class="muted" style="font-size:12px;">' + ibEscape(o.stripe_payment_intent || o.stripe_session_id || "—") + '</dd>' +
+          '<dt>Ship to</dt><dd>' + addressHTML(o.shipping_address) + '</dd>' +
+        '</dl>' +
+        '<h3 style="font-size:14px;margin-bottom:8px;">Items</h3>' + items +
+        '<div class="order-line"><span>Shipping</span><span>' + A.money(o.shipping_cents) + '</span></div>' +
+        '<div class="order-total"><span>Total</span><span>' + A.money(o.total_cents) + '</span></div>' +
+        '<div class="drawer-actions">' +
+          '<div class="field" style="flex-direction:row;align-items:center;"><label for="d-status">Set status</label><select id="d-status">' + opts + '</select></div>' +
+          '<button type="button" class="btn btn-primary btn-sm" id="d-save">Save</button>' +
+          '<a class="btn btn-outline btn-sm" href="../order.html?id=' + encodeURIComponent(o.id) + '" target="_blank" rel="noopener">Customer view</a>' +
+        '</div>';
+      document.getElementById("d-save").addEventListener("click", function () { saveStatus(o); });
+      document.getElementById("drawer").classList.add("open");
+      document.getElementById("drawer").setAttribute("aria-hidden", "false");
+      document.getElementById("backdrop").classList.add("open");
+    }
+
+    function closeDrawer() {
+      document.getElementById("drawer").classList.remove("open");
+      document.getElementById("drawer").setAttribute("aria-hidden", "true");
+      document.getElementById("backdrop").classList.remove("open");
+    }
+
+    async function saveStatus(o) {
+      var next = document.getElementById("d-status").value;
+      if (next === o.status) { closeDrawer(); return; }
+      var btn = document.getElementById("d-save");
+      btn.disabled = true;
+      var res = await window.IBDB.from("orders").update({ status: next }).eq("id", o.id).select().single();
+      btn.disabled = false;
+      if (res.error) { console.error(res.error); A.toast("Couldn't update order.", true); return; }
+      o.status = res.data.status;
+      A.toast("Order " + o.id.slice(0, 8) + " marked " + o.status + ".");
+      render();
+      closeDrawer();
+    }
+
+    async function load() {
+      var res = await window.IBDB.from("orders").select("*, order_items(*)").order("created_at", { ascending: false });
+      if (res.error) throw res.error;
+      all = res.data || [];
+      render();
+      var open = new URLSearchParams(location.search).get("open");
+      if (open) openDrawer(open);
+    }
+
+    document.getElementById("filters").addEventListener("click", function (e) {
+      var chip = e.target.closest(".filter-chip");
+      if (!chip) return;
+      status = chip.dataset.status;
+      document.querySelectorAll(".filter-chip").forEach(function (c) { c.classList.toggle("active", c === chip); });
+      render();
+    });
+    document.querySelectorAll(".filter-chip").forEach(function (c) { c.classList.toggle("active", c.dataset.status === status); });
+    document.getElementById("search").addEventListener("input", function (e) { search = e.target.value.trim().toLowerCase(); render(); });
+    document.getElementById("rows").addEventListener("click", function (e) {
+      var tr = e.target.closest("tr[data-id]");
+      if (tr) openDrawer(tr.dataset.id);
+    });
+    document.getElementById("d-close").addEventListener("click", closeDrawer);
+    document.getElementById("backdrop").addEventListener("click", closeDrawer);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDrawer(); });
+
+    A.requireAdmin().then(function (user) {
+      if (!user) return;
+      load().catch(function (e) {
+        console.error("Orders load failed", e);
+        document.getElementById("rows").innerHTML = '<tr><td colspan="6" class="muted">Couldn\'t load orders. Refresh to retry.</td></tr>';
+      });
+    });
+  })();
+</script>
+</body>
+</html>

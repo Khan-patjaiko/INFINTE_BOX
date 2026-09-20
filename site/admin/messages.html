@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Messages — Infinite Box Admin</title>
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="admin-page">
+    <div class="container">
+      <div class="admin-head">
+        <div><p class="eyebrow">Admin</p><h1>Messages</h1></div>
+        <p class="grid-status" id="count"></p>
+      </div>
+
+      <div class="admin-toolbar" id="filters">
+        <button type="button" class="filter-chip active" data-filter="">All</button>
+        <button type="button" class="filter-chip" data-filter="unread">Unread</button>
+        <button type="button" class="filter-chip" data-filter="read">Read</button>
+        <input type="search" id="search" placeholder="Search name, email or subject…" style="margin-left:auto;">
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>From</th><th>Subject</th><th>Message</th><th>Date</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="drawer-backdrop" id="backdrop"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head"><h2 id="d-title">Message</h2><button type="button" class="drawer-close" id="d-close" aria-label="Close">×</button></div>
+  <div id="d-body"></div>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/products.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+  (function () {
+    var A = window.IBAdmin;
+    var all = [];
+    var filter = "";
+    var search = "";
+
+    function render() {
+      var list = all.filter(function (m) {
+        if (filter === "unread" && m.is_read) return false;
+        if (filter === "read" && !m.is_read) return false;
+        if (search && (m.name + " " + m.email + " " + (m.subject || "")).toLowerCase().indexOf(search) === -1) return false;
+        return true;
+      });
+      var unread = all.filter(function (m) { return !m.is_read; }).length;
+      document.getElementById("count").textContent = list.length + " of " + all.length + " messages · " + unread + " unread";
+      var tb = document.getElementById("rows");
+      tb.innerHTML = list.length ? list.map(function (m) {
+        var preview = (m.message || "").replace(/\s+/g, " ").slice(0, 80);
+        return '<tr data-id="' + m.id + '"' + (m.is_read ? "" : ' class="unread"') + '>' +
+          '<td>' + ibEscape(m.name) + '<br><span class="muted">' + ibEscape(m.email) + '</span></td>' +
+          '<td>' + ibEscape(m.subject || "(no subject)") + '</td>' +
+          '<td class="muted">' + ibEscape(preview) + (m.message && m.message.length > 80 ? "…" : "") + '</td>' +
+          '<td class="muted" style="white-space:nowrap;">' + A.date(m.created_at) + '</td></tr>';
+      }).join("") : '<tr><td colspan="4" class="muted">No messages match.</td></tr>';
+    }
+
+    async function setRead(m, isRead) {
+      var res = await window.IBDB.from("contact_messages").update({ is_read: isRead }).eq("id", m.id).select().single();
+      if (res.error) { console.error(res.error); A.toast("Couldn't update message.", true); return false; }
+      m.is_read = res.data.is_read;
+      render();
+      return true;
+    }
+
+    function openDrawer(id) {
+      var m = all.find(function (x) { return x.id === id; });
+      if (!m) return;
+      document.getElementById("d-title").textContent = m.subject || "(no subject)";
+      var replySubject = encodeURIComponent("Re: " + (m.subject || "your message to Infinite Box"));
+      document.getElementById("d-body").innerHTML =
+        '<dl class="kv">' +
+          '<dt>From</dt><dd>' + ibEscape(m.name) + ' &lt;<a href="mailto:' + ibEscape(m.email) + '">' + ibEscape(m.email) + '</a>&gt;</dd>' +
+          '<dt>Received</dt><dd>' + A.date(m.created_at, true) + '</dd>' +
+        '</dl>' +
+        '<div class="pre">' + ibEscape(m.message) + '</div>' +
+        '<div class="drawer-actions">' +
+          '<a class="btn btn-primary btn-sm" href="mailto:' + ibEscape(m.email) + '?subject=' + replySubject + '">Reply by email</a>' +
+          '<button type="button" class="btn btn-outline btn-sm" id="d-toggle">' + (m.is_read ? "Mark as unread" : "Mark as read") + '</button>' +
+        '</div>';
+      document.getElementById("d-toggle").addEventListener("click", async function () {
+        if (await setRead(m, !m.is_read)) closeDrawer();
+      });
+      document.getElementById("drawer").classList.add("open");
+      document.getElementById("drawer").setAttribute("aria-hidden", "false");
+      document.getElementById("backdrop").classList.add("open");
+      // Opening a message marks it read.
+      if (!m.is_read) setRead(m, true);
+    }
+
+    function closeDrawer() {
+      document.getElementById("drawer").classList.remove("open");
+      document.getElementById("drawer").setAttribute("aria-hidden", "true");
+      document.getElementById("backdrop").classList.remove("open");
+    }
+
+    async function load() {
+      var res = await window.IBDB.from("contact_messages").select("*").order("created_at", { ascending: false });
+      if (res.error) throw res.error;
+      all = res.data || [];
+      render();
+      var open = new URLSearchParams(location.search).get("open");
+      if (open) openDrawer(open);
+    }
+
+    document.getElementById("filters").addEventListener("click", function (e) {
+      var chip = e.target.closest(".filter-chip");
+      if (!chip) return;
+      filter = chip.dataset.filter;
+      document.querySelectorAll(".filter-chip").forEach(function (c) { c.classList.toggle("active", c === chip); });
+      render();
+    });
+    document.getElementById("search").addEventListener("input", function (e) { search = e.target.value.trim().toLowerCase(); render(); });
+    document.getElementById("rows").addEventListener("click", function (e) {
+      var tr = e.target.closest("tr[data-id]");
+      if (tr) openDrawer(tr.dataset.id);
+    });
+    document.getElementById("d-close").addEventListener("click", closeDrawer);
+    document.getElementById("backdrop").addEventListener("click", closeDrawer);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDrawer(); });
+
+    A.requireAdmin().then(function (user) {
+      if (!user) return;
+      load().catch(function (e) {
+        console.error("Messages load failed", e);
+        document.getElementById("rows").innerHTML = '<tr><td colspan="4" class="muted">Couldn\'t load messages. Refresh to retry.</td></tr>';
+      });
+    });
+  })();
+</script>
+</body>
+</html>

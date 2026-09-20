@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Overview — Infinite Box Admin</title>
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="admin-page">
+    <div class="container">
+      <div class="admin-head">
+        <div>
+          <p class="eyebrow">Admin</p>
+          <h1>Overview</h1>
+        </div>
+        <p class="grid-status" id="admin-greeting"></p>
+      </div>
+
+      <div class="stat-grid" id="stats">
+        <a class="stat-card" href="orders.html?status=paid"><p class="stat-label">Orders to fulfil</p><p class="stat-value">–</p><p class="stat-sub">paid, not shipped</p></a>
+        <a class="stat-card" href="quotes.html?status=new"><p class="stat-label">New quotes</p><p class="stat-value">–</p><p class="stat-sub">awaiting a price</p></a>
+        <a class="stat-card" href="messages.html"><p class="stat-label">Unread messages</p><p class="stat-value">–</p><p class="stat-sub">contact form</p></a>
+        <a class="stat-card" href="orders.html"><p class="stat-label">Revenue (30d)</p><p class="stat-value">–</p><p class="stat-sub">paid + fulfilled</p></a>
+      </div>
+
+      <div class="admin-head"><h2>Recent orders</h2><a class="btn btn-outline btn-sm" href="orders.html">All orders</a></div>
+      <div class="admin-table-wrap" style="margin-bottom:var(--space-5);">
+        <table class="admin-table">
+          <thead><tr><th>Order</th><th>Customer</th><th>Status</th><th class="num">Total</th><th>Date</th></tr></thead>
+          <tbody id="recent-orders"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="admin-head"><h2>Recent quote requests</h2><a class="btn btn-outline btn-sm" href="quotes.html">All quotes</a></div>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Name</th><th>Material</th><th class="num">Qty</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody id="recent-quotes"><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/products.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+  (function () {
+    var A = window.IBAdmin;
+
+    function setStat(i, value, sub) {
+      var card = document.querySelectorAll("#stats .stat-card")[i];
+      card.querySelector(".stat-value").textContent = value;
+      if (sub) card.querySelector(".stat-sub").textContent = sub;
+    }
+
+    function rowClick(tbody, page) {
+      tbody.addEventListener("click", function (e) {
+        var tr = e.target.closest("tr[data-id]");
+        if (tr) window.location.href = page + "?open=" + encodeURIComponent(tr.dataset.id);
+      });
+    }
+
+    async function load() {
+      var db = window.IBDB;
+      var since = new Date(Date.now() - 30 * 864e5).toISOString();
+      var results = await Promise.all([
+        db.from("orders").select("id", { count: "exact", head: true }).eq("status", "paid"),
+        db.from("quote_requests").select("id", { count: "exact", head: true }).eq("status", "new"),
+        db.from("contact_messages").select("id", { count: "exact", head: true }).eq("is_read", false),
+        db.from("orders").select("total_cents").in("status", ["paid", "fulfilled"]).gte("created_at", since),
+        db.from("orders").select("id,email,status,total_cents,created_at").order("created_at", { ascending: false }).limit(8),
+        db.from("quote_requests").select("id,name,material,quantity,status,created_at").order("created_at", { ascending: false }).limit(8)
+      ]);
+      var err = results.find(function (r) { return r.error; });
+      if (err) throw err.error;
+
+      setStat(0, results[0].count || 0);
+      setStat(1, results[1].count || 0);
+      setStat(2, results[2].count || 0);
+      var rev = (results[3].data || []).reduce(function (s, o) { return s + (o.total_cents || 0); }, 0);
+      setStat(3, A.money(rev), (results[3].data || []).length + " orders in the last 30 days");
+
+      var ob = document.getElementById("recent-orders");
+      var orders = results[4].data || [];
+      ob.innerHTML = orders.length ? orders.map(function (o) {
+        return '<tr data-id="' + o.id + '"><td>' + ibEscape(o.id.slice(0, 8)) + '</td><td>' + ibEscape(o.email) + '</td><td>' + A.statusBadge(o.status) + '</td><td class="num">' + A.money(o.total_cents) + '</td><td class="muted">' + A.date(o.created_at) + '</td></tr>';
+      }).join("") : '<tr><td colspan="5" class="muted">No orders yet.</td></tr>';
+      rowClick(ob, "orders.html");
+
+      var qb = document.getElementById("recent-quotes");
+      var quotes = results[5].data || [];
+      qb.innerHTML = quotes.length ? quotes.map(function (q) {
+        return '<tr data-id="' + q.id + '"><td>' + ibEscape(q.name) + '</td><td>' + ibEscape(q.material || "—") + '</td><td class="num">' + (q.quantity || "—") + '</td><td>' + A.statusBadge(q.status) + '</td><td class="muted">' + A.date(q.created_at) + '</td></tr>';
+      }).join("") : '<tr><td colspan="5" class="muted">No quote requests yet.</td></tr>';
+      rowClick(qb, "quotes.html");
+    }
+
+    A.requireAdmin().then(function (user) {
+      if (!user) return;
+      document.getElementById("admin-greeting").textContent = "Signed in as " + user.email;
+      load().catch(function (e) {
+        console.error("Overview load failed", e);
+        A.toast("Couldn't load dashboard data.", true);
+      });
+    });
+  })();
+</script>
+</body>
+</html>

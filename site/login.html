@@ -60,7 +60,8 @@
   function nextTarget() {
     var params = new URLSearchParams(location.search);
     var next = params.get("next");
-    return (next && /^[a-zA-Z0-9_-]+\.html$/.test(next)) ? next : "account.html";
+    // Same-site pages only: "account.html" or "admin/orders.html" — never absolute/../ URLs.
+    return (next && /^(admin\/)?[a-zA-Z0-9_-]+\.html$/.test(next)) ? next : "account.html";
   }
 
   // If already signed in, skip the form.

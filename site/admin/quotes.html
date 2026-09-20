@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Quotes — Infinite Box Admin</title>
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="admin-page">
+    <div class="container">
+      <div class="admin-head">
+        <div><p class="eyebrow">Admin</p><h1>Quote requests</h1></div>
+        <p class="grid-status" id="count"></p>
+      </div>
+
+      <div class="admin-toolbar" id="filters">
+        <button type="button" class="filter-chip active" data-status="">All</button>
+        <button type="button" class="filter-chip" data-status="new">New</button>
+        <button type="button" class="filter-chip" data-status="quoted">Quoted</button>
+        <button type="button" class="filter-chip" data-status="accepted">Accepted</button>
+        <button type="button" class="filter-chip" data-status="closed">Closed</button>
+        <input type="search" id="search" placeholder="Search name or email…" style="margin-left:auto;">
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead><tr><th>Name</th><th>Email</th><th>Material</th><th class="num">Qty</th><th>File</th><th>Status</th><th class="num">Quoted</th><th>Date</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="8" class="muted">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="drawer-backdrop" id="backdrop"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="drawer-head"><h2 id="d-title">Quote</h2><button type="button" class="drawer-close" id="d-close" aria-label="Close">×</button></div>
+  <div id="d-body"></div>
+</aside>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/products.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+  (function () {
+    var A = window.IBAdmin;
+    var STATUSES = ["new", "quoted", "accepted", "closed"];
+    var all = [];
+    var status = new URLSearchParams(location.search).get("status") || "";
+    var search = "";
+
+    function render() {
+      var list = all.filter(function (q) {
+        if (status && q.status !== status) return false;
+        if (search && (q.name + " " + q.email).toLowerCase().indexOf(search) === -1) return false;
+        return true;
+      });
+      document.getElementById("count").textContent = list.length + " of " + all.length + " requests";
+      var tb = document.getElementById("rows");
+      tb.innerHTML = list.length ? list.map(function (q) {
+        return '<tr data-id="' + q.id + '"' + (q.status === "new" ? ' class="unread"' : "") + '>' +
+          '<td>' + ibEscape(q.name) + '</td>' +
+          '<td class="muted">' + ibEscape(q.email) + '</td>' +
+          '<td>' + ibEscape(q.material || "—") + '</td>' +
+          '<td class="num">' + (q.quantity || "—") + '</td>' +
+          '<td class="muted">' + (q.file_url ? "📎" : "—") + '</td>' +
+          '<td>' + A.statusBadge(q.status) + '</td>' +
+          '<td class="num">' + (q.quoted_price_cents != null ? A.money(q.quoted_price_cents) : "—") + '</td>' +
+          '<td class="muted">' + A.date(q.created_at) + '</td></tr>';
+      }).join("") : '<tr><td colspan="8" class="muted">No quote requests match.</td></tr>';
+    }
+
+    function openDrawer(id) {
+      var q = all.find(function (x) { return x.id === id; });
+      if (!q) return;
+      document.getElementById("d-title").textContent = "Quote from " + q.name;
+      var opts = STATUSES.map(function (s) {
+        return '<option value="' + s + '"' + (s === q.status ? " selected" : "") + '>' + s + '</option>';
+      }).join("");
+      var fileHTML = q.file_url
+        ? '<button type="button" class="btn btn-outline btn-sm" id="d-file">Download design file</button> <span class="muted" style="font-size:12px;">' + ibEscape(q.file_url) + '</span>'
+        : '<span class="muted">No file attached</span>';
+      document.getElementById("d-body").innerHTML =
+        '<dl class="kv">' +
+          '<dt>Status</dt><dd>' + A.statusBadge(q.status) + '</dd>' +
+          '<dt>Received</dt><dd>' + A.date(q.created_at, true) + '</dd>' +
+          '<dt>Email</dt><dd><a href="mailto:' + ibEscape(q.email) + '?subject=' + encodeURIComponent("Your Infinite Box quote") + '">' + ibEscape(q.email) + '</a>' + (q.user_id ? "" : ' <span class="muted">(guest)</span>') + '</dd>' +
+          '<dt>Material</dt><dd>' + ibEscape(q.material || "—") + '</dd>' +
+          '<dt>Quantity</dt><dd>' + (q.quantity || "—") + '</dd>' +
+          '<dt>File</dt><dd>' + fileHTML + '</dd>' +
+        '</dl>' +
+        '<h3 style="font-size:14px;margin-bottom:8px;">Details</h3>' +
+        '<div class="pre">' + (q.details ? ibEscape(q.details) : '<span class="muted">No details given.</span>') + '</div>' +
+        '<div class="form-grid two" style="margin-top:var(--space-4);">' +
+          '<div class="field"><label for="d-status">Status</label><select id="d-status">' + opts + '</select></div>' +
+          '<div class="field"><label for="d-price">Quoted price (USD)</label><input type="number" id="d-price" min="0" step="0.01" placeholder="0.00" value="' + (q.quoted_price_cents != null ? (q.quoted_price_cents / 100).toFixed(2) : "") + '"></div>' +
+          '<div class="field span-2"><label for="d-note">Internal note</label><textarea id="d-note" rows="3" style="min-height:80px;">' + ibEscape(q.admin_note || "") + '</textarea></div>' +
+        '</div>' +
+        '<div class="drawer-actions"><button type="button" class="btn btn-primary btn-sm" id="d-save">Save</button></div>';
+      document.getElementById("d-save").addEventListener("click", function () { save(q); });
+      var fileBtn = document.getElementById("d-file");
+      if (fileBtn) fileBtn.addEventListener("click", async function () {
+        fileBtn.disabled = true;
+        try {
+          var url = await A.signedUrl(q.file_url);
+          window.open(url, "_blank", "noopener");
+        } catch (e) {
+          console.error(e);
+          A.toast("Couldn't create download link.", true);
+        }
+        fileBtn.disabled = false;
+      });
+      document.getElementById("drawer").classList.add("open");
+      document.getElementById("drawer").setAttribute("aria-hidden", "false");
+      document.getElementById("backdrop").classList.add("open");
+    }
+
+    function closeDrawer() {
+      document.getElementById("drawer").classList.remove("open");
+      document.getElementById("drawer").setAttribute("aria-hidden", "true");
+      document.getElementById("backdrop").classList.remove("open");
+    }
+
+    async function save(q) {
+      var priceStr = document.getElementById("d-price").value.trim();
+      var patch = {
+        status: document.getElementById("d-status").value,
+        quoted_price_cents: priceStr === "" ? null : Math.round(parseFloat(priceStr) * 100),
+        admin_note: document.getElementById("d-note").value.trim() || null
+      };
+      if (patch.quoted_price_cents != null && !(patch.quoted_price_cents >= 0)) { A.toast("Enter a valid price.", true); return; }
+      var btn = document.getElementById("d-save");
+      btn.disabled = true;
+      var res = await window.IBDB.from("quote_requests").update(patch).eq("id", q.id).select().single();
+      btn.disabled = false;
+      if (res.error) { console.error(res.error); A.toast("Couldn't save quote.", true); return; }
+      Object.assign(q, res.data);
+      A.toast("Quote saved.");
+      render();
+      closeDrawer();
+    }
+
+    async function load() {
+      var res = await window.IBDB.from("quote_requests").select("*").order("created_at", { ascending: false });
+      if (res.error) throw res.error;
+      all = res.data || [];
+      render();
+      var open = new URLSearchParams(location.search).get("open");
+      if (open) openDrawer(open);
+    }
+
+    document.getElementById("filters").addEventListener("click", function (e) {
+      var chip = e.target.closest(".filter-chip");
+      if (!chip) return;
+      status = chip.dataset.status;
+      document.querySelectorAll(".filter-chip").forEach(function (c) { c.classList.toggle("active", c === chip); });
+      render();
+    });
+    document.querySelectorAll(".filter-chip").forEach(function (c) { c.classList.toggle("active", c.dataset.status === status); });
+    document.getElementById("search").addEventListener("input", function (e) { search = e.target.value.trim().toLowerCase(); render(); });
+    document.getElementById("rows").addEventListener("click", function (e) {
+      var tr = e.target.closest("tr[data-id]");
+      if (tr) openDrawer(tr.dataset.id);
+    });
+    document.getElementById("d-close").addEventListener("click", closeDrawer);
+    document.getElementById("backdrop").addEventListener("click", closeDrawer);
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDrawer(); });
+
+    A.requireAdmin().then(function (user) {
+      if (!user) return;
+      load().catch(function (e) {
+        console.error("Quotes load failed", e);
+        document.getElementById("rows").innerHTML = '<tr><td colspan="8" class="muted">Couldn\'t load quotes. Refresh to retry.</td></tr>';
+      });
+    });
+  })();
+</script>
+</body>
+</html>

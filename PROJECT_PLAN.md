@@ -15,7 +15,7 @@ but nothing uploaded).
 | Area | Status |
 |---|---|
 | Static site design (14 pages, dark theme, design tokens) | ✅ Done |
-| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, seed (8 migrations) | ✅ Done, advisor clean |
+| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, seed (9 migrations) | ✅ Done, advisor clean |
 | Live product catalogue from DB (index/shop/product/cart) | ✅ Done |
 | Cart (localStorage) | ✅ Done |
 | Custom quote form → `submit-quote` Edge Function + file upload | ✅ Live, verified |
@@ -29,11 +29,11 @@ but nothing uploaded).
 | Git | ⚠️ Local `main` is **ahead of `origin/main`** (not pushed) as of 2026-09-19 |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
 | Real product photography | ❌ None (SVG placeholders; frontend ready for `image_url`) |
-| Admin UI (manage products/orders/quotes) | ❌ None — DB has `is_admin` + policies, no page |
+| Admin UI (`site/admin/` — overview, orders, quotes, messages, products) | ⚠️ **Built 2026-09-20**, migration 0009 applied; needs `is_admin = true` on a profile + a signed-in end-to-end test |
 | Email notifications (order confirmation, new quote alert) | ❌ None |
 | Coming-soon page email capture | ❌ localStorage only, not a real list |
 
-**Immediate blockers on the user side:** (1) product photos, (2) upload `site/` to Hostinger
+**Immediate blockers on the user side:** (1) product photos, (2) grant `is_admin` to your account and test `site/admin/`, (3) upload `site/` to Hostinger
 `public_html` and point the domain at it.
 
 ---
@@ -54,11 +54,18 @@ E-Commerce Web/
 │   ├── account.html               Auth-guarded: profile + order history (cards link to order.html)
 │   ├── order.html?id=<uuid> or ?session_id=<cs_...>  Single-order status (items, total, shipping address)
 │   ├── success.html · cancel.html Stripe return pages (success.html has a "My order" button → order.html)
+│   ├── admin/                     Admin dashboard (guarded by profiles.is_admin; own header via admin.js, noindex)
+│   │   ├── index.html             Overview: counts (to-fulfil, new quotes, unread, 30d revenue) + recent orders/quotes
+│   │   ├── orders.html            Filter/search, drawer with items + address, change status
+│   │   ├── quotes.html            Filter/search, drawer with details, signed-URL file download, status/quoted price/note
+│   │   ├── messages.html          Contact inbox, read/unread, mailto reply
+│   │   └── products.html          CRUD on products incl. photo upload to product-images, specs editor, active toggle
 │   └── assets/
 │       ├── css/styles.css         Single stylesheet, HSL tokens, --space-* scale
 │       ├── js/config.js           Supabase URL + anon key (public)
 │       ├── js/supabase-client.js  window.IBDB
 │       ├── js/auth.js             window.IBAuth (signUp/signIn/signInWithGoogle/signOut/requireUser/refreshHeader)
+│       ├── js/admin.js            window.IBAdmin (requireAdmin/money/date/statusBadge/toast/signedUrl) + admin header
 │       ├── js/products.js         loadProducts()/getProduct() + shared render helpers
 │       ├── js/icons.js            SVG placeholder icons
 │       ├── js/main.js             window.IB cart API, mobile nav
@@ -66,7 +73,7 @@ E-Commerce Web/
 │       └── img/                   icon-/logo- dark/light PNGs
 ├── supabase/                      ← backend source of truth (mirrors hosted project)
 │   ├── config.toml                project id, verify_jwt=false per function
-│   ├── migrations/*.sql           8 migrations (same versions as production)
+│   ├── migrations/*.sql           9 migrations (same versions as production)
 │   └── functions/<name>/index.ts  submit-quote · create-checkout-session · stripe-webhook · get-order
 ├── docs/ARCHITECTURE.md           Four-layer architecture reference
 ├── coming-soon/index.html         Standalone pre-launch page (separate deploy, no backend)
@@ -75,9 +82,9 @@ E-Commerce Web/
 └── HANDOVER*.md                   Session history
 
 Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
-├── Tables: profiles, products, orders, order_items, quote_requests, contact_messages, store_settings (RLS on all)
+├── Tables: profiles, products, orders, order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (RLS on all; admins can update orders/quotes/messages)
 ├── Helper: private.is_admin()
-├── Storage: product-images (public read), custom-uploads (private)
+├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
 ├── Auth: email/password (confirmation on), Google OAuth
 └── Edge Functions: submit-quote ✅ · create-checkout-session ✅ (v5, reads shipping fee from `store_settings`) · stripe-webhook ✅ · get-order ✅ (v1, returns a single order for its owner or by Stripe session id)
 
@@ -85,8 +92,7 @@ Nav: Shop · Custom Orders · About · Account/Log in · Cart · Shop Now
 Footer: Shop (All Products / Custom Orders / Materials) · Company (About / Contact / FAQ)
 ```
 
-**Planned additions (later phases):** `site/admin/` (products, orders, quotes dashboard),
-optional `privacy.html` / `terms.html` (required for Stripe live mode + Google OAuth
+**Planned additions (later phases):** optional `privacy.html` / `terms.html` (required for Stripe live mode + Google OAuth
 verification).
 
 ---
@@ -135,15 +141,17 @@ Goal: clean state, everything known-good.
 - [ ] Add `privacy.html` and `terms.html` + footer links (Stripe live mode and Google OAuth app verification both want these).
 - [ ] Turn coming-soon email capture into a real list (Mailchimp/Brevo) **or** drop the page.
 
-### Phase 11 — Admin dashboard (new build, ~2 sessions)
+### Phase 11 — Admin dashboard (built 2026-09-20; needs an admin account to verify)
 Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces it server-side).
-- [ ] `site/admin/index.html` — overview: recent orders, new quotes, unread messages.
-- [ ] `site/admin/products.html` — CRUD on `products` (name, price, category, specs, active, image upload to bucket).
-- [ ] `site/admin/orders.html` — list + status change (`paid → fulfilled`), view items/address.
-- [ ] `site/admin/quotes.html` — list `quote_requests`, download design file (signed URL via service role or admin storage policy), set status/quoted price.
-- [ ] `site/admin/messages.html` — `contact_messages` inbox.
-- [ ] Guard: `IBAuth.requireAdmin()` in `auth.js` (redirect non-admins); mark the owner's profile `is_admin = true` via SQL.
-- [ ] Optional: storage policy so admins can read `custom-uploads` directly from the client.
+- [x] `site/admin/index.html` — overview: to-fulfil / new-quote / unread counts, 30-day revenue, recent orders + quotes.
+- [x] `site/admin/products.html` — CRUD on `products` (name, slug, price, category, material, description, specs, icon, sort, active, photo upload to `product-images`).
+- [x] `site/admin/orders.html` — filter/search, drawer with items + shipping address + Stripe ids, status change (`paid → fulfilled` etc.).
+- [x] `site/admin/quotes.html` — filter/search, drawer with details, design-file download via signed URL, set status / quoted price / internal note.
+- [x] `site/admin/messages.html` — `contact_messages` inbox with read/unread and mailto reply.
+- [x] Guard: `IBAdmin.requireAdmin()` in `assets/js/admin.js` (signed out → `login.html?next=admin/…`; signed in but not admin → friendly message). `login.html` now accepts `next=admin/<page>.html`.
+- [x] Migration 0009 (`admin_access`): admin UPDATE policies on orders/quote_requests/contact_messages, `quote_requests.quoted_price_cents` + `admin_note`, `contact_messages.is_read`, admin SELECT on `custom-uploads` storage objects.
+- [ ] **Mark an owner profile `is_admin = true`** — `update public.profiles set is_admin = true where email = '<you>';` (Claude's attempt to do this for the test user was blocked by permissions — user to run or approve).
+- [ ] Signed-in end-to-end test of all five pages (Claude verified: no script errors, redirect-to-login works; the admin views themselves are untested until an admin exists).
 
 ### Phase 12 — Notifications & customer experience
 - [ ] Email on order paid (customer receipt) and on new quote/contact (owner alert) — Resend (or similar) called from `stripe-webhook` / `submit-quote` Edge Functions; API key as a secret.
@@ -171,7 +179,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 ## Suggested execution order
 
 1. **Phase 7** — now, no blockers.
-2. **Phase 11 (admin)** can start immediately in parallel with waiting on Stripe/Hostinger — it's pure code and unblocks the owner from needing the Supabase dashboard to manage products/quotes.
+2. **Phase 11 (admin)** — built; verify with an admin account, then it replaces the Supabase dashboard for day-to-day product/order/quote management.
 3. **Phase 9** next — Hostinger is paid for and ready, just needs `site/` uploaded.
 4. **Phase 10 → 12 → 13** toward launch.
 
