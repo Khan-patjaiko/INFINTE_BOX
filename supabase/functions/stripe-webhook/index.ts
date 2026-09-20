@@ -56,6 +56,9 @@ Deno.serve(async (req) => {
         }
         const { error } = await admin.from("orders").update(update).eq("id", orderId);
         if (error) throw error;
+        // Reduce stock for the items sold (idempotent per order; see migration 0011).
+        const { error: stockErr } = await admin.rpc("decrement_order_stock", { p_order_id: orderId });
+        if (stockErr) throw stockErr;
       }
     } else if (event.type === "checkout.session.expired") {
       const session = event.data.object as Stripe.Checkout.Session;

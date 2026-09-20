@@ -64,22 +64,28 @@
           '<p class="pd-price">' + formatPrice(p.price) + '</p>' +
           '<p class="pd-desc">' + ibEscape(p.description) + '</p>' +
           '<div class="pd-meta">' + specsHtml + '</div>' +
-          '<div class="pd-actions">' +
-            '<div class="qty-input"><button type="button" data-qty="-1">−</button><input type="text" id="qty" value="1" readonly><button type="button" data-qty="1">+</button></div>' +
-            '<button class="btn btn-primary" id="add-to-cart-btn">Add to Cart</button>' +
-          '</div>' +
-          '<p class="add-msg" id="add-msg">Added to cart.</p>' +
+          (p.soldOut
+            ? '<div class="pd-actions"><span class="btn btn-outline pd-sold-out" aria-disabled="true">Sold out</span></div>' +
+              '<p class="form-note">This item is currently out of stock. <a href="custom.html" style="text-decoration:underline;">Request a custom order</a> or check back soon.</p>'
+            : '<div class="pd-actions">' +
+                '<div class="qty-input"><button type="button" data-qty="-1">−</button><input type="text" id="qty" value="1" readonly><button type="button" data-qty="1">+</button></div>' +
+                '<button class="btn btn-primary" id="add-to-cart-btn">Add to Cart</button>' +
+              '</div>' +
+              (p.stock <= 5 ? '<p class="form-note pd-low-stock">Only ' + p.stock + ' left in stock.</p>' : "") +
+              '<p class="add-msg" id="add-msg">Added to cart.</p>') +
         '</div>';
 
       var qtyInput = document.getElementById("qty");
       document.querySelectorAll("[data-qty]").forEach(function (btn) {
         btn.addEventListener("click", function () {
-          var val = Math.max(1, parseInt(qtyInput.value, 10) + parseInt(btn.dataset.qty, 10));
+          // Clamp to what is actually in stock (the cart and server enforce this too).
+          var val = Math.min(p.stock, Math.max(1, parseInt(qtyInput.value, 10) + parseInt(btn.dataset.qty, 10)));
           qtyInput.value = val;
         });
       });
 
-      document.getElementById("add-to-cart-btn").addEventListener("click", function () {
+      var addBtn = document.getElementById("add-to-cart-btn");
+      if (addBtn) addBtn.addEventListener("click", function () {
         IB.addToCart(p.id, parseInt(qtyInput.value, 10));
         var msg = document.getElementById("add-msg");
         msg.classList.add("show");

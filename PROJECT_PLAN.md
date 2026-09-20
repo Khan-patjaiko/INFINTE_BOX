@@ -15,7 +15,7 @@ but nothing uploaded).
 | Area | Status |
 |---|---|
 | Static site design (14 pages, dark theme, design tokens) | ✅ Done |
-| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, seed (10 migrations) | ✅ Done, advisor clean |
+| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, seed (11 migrations) | ✅ Done, advisor clean |
 | Live product catalogue from DB (index/shop/product/cart) | ✅ Done |
 | Cart (localStorage) | ✅ Done |
 | Custom quote form → `submit-quote` Edge Function + file upload | ✅ Live, verified |
@@ -73,7 +73,7 @@ E-Commerce Web/
 │       └── img/                   icon-/logo- dark/light PNGs
 ├── supabase/                      ← backend source of truth (mirrors hosted project)
 │   ├── config.toml                project id, verify_jwt=false per function
-│   ├── migrations/*.sql           10 migrations (same versions as production)
+│   ├── migrations/*.sql           11 migrations (same versions as production)
 │   └── functions/<name>/index.ts  submit-quote · create-checkout-session · stripe-webhook · get-order
 ├── docs/ARCHITECTURE.md           Four-layer architecture reference
 ├── coming-soon/index.html         Standalone pre-launch page (separate deploy, no backend)
@@ -82,11 +82,11 @@ E-Commerce Web/
 └── HANDOVER*.md                   Session history
 
 Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
-├── Tables: profiles, products (+stock), orders, order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (RLS on all; admins can update orders/quotes/messages)
+├── Tables: profiles, products (+stock), orders (+stock_applied_at), order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (RLS on all; admins can update orders/quotes/messages)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
 ├── Auth: email/password (confirmation on), Google OAuth
-└── Edge Functions: submit-quote ✅ · create-checkout-session ✅ (v5, reads shipping fee from `store_settings`) · stripe-webhook ✅ · get-order ✅ (v1, returns a single order for its owner or by Stripe session id)
+└── Edge Functions: submit-quote ✅ · create-checkout-session ✅ (v6: shipping fee from `store_settings`, refuses over-stock carts with 409) · stripe-webhook ✅ (v5: also calls `decrement_order_stock` on paid) · get-order ✅ (v1, returns a single order for its owner or by Stripe session id)
 
 Nav: Shop · Custom Orders · About · Account/Log in · Cart · Shop Now
 Footer: Shop (All Products / Custom Orders / Materials) · Company (About / Contact / FAQ)
@@ -145,6 +145,8 @@ Goal: clean state, everything known-good.
 Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces it server-side).
 - [x] `site/admin/index.html` — overview: to-fulfil / new-quote / unread counts, 30-day revenue, recent orders + quotes.
 - [x] `site/admin/products.html` — CRUD on `products` (name, slug, price, category, material, description, specs, icon, stock, sort, active, photo upload to `product-images`). Stock column added 2026-09-20 (migration 0010, `products.stock`, default 0; red badge at 0, amber at ≤5).
+- [x] **Stock enforcement** (2026-09-20): shop cards show a "Sold out" pill + dimmed thumb; product page swaps Add-to-cart for a disabled "Sold out" button and clamps qty to stock ("Only N left" at ≤5); cart clamps quantities, flags sold-out rows, excludes them from the subtotal and disables Checkout; `create-checkout-session` v6 returns 409 with a readable message if any line exceeds stock (cart shows that message and refreshes); `stripe-webhook` v5 calls `decrement_order_stock` (migration 0011: SECURITY DEFINER, service_role only, idempotent via `orders.stock_applied_at`, floors at 0). Verified end-to-end in the preview + SQL.
+- [ ] **Set real stock values in Admin → Products** — every product starts at 0, so the whole store shows *Sold out* until you enter counts (Custom Enclosure is at 2 after testing).
 - [x] `site/admin/orders.html` — filter/search, drawer with items + shipping address + Stripe ids, status change (`paid → fulfilled` etc.).
 - [x] `site/admin/quotes.html` — filter/search, drawer with details, design-file download via signed URL, set status / quoted price / internal note.
 - [x] `site/admin/messages.html` — `contact_messages` inbox with read/unread and mailto reply.
@@ -170,7 +172,6 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 
 ### Backlog / ideas (not scheduled)
 - Product search, product variants (size/colour/material options).
-- Stock enforcement: hide or disable "Add to cart" when `products.stock = 0`, and decrement stock in `stripe-webhook` on `checkout.session.completed` (the column exists and is editable in admin; nothing reads it on the storefront yet).
 - Discount codes (Stripe Coupons).
 - Multi-currency (site is USD; business appears Thailand-based — confirm currency + Stripe country support).
 - PWA / offline cart, analytics (Plausible/GA4), reviews.

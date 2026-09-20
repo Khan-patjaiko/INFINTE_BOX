@@ -73,12 +73,15 @@ Deno.serve(async (req) => {
     const bySlug = new Map((products ?? []).map((p: { slug: string }) => [p.slug, p]));
     const lineItems: unknown[] = [];
     const orderItems: { product_id: string; name: string; unit_price_cents: number; qty: number }[] = [];
+    const soldOut: string[] = [];
     let subtotal = 0;
 
     for (const i of items) {
-      const p = bySlug.get(i.id) as { id: string; slug: string; name: string; price_cents: number } | undefined;
+      const p = bySlug.get(i.id) as { id: string; slug: string; name: string; price_cents: number; stock: number } | undefined;
       if (!p) continue;
       const qty = Math.max(1, parseInt(String(i.qty), 10) || 1);
+      // Stock is authoritative here; the cart page only mirrors it for UX.
+      if (qty > (p.stock ?? 0)) { soldOut.push(p.stock > 0 ? `${p.name} (only ${p.stock} left)` : `${p.name} (sold out)`); continue; }
       subtotal += p.price_cents * qty;
       lineItems.push({
         quantity: qty,
@@ -90,6 +93,7 @@ Deno.serve(async (req) => {
       });
       orderItems.push({ product_id: p.id, name: p.name, unit_price_cents: p.price_cents, qty });
     }
+    if (soldOut.length) return json({ error: "Not enough stock: " + soldOut.join(", ") + ". Please update your cart.", sold_out: soldOut }, 409);
     if (lineItems.length === 0) return json({ error: "No valid items in cart" }, 400);
 
     const total = subtotal + shippingCents;

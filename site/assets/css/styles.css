@@ -848,3 +848,16 @@ button { font-family: inherit; cursor: pointer; }
 .admin-toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); background: hsl(var(--card)); color: hsl(var(--foreground)); border: 1px solid hsl(var(--success)); border-radius: var(--radius); padding: 12px 20px; font-size: 14px; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 200; }
 .admin-toast.show { opacity: 1; transform: translate(-50%, 0); }
 .admin-toast.error { border-color: hsl(var(--destructive)); }
+
+/* ---------- Stock / sold out ---------- */
+.product-thumb { position: relative; }
+.sold-out-badge { position: absolute; top: 12px; left: 12px; font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: 999px; background: hsl(var(--background) / 0.9); color: hsl(var(--foreground)); border: 1px solid hsl(var(--border)); }
+.product-card.sold-out .product-thumb svg, .product-card.sold-out .product-thumb img { opacity: 0.35; }
+.product-card.sold-out .product-price { color: hsl(var(--muted-foreground)); }
+.pd-sold-out { cursor: not-allowed; opacity: 0.6; }
+.pd-low-stock { color: hsl(var(--secondary)); margin-top: 12px; }
+.cart-row.sold-out .cart-thumb, .cart-row.sold-out .qty-input, .cart-row.sold-out .product-price { opacity: 0.4; }
+.cart-row.sold-out .qty-input button { pointer-events: none; }
+.cart-stock-warn { color: hsl(var(--secondary)); margin-top: 4px; }
+.cart-row.sold-out .cart-stock-warn { color: hsl(var(--destructive)); }
+.btn:disabled, .btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; }

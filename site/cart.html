@@ -53,10 +53,26 @@
         throw new Error("No checkout URL returned");
       } catch (e) {
         console.error("Checkout failed", e);
+        // The Edge Function returns 409 with a readable message when stock ran out
+        // between adding to cart and checking out; surface that instead of the generic text.
+        var message = "Sorry, checkout couldn't start. Please try again.";
+        var stockProblem = false;
+        try {
+          if (e && e.context && typeof e.context.json === "function") {
+            var body = await e.context.json();
+            if (body && body.error) { message = body.error; stockProblem = !!body.sold_out; }
+          }
+        } catch (ignore) {}
         btn.disabled = false;
         btn.textContent = "Checkout";
+        if (stockProblem) {
+          // Re-fetch products so the cart re-renders with current stock, then show the note.
+          _productsPromise = null;
+          await loadProducts();
+          render();
+        }
         var note = document.getElementById("checkout-error");
-        if (note) note.style.display = "block";
+        if (note) { note.textContent = message; note.style.display = "block"; }
       }
     }
 
@@ -72,14 +88,26 @@
         return;
       }
 
+      // Clamp quantities to stock and flag anything that can no longer be bought.
+      var blocked = false;
+      cart.forEach(function (item) {
+        var p = getProduct(item.id);
+        if (!p) return;
+        if (p.soldOut) { blocked = true; }
+        else if (item.qty > p.stock) { IB.setQty(p.id, p.stock); item.qty = p.stock; }
+      });
+
       var rows = cart.map(function (item) {
         var p = getProduct(item.id);
         if (!p) return "";
-        return '<div class="cart-row" data-id="' + ibEscape(p.id) + '">' +
+        var stockNote = p.soldOut
+          ? '<p class="cart-item-material cart-stock-warn">Sold out — remove this item to check out</p>'
+          : (item.qty >= p.stock ? '<p class="cart-item-material cart-stock-warn">Only ' + p.stock + ' in stock</p>' : "");
+        return '<div class="cart-row' + (p.soldOut ? " sold-out" : "") + '" data-id="' + ibEscape(p.id) + '">' +
           '<div class="cart-thumb">' + productThumbHTML(p) + '</div>' +
           '<div>' +
             '<p class="cart-item-name">' + ibEscape(p.name) + '</p>' +
-            '<p class="cart-item-material">' + ibEscape(p.material) + ' · ' + formatPrice(p.price) + '</p>' +
+            '<p class="cart-item-material">' + ibEscape(p.material) + ' · ' + formatPrice(p.price) + '</p>' + stockNote +
           '</div>' +
           '<div class="cart-item-actions">' +
             '<div class="qty-input"><button type="button" data-qty-down>−</button><input type="text" value="' + item.qty + '" readonly><button type="button" data-qty-up>+</button></div>' +
@@ -91,7 +119,7 @@
 
       var subtotal = cart.reduce(function (sum, item) {
         var p = getProduct(item.id);
-        return sum + (p ? p.price * item.qty : 0);
+        return sum + (p && !p.soldOut ? p.price * item.qty : 0);
       }, 0);
       var shipping = subtotal > 0 ? shippingUsd : 0;
       var total = subtotal + shipping;
@@ -101,7 +129,9 @@
           '<div class="cart-summary-row"><span>Subtotal</span><span>' + formatPrice(subtotal) + '</span></div>' +
           '<div class="cart-summary-row"><span>Shipping</span><span>' + formatPrice(shipping) + '</span></div>' +
           '<div class="cart-summary-row total"><span>Total</span><span>' + formatPrice(total) + '</span></div>' +
-          '<button class="btn btn-primary btn-block mt-16" id="checkout-btn">Checkout</button>' +
+          (blocked
+            ? '<button class="btn btn-primary btn-block mt-16" id="checkout-btn" disabled title="Remove sold-out items first">Checkout</button>'
+            : '<button class="btn btn-primary btn-block mt-16" id="checkout-btn">Checkout</button>') +
           '<a class="btn btn-outline btn-block mt-16" href="custom.html">Need a custom quote instead?</a>' +
           '<p class="form-note" id="checkout-error" style="display:none;color:hsl(var(--destructive));">Sorry, checkout couldn\'t start. Please try again.</p>' +
         '</div>';
@@ -110,7 +140,8 @@
         var id = row.dataset.id;
         row.querySelector("[data-qty-up]").addEventListener("click", function () {
           var item = IB.getCart().find(function (i) { return i.id === id; });
-          IB.setQty(id, item.qty + 1);
+          var p = getProduct(id);
+          IB.setQty(id, Math.min(p ? p.stock : item.qty + 1, item.qty + 1));
           render();
         });
         row.querySelector("[data-qty-down]").addEventListener("click", function () {
@@ -125,7 +156,7 @@
       });
 
       var checkoutBtn = document.getElementById("checkout-btn");
-      if (checkoutBtn) {
+      if (checkoutBtn && !checkoutBtn.disabled) {
         checkoutBtn.addEventListener("click", function () { startCheckout(checkoutBtn); });
       }
     }

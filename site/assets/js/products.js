@@ -15,7 +15,9 @@ function _mapProductRow(row) {
     category: row.category,
     description: row.description,
     specs: row.specs || {},
-    image: row.image_url || null
+    image: row.image_url || null,
+    stock: typeof row.stock === "number" ? row.stock : 0,
+    soldOut: !(row.stock > 0)
   };
 }
 
@@ -58,8 +60,8 @@ function productThumbHTML(p) {
 }
 
 function productCardHTML(p) {
-  return '<a class="product-card" href="product.html?id=' + encodeURIComponent(p.id) + '">' +
-    '<div class="product-thumb">' + productThumbHTML(p) + '</div>' +
+  return '<a class="product-card' + (p.soldOut ? " sold-out" : "") + '" href="product.html?id=' + encodeURIComponent(p.id) + '">' +
+    '<div class="product-thumb">' + productThumbHTML(p) + (p.soldOut ? '<span class="sold-out-badge">Sold out</span>' : "") + '</div>' +
     '<div class="product-body"><div class="product-row">' +
       '<div><p class="product-name">' + ibEscape(p.name) + '</p>' +
       '<span class="product-material">' + ibEscape(p.material) + '</span></div>' +

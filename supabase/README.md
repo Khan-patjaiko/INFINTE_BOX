@@ -8,11 +8,11 @@ the backend can be reviewed in PRs and rebuilt from git.
 ```
 supabase/
 ├── config.toml            project id + per-function verify_jwt settings
-├── migrations/            10 SQL migrations, same version stamps as supabase_migrations.schema_migrations
+├── migrations/            11 SQL migrations, same version stamps as supabase_migrations.schema_migrations
 └── functions/
     ├── submit-quote/              v2  custom-quote form + private file upload
-    ├── create-checkout-session/   v5  server-side pricing (shipping fee from store_settings) → pending order → Stripe Checkout
-    ├── stripe-webhook/            v4  signature-verified; pending→paid / expired→cancelled
+    ├── create-checkout-session/   v6  server-side pricing, stock check (409), shipping fee from store_settings → pending order → Stripe Checkout
+    ├── stripe-webhook/            v5  signature-verified; pending→paid + decrement stock / expired→cancelled
     └── get-order/                 v1  single order by session_id (guest) or id (owner/admin)
 ```
 
@@ -45,5 +45,5 @@ npx supabase db push
 ## Verifying the copy matches production
 
 `list_edge_functions` reports an `ezbr_sha256` per function; redeploying an unchanged file
-leaves that hash unchanged. `list_migrations` should list exactly the 10 versions in
+leaves that hash unchanged. `list_migrations` should list exactly the 11 versions in
 `migrations/`.
