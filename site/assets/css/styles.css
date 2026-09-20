@@ -808,7 +808,6 @@ button { font-family: inherit; cursor: pointer; }
 .admin-toolbar input, .admin-toolbar select { background: hsl(var(--card)); border: 1px solid hsl(var(--input)); border-radius: var(--radius-button); color: hsl(var(--foreground)); padding: 8px 12px; font-family: inherit; font-size: 14px; }
 .admin-toolbar input:focus, .admin-toolbar select:focus { outline: none; border-color: hsl(var(--ring)); }
 .filter-chip { font-size: 13px; padding: 6px 12px; border-radius: 999px; border: 1px solid hsl(var(--border)); background: transparent; color: hsl(var(--foreground) / 0.75); cursor: pointer; font-family: inherit; }
-.filter-chip.active { border-color: hsl(var(--primary)); color: hsl(var(--primary)); }
 
 .admin-table-wrap { overflow-x: auto; border: 1px solid hsl(var(--border)); border-radius: var(--radius); background: hsl(var(--card)); }
 .admin-table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 640px; }
