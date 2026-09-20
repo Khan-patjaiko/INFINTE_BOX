@@ -129,12 +129,18 @@
 <script>
   (function () {
     var grid = document.getElementById("home-product-grid");
-    grid.innerHTML = '<p class="grid-status">Loading products…</p>';
-    loadProducts().then(function () {
-      grid.innerHTML = PRODUCTS.slice(0, 6).map(productCardHTML).join("");
-    }).catch(function () {
-      grid.innerHTML = '<p class="grid-status">Couldn\'t load products. Please refresh.</p>';
-    });
+    function render() {
+      grid.innerHTML = '<p class="grid-status">Loading products…</p>';
+      loadProducts().then(function () {
+        grid.innerHTML = PRODUCTS.length
+          ? PRODUCTS.slice(0, 6).map(productCardHTML).join("")
+          : '<p class="grid-status">No products listed yet — check back soon, or <a href="custom.html">request a custom part</a>.</p>';
+      }).catch(function () {
+        grid.innerHTML = loadErrorHTML("Couldn't load products.");
+      });
+    }
+    ibOnRetry(grid, render);
+    render();
   })();
 </script>
 </body>

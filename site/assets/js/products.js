@@ -33,8 +33,24 @@ function loadProducts() {
     if (res.error) throw res.error;
     PRODUCTS = (res.data || []).map(_mapProductRow);
     return PRODUCTS;
-  })();
+  })().catch(function (err) {
+    _productsPromise = null; // let the page retry instead of caching the failure
+    throw err;
+  });
   return _productsPromise;
+}
+
+// Error message with a Retry button. Pages listen for clicks on [data-retry]
+// inside their container and re-run their loader (see ibOnRetry).
+function loadErrorHTML(message) {
+  return '<p class="grid-status">' + message +
+    ' <button type="button" class="btn btn-outline btn-sm" data-retry>Retry</button></p>';
+}
+
+function ibOnRetry(container, fn) {
+  container.addEventListener("click", function (e) {
+    if (e.target.closest("[data-retry]")) fn();
+  });
 }
 
 function getProduct(id) {

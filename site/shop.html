@@ -51,7 +51,6 @@
   (function () {
     var filterBar = document.getElementById("filter-bar");
     var grid = document.getElementById("shop-product-grid");
-    grid.innerHTML = '<p class="grid-status">Loading products…</p>';
 
     function renderGrid(category) {
       var items = category === "All" ? PRODUCTS : PRODUCTS.filter(function (p) { return p.category === category; });
@@ -60,24 +59,29 @@
         : '<p class="grid-status">No products in this category.</p>';
     }
 
-    loadProducts().then(function () {
-      var categories = ["All"].concat(Array.from(new Set(PRODUCTS.map(function (p) { return p.category; }))));
-      filterBar.innerHTML = categories.map(function (c, i) {
-        return '<button class="filter-chip' + (i === 0 ? ' active' : '') + '" data-category="' + ibEscape(c) + '">' + ibEscape(c) + '</button>';
-      }).join("");
-
-      filterBar.addEventListener("click", function (e) {
-        var btn = e.target.closest(".filter-chip");
-        if (!btn) return;
-        filterBar.querySelectorAll(".filter-chip").forEach(function (b) { b.classList.remove("active"); });
-        btn.classList.add("active");
-        renderGrid(btn.dataset.category);
-      });
-
-      renderGrid("All");
-    }).catch(function () {
-      grid.innerHTML = '<p class="grid-status">Couldn\'t load products. Please refresh.</p>';
+    filterBar.addEventListener("click", function (e) {
+      var btn = e.target.closest(".filter-chip");
+      if (!btn) return;
+      filterBar.querySelectorAll(".filter-chip").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      renderGrid(btn.dataset.category);
     });
+
+    function load() {
+      grid.innerHTML = '<p class="grid-status">Loading products…</p>';
+      loadProducts().then(function () {
+        var categories = ["All"].concat(Array.from(new Set(PRODUCTS.map(function (p) { return p.category; }))));
+        filterBar.innerHTML = categories.map(function (c, i) {
+          return '<button class="filter-chip' + (i === 0 ? ' active' : '') + '" data-category="' + ibEscape(c) + '">' + ibEscape(c) + '</button>';
+        }).join("");
+
+        renderGrid("All");
+      }).catch(function () {
+        grid.innerHTML = loadErrorHTML("Couldn't load products.");
+      });
+    }
+    ibOnRetry(grid, load);
+    load();
   })();
 </script>
 </body>

@@ -175,9 +175,14 @@
         }, function () {});
     }
 
-    Promise.all([loadProducts(), loadShipping()]).then(render).catch(function () {
-      container.innerHTML = '<p class="grid-status">Couldn\'t load your cart. Please refresh.</p>';
-    });
+    function load() {
+      container.innerHTML = '<p class="grid-status">Loading your cart…</p>';
+      Promise.all([loadProducts(), loadShipping()]).then(render).catch(function () {
+        container.innerHTML = loadErrorHTML("Couldn't load your cart.");
+      });
+    }
+    ibOnRetry(container, load);
+    load();
   })();
 </script>
 </body>

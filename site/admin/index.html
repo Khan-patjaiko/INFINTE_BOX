@@ -113,6 +113,9 @@
       load().catch(function (e) {
         console.error("Overview load failed", e);
         A.toast("Couldn't load dashboard data.", true);
+        var msg = '<tr><td colspan="5" class="muted">Couldn\'t load — refresh to try again.</td></tr>';
+        document.getElementById("recent-orders").innerHTML = msg;
+        document.getElementById("recent-quotes").innerHTML = msg;
       });
     });
   })();

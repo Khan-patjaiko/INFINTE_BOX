@@ -50,13 +50,18 @@
       return null;
     }
     var res = await db().from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
-    if (!res.data || !res.data.is_admin) {
+    if (res.error || !res.data || !res.data.is_admin) {
       var main = document.querySelector("main");
       if (main) {
-        main.innerHTML = '<section class="section"><div class="container">' +
-          '<div class="empty-state"><p>This account (' + ibEscape(user.email) + ") isn't an admin.</p>" +
-          '<a class="btn btn-primary" href="../index.html">Back to store</a></div></div></section>';
+        main.innerHTML = '<section class="section"><div class="container"><div class="empty-state">' +
+          (res.error
+            ? "<p>Couldn't verify admin access (" + ibEscape(res.error.message || "network error") + ").</p>" +
+              '<button type="button" class="btn btn-primary" onclick="location.reload()">Try again</button>'
+            : '<p>This account (' + ibEscape(user.email) + ") isn't an admin.</p>" +
+              '<a class="btn btn-primary" href="../index.html">Back to store</a>') +
+          '</div></div></section>';
       }
+      if (res.error) console.error("Admin check failed", res.error);
       return null;
     }
     return user;
