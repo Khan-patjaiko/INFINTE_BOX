@@ -15,7 +15,7 @@ but nothing uploaded).
 | Area | Status |
 |---|---|
 | Static site design (14 pages, dark theme, design tokens) | ✅ Done |
-| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, seed (9 migrations) | ✅ Done, advisor clean |
+| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, seed (10 migrations) | ✅ Done, advisor clean |
 | Live product catalogue from DB (index/shop/product/cart) | ✅ Done |
 | Cart (localStorage) | ✅ Done |
 | Custom quote form → `submit-quote` Edge Function + file upload | ✅ Live, verified |
@@ -59,7 +59,7 @@ E-Commerce Web/
 │   │   ├── orders.html            Filter/search, drawer with items + address, change status
 │   │   ├── quotes.html            Filter/search, drawer with details, signed-URL file download, status/quoted price/note
 │   │   ├── messages.html          Contact inbox, read/unread, mailto reply
-│   │   └── products.html          CRUD on products incl. photo upload to product-images, specs editor, active toggle
+│   │   └── products.html          CRUD on products incl. photo upload to product-images, specs editor, stock, active toggle
 │   └── assets/
 │       ├── css/styles.css         Single stylesheet, HSL tokens, --space-* scale
 │       ├── js/config.js           Supabase URL + anon key (public)
@@ -73,7 +73,7 @@ E-Commerce Web/
 │       └── img/                   icon-/logo- dark/light PNGs
 ├── supabase/                      ← backend source of truth (mirrors hosted project)
 │   ├── config.toml                project id, verify_jwt=false per function
-│   ├── migrations/*.sql           9 migrations (same versions as production)
+│   ├── migrations/*.sql           10 migrations (same versions as production)
 │   └── functions/<name>/index.ts  submit-quote · create-checkout-session · stripe-webhook · get-order
 ├── docs/ARCHITECTURE.md           Four-layer architecture reference
 ├── coming-soon/index.html         Standalone pre-launch page (separate deploy, no backend)
@@ -82,7 +82,7 @@ E-Commerce Web/
 └── HANDOVER*.md                   Session history
 
 Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
-├── Tables: profiles, products, orders, order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (RLS on all; admins can update orders/quotes/messages)
+├── Tables: profiles, products (+stock), orders, order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (RLS on all; admins can update orders/quotes/messages)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
 ├── Auth: email/password (confirmation on), Google OAuth
@@ -144,7 +144,7 @@ Goal: clean state, everything known-good.
 ### Phase 11 — Admin dashboard (built 2026-09-20; needs an admin account to verify)
 Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces it server-side).
 - [x] `site/admin/index.html` — overview: to-fulfil / new-quote / unread counts, 30-day revenue, recent orders + quotes.
-- [x] `site/admin/products.html` — CRUD on `products` (name, slug, price, category, material, description, specs, icon, sort, active, photo upload to `product-images`).
+- [x] `site/admin/products.html` — CRUD on `products` (name, slug, price, category, material, description, specs, icon, stock, sort, active, photo upload to `product-images`). Stock column added 2026-09-20 (migration 0010, `products.stock`, default 0; red badge at 0, amber at ≤5).
 - [x] `site/admin/orders.html` — filter/search, drawer with items + shipping address + Stripe ids, status change (`paid → fulfilled` etc.).
 - [x] `site/admin/quotes.html` — filter/search, drawer with details, design-file download via signed URL, set status / quoted price / internal note.
 - [x] `site/admin/messages.html` — `contact_messages` inbox with read/unread and mailto reply.
@@ -169,7 +169,8 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [ ] Update `HANDOVER_4.md` / retire older handovers into `PROJECT_PLAN.md` as source of truth.
 
 ### Backlog / ideas (not scheduled)
-- Product search, product variants (size/colour/material options), stock quantities.
+- Product search, product variants (size/colour/material options).
+- Stock enforcement: hide or disable "Add to cart" when `products.stock = 0`, and decrement stock in `stripe-webhook` on `checkout.session.completed` (the column exists and is editable in admin; nothing reads it on the storefront yet).
 - Discount codes (Stripe Coupons).
 - Multi-currency (site is USD; business appears Thailand-based — confirm currency + Stripe country support).
 - PWA / offline cart, analytics (Plausible/GA4), reviews.

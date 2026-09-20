@@ -27,8 +27,8 @@
 
       <div class="admin-table-wrap">
         <table class="admin-table">
-          <thead><tr><th></th><th>Product</th><th>Category</th><th>Material</th><th class="num">Price</th><th class="num">Sort</th><th>Status</th></tr></thead>
-          <tbody id="rows"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
+          <thead><tr><th></th><th>Product</th><th>Category</th><th>Material</th><th class="num">Price</th><th class="num">Stock</th><th class="num">Sort</th><th>Status</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="8" class="muted">Loading…</td></tr></tbody>
         </table>
       </div>
       <p class="form-note">Changes appear on the store immediately. Inactive products are hidden from customers but keep their order history.</p>
@@ -48,6 +48,7 @@
     <div class="field span-2"><label for="f-description">Description</label><textarea id="f-description" rows="4" style="min-height:96px;"></textarea></div>
     <div class="field span-2"><label for="f-specs">Specs <span class="muted">(one per line, <code>Label: value</code>)</span></label><textarea id="f-specs" rows="5" style="min-height:110px;font-size:13px;" placeholder="Material: PETG&#10;Layer height: 0.2mm&#10;Lead time: 3-5 days"></textarea></div>
     <div class="field"><label for="f-icon">Placeholder icon</label><select id="f-icon"></select></div>
+    <div class="field"><label for="f-stock">Stock on hand</label><input type="number" id="f-stock" min="0" step="1" value="0"></div>
     <div class="field"><label for="f-sort">Sort order</label><input type="number" id="f-sort" step="1" value="0"></div>
     <div class="field span-2">
       <label>Photo</label>
@@ -88,6 +89,12 @@
 
     function $(id) { return document.getElementById(id); }
 
+    function stockHTML(n) {
+      if (n <= 0) return '<span class="order-status cancelled">0</span>';
+      if (n <= 5) return '<span class="order-status low">' + n + '</span>';
+      return String(n);
+    }
+
     function thumbHTML(p) {
       if (p.image_url) return '<img src="' + ibEscape(p.image_url) + '" alt="">';
       return typeof productIconSVG === "function" ? productIconSVG(p.icon_key) : "";
@@ -107,9 +114,10 @@
           '<td>' + ibEscape(p.category || "—") + '</td>' +
           '<td>' + ibEscape(p.material || "—") + '</td>' +
           '<td class="num">' + A.money(p.price_cents) + '</td>' +
+          '<td class="num">' + stockHTML(p.stock) + '</td>' +
           '<td class="num">' + p.sort + '</td>' +
           '<td>' + (p.active ? '<span class="order-status paid">active</span>' : '<span class="order-status">inactive</span>') + '</td></tr>';
-      }).join("") : '<tr><td colspan="7" class="muted">No products match.</td></tr>';
+      }).join("") : '<tr><td colspan="8" class="muted">No products match.</td></tr>';
 
       var cats = Array.from(new Set(all.map(function (p) { return p.category; }).filter(Boolean)));
       $("category-list").innerHTML = cats.map(function (c) { return '<option value="' + ibEscape(c) + '">'; }).join("");
@@ -158,6 +166,7 @@
       $("f-description").value = p ? (p.description || "") : "";
       $("f-specs").value = p ? specsToText(p.specs) : "";
       $("f-icon").value = p && p.icon_key ? p.icon_key : $("f-icon").options[0].value;
+      $("f-stock").value = p ? p.stock : 0;
       $("f-sort").value = p ? p.sort : (all.length ? Math.max.apply(null, all.map(function (x) { return x.sort; })) + 1 : 1);
       $("f-active").checked = p ? !!p.active : true;
       $("f-image").value = "";
@@ -200,6 +209,8 @@
       if (!name) return showError("Name is required.");
       if (!/^[a-z0-9-]+$/.test(slug)) return showError("Slug may only contain lowercase letters, numbers and dashes.");
       if (!(price >= 0)) return showError("Enter a valid price.");
+      var stock = parseInt($("f-stock").value, 10);
+      if (!(stock >= 0)) return showError("Stock must be 0 or more.");
       if (pendingImage && pendingImage.size > 5 * 1024 * 1024) return showError("Photo must be 5 MB or smaller.");
 
       var btn = $("d-save");
@@ -215,6 +226,7 @@
           description: $("f-description").value.trim() || null,
           specs: textToSpecs($("f-specs").value),
           icon_key: $("f-icon").value,
+          stock: stock,
           sort: parseInt($("f-sort").value, 10) || 0,
           active: $("f-active").checked
         };
@@ -273,7 +285,7 @@
       if (!user) return;
       load().catch(function (e) {
         console.error("Products load failed", e);
-        $("rows").innerHTML = '<tr><td colspan="7" class="muted">Couldn\'t load products. Refresh to retry.</td></tr>';
+        $("rows").innerHTML = '<tr><td colspan="8" class="muted">Couldn\'t load products. Refresh to retry.</td></tr>';
       });
     });
   })();

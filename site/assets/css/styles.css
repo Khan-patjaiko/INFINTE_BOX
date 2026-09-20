@@ -771,6 +771,7 @@ button { font-family: inherit; cursor: pointer; }
 .order-status.paid { background: hsl(var(--success) / 0.15); color: hsl(var(--success)); }
 .order-status.fulfilled { background: hsl(var(--accent) / 0.15); color: hsl(var(--accent)); }
 .order-status.cancelled { background: hsl(var(--destructive) / 0.15); color: hsl(var(--destructive)); }
+.order-status.low { background: hsl(var(--secondary) / 0.15); color: hsl(var(--secondary)); }
 .order-line { display: flex; justify-content: space-between; font-size: 14px; padding: 6px 0; color: hsl(var(--muted-foreground)); }
 .order-total { display: flex; justify-content: space-between; font-weight: 600; margin-top: 12px; padding-top: 12px; border-top: 1px solid hsl(var(--border)); }
 .order-address { background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: 24px; margin-top: 16px; font-size: 14px; line-height: 1.6; color: hsl(var(--muted-foreground)); }

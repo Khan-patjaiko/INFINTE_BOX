@@ -82,7 +82,7 @@ idempotency log (replays are harmless today).
 
 ## Layer 3 — Database (data)
 
-Postgres on Supabase, schema defined by 9 migrations in [`supabase/migrations/`](../supabase/migrations).
+Postgres on Supabase, schema defined by 10 migrations in [`supabase/migrations/`](../supabase/migrations).
 RLS is enabled on every table.
 
 | Table | Purpose | Key rules |
