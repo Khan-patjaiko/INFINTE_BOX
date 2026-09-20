@@ -1,6 +1,6 @@
 # Infinite Box — Project Plan (living roadmap)
 
-Last updated: 2026-09-19 · Source of truth for phases and tasks. Session history lives in
+Last updated: 2026-09-20 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
 [HANDOVER_4.md](HANDOVER_4.md). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -15,7 +15,7 @@ but nothing uploaded).
 | Area | Status |
 |---|---|
 | Static site design (14 pages, dark theme, design tokens) | ✅ Done |
-| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, seed (7 migrations) | ✅ Done, advisor clean |
+| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, seed (8 migrations) | ✅ Done, advisor clean |
 | Live product catalogue from DB (index/shop/product/cart) | ✅ Done |
 | Cart (localStorage) | ✅ Done |
 | Custom quote form → `submit-quote` Edge Function + file upload | ✅ Live, verified |
@@ -66,7 +66,7 @@ E-Commerce Web/
 │       └── img/                   icon-/logo- dark/light PNGs
 ├── supabase/                      ← backend source of truth (mirrors hosted project)
 │   ├── config.toml                project id, verify_jwt=false per function
-│   ├── migrations/*.sql           7 migrations (same versions as production)
+│   ├── migrations/*.sql           8 migrations (same versions as production)
 │   └── functions/<name>/index.ts  submit-quote · create-checkout-session · stripe-webhook · get-order
 ├── docs/ARCHITECTURE.md           Four-layer architecture reference
 ├── coming-soon/index.html         Standalone pre-launch page (separate deploy, no backend)
@@ -75,11 +75,11 @@ E-Commerce Web/
 └── HANDOVER*.md                   Session history
 
 Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
-├── Tables: profiles, products, orders, order_items, quote_requests, contact_messages (RLS on all)
+├── Tables: profiles, products, orders, order_items, quote_requests, contact_messages, store_settings (RLS on all)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read), custom-uploads (private)
 ├── Auth: email/password (confirmation on), Google OAuth
-└── Edge Functions: submit-quote ✅ · create-checkout-session ✅ · stripe-webhook ✅ · get-order ✅ (v1, returns a single order for its owner or by Stripe session id)
+└── Edge Functions: submit-quote ✅ · create-checkout-session ✅ (v5, reads shipping fee from `store_settings`) · stripe-webhook ✅ · get-order ✅ (v1, returns a single order for its owner or by Stripe session id)
 
 Nav: Shop · Custom Orders · About · Account/Log in · Cart · Shop Now
 Footer: Shop (All Products / Custom Orders / Materials) · Company (About / Contact / FAQ)
@@ -103,10 +103,10 @@ Goal: clean state, everything known-good.
 - [x] Supabase sanity check (2026-09-18): only `testuser@infinitebox.dev` (email provider) exists; **no Google user** → Google sign-in must be re-tested end-to-end. Tables otherwise clean (0 orders/quotes/messages, 8 products, 1 leftover test file in `custom-uploads`).
 - [ ] Re-test Google sign-in from `login.html` in a real browser and confirm a `provider = google` row + `profiles.full_name` appear.
 - [ ] Remove the SQL-created test user (`testuser@infinitebox.dev`) or keep it deliberately and note it.
-- [ ] Smoke-test all 14 pages in the preview (console clean, header auth state correct).
+- [x] Smoke-test all 15 pages in the preview — done 2026-09-20: every page loads header/footer with the right title, `account.html` redirects to login when signed out; only console error is the expected 401 from `order.html?id=x` while unauthenticated.
 - [x] Architecture review (2026-09-19) → `docs/ARCHITECTURE.md`; exported migrations + Edge Functions into `supabase/`; pinned supabase-js CDN to `2.116.0` on all 15 pages.
 - [ ] Enable **Leaked Password Protection** in Supabase → Auth → Providers → Email (the only open security-advisor warning; user-side toggle).
-- [ ] Single source of truth for the shipping fee (currently `6.5` in `cart.html` and `650` in `create-checkout-session`).
+- [x] Single source of truth for the shipping fee — done 2026-09-20: migration 0008 adds `store_settings` (key/value jsonb, public read, admin write) seeded with `shipping_cents = 650`; `cart.html` and `create-checkout-session` (v5) both read it and fall back to 650 if the row is missing. Change the fee with one SQL update; no redeploy needed.
 
 ### Phase 8 — Payments go-live (test mode) ✅ Done (2026-09-19)
 - [x] User created a Stripe account (sandbox/test mode), got `sk_test_…`.
@@ -116,7 +116,7 @@ Goal: clean state, everything known-good.
 - [x] Full test checkout with `4242 4242 4242 4242` → `success.html` → confirmed via SQL: `orders.status = 'paid'`, `stripe_payment_intent` set, `shipping_address` populated correctly, `order_items` row correct.
 - [x] Verified `cancel.html` path preserves the cart (added a 2nd product, opened Checkout, clicked Stripe's "Back", cart still showed the item).
 - [x] Guest checkout path confirmed structurally (order created with `user_id = null`, placeholder email overwritten by `customer_details.email` via the webhook — existing working design).
-- [ ] Decide shipping model (flat $6.50 is hardcoded in the Edge Function) — keep or make it a `settings` row. *(deferred, not blocking)*
+- [x] Shipping model: flat rate, now a `store_settings` row (see Phase 7, 2026-09-20).
 - Test rows created during verification (2 pending + 1 paid order) were deleted from `orders`/`order_items` afterward — sandbox is clean.
 - One further test order (`9acb36b4…`, "Custom Enclosure", $30.50, `paid`) was placed by the user directly while testing the preview on 2026-09-19 — left in the database deliberately (not Claude's to delete). Clear it manually before launch, or ask Claude to.
 

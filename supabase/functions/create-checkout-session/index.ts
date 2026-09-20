@@ -17,7 +17,9 @@ function json(body: unknown, status = 200) {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-const SHIPPING_CENTS = 650;
+// Flat-rate shipping lives in store_settings.shipping_cents (see migration 0008);
+// this is only the fallback if that row is missing or unreadable.
+const DEFAULT_SHIPPING_CENTS = 650;
 // Countries Stripe Checkout will accept a shipping address for. Edit freely.
 const SHIP_TO = [
   "US", "CA", "GB", "IE", "AU", "NZ", "TH", "SG", "MY", "JP", "KR", "HK",
@@ -40,6 +42,12 @@ Deno.serve(async (req) => {
     if (!Array.isArray(items) || items.length === 0) return json({ error: "Cart is empty" }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    const { data: shipRow } = await admin.from("store_settings")
+      .select("value").eq("key", "shipping_cents").maybeSingle();
+    const shippingCents = Number.isInteger(shipRow?.value) && shipRow!.value >= 0
+      ? shipRow!.value as number
+      : DEFAULT_SHIPPING_CENTS;
 
     // Optionally identify the signed-in user.
     let userId: string | null = null;
@@ -84,14 +92,14 @@ Deno.serve(async (req) => {
     }
     if (lineItems.length === 0) return json({ error: "No valid items in cart" }, 400);
 
-    const total = subtotal + SHIPPING_CENTS;
+    const total = subtotal + shippingCents;
 
     const { data: order, error: oErr } = await admin.from("orders").insert({
       user_id: userId,
       email: userEmail ?? "guest@pending",
       status: "pending",
       subtotal_cents: subtotal,
-      shipping_cents: SHIPPING_CENTS,
+      shipping_cents: shippingCents,
       total_cents: total,
     }).select().single();
     if (oErr) throw oErr;
@@ -110,7 +118,7 @@ Deno.serve(async (req) => {
         shipping_rate_data: {
           type: "fixed_amount",
           display_name: "Standard shipping",
-          fixed_amount: { amount: SHIPPING_CENTS, currency: "usd" },
+          fixed_amount: { amount: shippingCents, currency: "usd" },
         },
       }],
       shipping_address_collection: { allowed_countries: SHIP_TO as never },

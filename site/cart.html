@@ -93,7 +93,7 @@
         var p = getProduct(item.id);
         return sum + (p ? p.price * item.qty : 0);
       }, 0);
-      var shipping = subtotal > 0 ? 6.5 : 0;
+      var shipping = subtotal > 0 ? shippingUsd : 0;
       var total = subtotal + shipping;
 
       container.innerHTML = rows +
@@ -130,7 +130,19 @@
       }
     }
 
-    loadProducts().then(render).catch(function () {
+    // Flat shipping fee comes from store_settings (same row create-checkout-session uses);
+    // fall back to $6.50 if the read fails so the cart still renders.
+    var shippingUsd = 6.5;
+    function loadShipping() {
+      if (!window.IBDB) return Promise.resolve();
+      return window.IBDB.from("store_settings").select("value").eq("key", "shipping_cents").maybeSingle()
+        .then(function (res) {
+          var cents = res && res.data && res.data.value;
+          if (typeof cents === "number" && cents >= 0) shippingUsd = cents / 100;
+        }, function () {});
+    }
+
+    Promise.all([loadProducts(), loadShipping()]).then(render).catch(function () {
       container.innerHTML = '<p class="grid-status">Couldn\'t load your cart. Please refresh.</p>';
     });
   })();
