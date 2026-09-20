@@ -723,6 +723,16 @@ button { font-family: inherit; cursor: pointer; }
 .product-thumb img, .cart-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .pd-image img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
+/* ---------- Legal pages (privacy.html / terms.html) ---------- */
+.legal { max-width: 760px; font-size: 15px; line-height: 1.8; color: hsl(var(--muted-foreground)); }
+.legal h2 { color: hsl(var(--foreground)); font-size: 20px; margin: var(--space-5) 0 var(--space-3); }
+.legal h2:first-child { margin-top: 0; }
+.legal p, .legal ul { margin-bottom: var(--space-3); }
+.legal ul { padding-left: 22px; }
+.legal li { margin-bottom: var(--space-1); }
+.legal a { color: hsl(var(--primary)); }
+.legal .placeholder { color: hsl(var(--primary)); font-style: italic; }
+
 /* ---------- Auth pages ---------- */
 .auth-wrap { max-width: 420px; margin: 0 auto; }
 .auth-wrap .form-grid { max-width: 100%; }

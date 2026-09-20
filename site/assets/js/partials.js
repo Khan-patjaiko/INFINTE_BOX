@@ -74,7 +74,7 @@ var FOOTER_HTML = [
     '</div>',
     '<div class="footer-bottom">',
       '<p>© 2026 Infinite Box. All rights reserved.</p>',
-      '<div class="footer-legal"><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>',
+      '<div class="footer-legal"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></div>',
     '</div>',
   '</div>',
 '</footer>'

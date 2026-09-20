@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /cart.html
+Disallow: /account.html
+Disallow: /order.html
+Disallow: /success.html
+Disallow: /cancel.html
+Disallow: /login.html
+Disallow: /signup.html
+
+Sitemap: https://infinite-box.co/sitemap.xml
