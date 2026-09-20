@@ -2,15 +2,15 @@
 
 Last updated: 2026-09-21 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
-[HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md). How the system is built (four-layer architecture review) lives in
+[HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
 ## Where we are now (as of 2026-09-21)
 
-**Overall: ~90% to a launchable v1.** The store works end-to-end locally including test-mode
-payments, a per-order status page, stock/sold-out enforcement and an admin dashboard; it is
-not yet deployed (Hostinger hosting is purchased but nothing uploaded — deferred by the user).
+**Overall: ~93% to a launchable v1.** The store works end-to-end locally including test-mode
+payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages
+and SEO/share metadata; it is not yet deployed (Hostinger hosting is purchased but nothing uploaded — deferred by the user).
 
 | Area | Status |
 |---|---|
@@ -26,16 +26,19 @@ not yet deployed (Hostinger hosting is purchased but nothing uploaded — deferr
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
 | Hosting | ⚠️ **Hostinger purchased**, not yet deployed |
-| Git | ⚠️ Local `main` is **10 commits ahead of `origin/main`** (not pushed) as of 2026-09-21 |
+| Git | ⚠️ Local `main` is **15 commits ahead of `origin/main`** (not pushed) as of 2026-09-21 |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
 | Real product photography | ❌ None (SVG placeholders; frontend ready for `image_url`) |
 | Admin UI (`site/admin/` — overview, orders, quotes, messages, products) | ✅ Done 2026-09-20, verified signed in as admin (`testuser@infinitebox.dev` is admin) |
 | Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20 — **stock counts still need to be entered** (all 0 except Custom Enclosure) |
 | Footer social links (Facebook / Instagram / Line) | ⚠️ Added 2026-09-21 with **placeholder URLs** in `partials.js` `SOCIAL_LINKS` |
+| Legal pages (`privacy.html`, `terms.html`) + footer/signup links | ⚠️ Done 2026-09-21 — **orange bracketed placeholders** (legal name, address, jurisdiction, retention periods) need filling |
+| SEO / share prep (robots.txt, sitemap.xml, descriptions, noindex, canonical, Open Graph) | ✅ Done 2026-09-21 — assumes domain `https://infinite-box.co` |
+| Error/empty states + Retry on every DB read; 375px audit; Lighthouse (home 98/95/100/100) | ✅ Done 2026-09-21 |
 | Email notifications (order confirmation, new quote alert) | ❌ None |
 | Coming-soon page email capture | ❌ localStorage only, not a real list |
 
-**Immediate blockers on the user side:** (1) enter stock counts in Admin → Products, (2) real social URLs in `partials.js`, (3) product photos (upload via Admin → Products), (4) upload `site/` to Hostinger
+**Immediate blockers on the user side:** (1) enter stock counts in Admin → Products, (2) real social URLs in `partials.js`, (3) fill the placeholders in `privacy.html` / `terms.html` and confirm the domain is `infinite-box.co`, (4) product photos (upload via Admin → Products), (5) upload `site/` to Hostinger
 `public_html` and point the domain at it.
 
 ---
@@ -52,10 +55,12 @@ E-Commerce Web/
 │   ├── custom.html                Custom-order quote form (+ file upload)
 │   ├── contact.html               Contact form
 │   ├── about.html · faq.html · materials.html   Static content
+│   ├── privacy.html · terms.html  Legal pages (placeholders to fill; `.legal` prose class)
 │   ├── login.html · signup.html   Email/password + Google OAuth
 │   ├── account.html               Auth-guarded: profile + order history (cards link to order.html)
 │   ├── order.html?id=<uuid> or ?session_id=<cs_...>  Single-order status (items, total, shipping address)
 │   ├── success.html · cancel.html Stripe return pages (success.html has a "My order" button → order.html)
+│   ├── robots.txt · sitemap.xml   Crawler config (admin + transactional pages disallowed)
 │   ├── admin/                     Admin dashboard (guarded by profiles.is_admin; own header via admin.js, noindex)
 │   │   ├── index.html             Overview: counts (to-fulfil, new quotes, unread, 30d revenue) + recent orders/quotes
 │   │   ├── orders.html            Filter/search, drawer with items + address, change status
@@ -68,7 +73,7 @@ E-Commerce Web/
 │       ├── js/supabase-client.js  window.IBDB
 │       ├── js/auth.js             window.IBAuth (signUp/signIn/signInWithGoogle/signOut/requireUser/refreshHeader)
 │       ├── js/admin.js            window.IBAdmin (requireAdmin/money/date/statusBadge/toast/signedUrl) + admin header
-│       ├── js/products.js         loadProducts()/getProduct() + shared render helpers
+│       ├── js/products.js         loadProducts()/getProduct() + render helpers + loadErrorHTML()/ibOnRetry()
 │       ├── js/icons.js            SVG placeholder icons
 │       ├── js/main.js             window.IB cart API, mobile nav
 │       ├── js/partials.js         HEADER_HTML / FOOTER_HTML injection (all pages) + SOCIAL_LINKS (footer Follow column)
@@ -91,11 +96,9 @@ Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
 └── Edge Functions: submit-quote ✅ · create-checkout-session ✅ (v6: shipping fee from `store_settings`, refuses over-stock carts with 409) · stripe-webhook ✅ (v5: also calls `decrement_order_stock` on paid) · get-order ✅ (v1, returns a single order for its owner or by Stripe session id)
 
 Nav: Shop · Custom Orders · About · Account/Log in · Cart · Shop Now
-Footer: Shop (All Products / Custom Orders / Materials) · Company (About / Contact / FAQ)
+Footer: Shop (All Products / Custom Orders / Materials) · Company (About / Contact / FAQ) · Follow · Privacy / Terms
 ```
 
-**Planned additions (later phases):** optional `privacy.html` / `terms.html` (required for Stripe live mode + Google OAuth
-verification).
 
 ---
 
@@ -135,12 +138,12 @@ Goal: clean state, everything known-good.
 - [ ] Google Cloud Console: add production domain to authorized JS origins if required.
 - [ ] Re-run login (email + Google) and a test checkout on the live domain.
 - [ ] Deploy `coming-soon/` separately (or retire it once the store is live — user decision).
-- [ ] Add `robots.txt`, favicon links check, `<meta description>` per page, Open Graph tags.
+- [x] Add `robots.txt`, `sitemap.xml`, `<meta description>` per page, `noindex` on transactional pages, canonical + Open Graph tags — done 2026-09-21 (Handover #6). Origin hardcoded as `https://infinite-box.co`.
 
 ### Phase 10 — Content & catalogue
 - [ ] Real product photography → upload through **Admin → Products → Photo** (writes to `product-images` and sets `image_url`). Zero code changes needed.
 - [ ] Review copy on about/faq/materials (currently from the Airo export).
-- [ ] Add `privacy.html` and `terms.html` + footer links (Stripe live mode and Google OAuth app verification both want these).
+- [x] Add `privacy.html` and `terms.html` + footer links — done 2026-09-21. **User must fill the bracketed placeholders** (legal name, address, jurisdiction, retention/return periods) and ideally have the copy checked.
 - [ ] Turn coming-soon email capture into a real list (Mailchimp/Brevo) **or** drop the page.
 
 ### Phase 11 — Admin dashboard ✅ Done (2026-09-20)
@@ -168,12 +171,12 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [ ] Enter real stock counts for all products (Admin → Products) — until then the store shows almost everything as *Sold out*.
 - [ ] Replace placeholder social URLs in `partials.js` `SOCIAL_LINKS` (or blank a `url` to hide it).
 - [x] Page-hero top padding fixed (2026-09-20) — all 13 non-home pages; cart heading gap fixed; admin filter-chip contrast fixed.
-- [ ] Migrate remaining hardcoded px spacing onto `--space-*`.
-- [ ] Responsive audit of cart/custom/account/admin pages at 375px.
-- [ ] Lighthouse pass (performance, a11y, SEO).
-- [ ] Error/empty states for every DB read (products fetch fail, no orders, etc.).
+- [ ] Migrate remaining hardcoded px spacing onto `--space-*` — deliberately skipped 2026-09-21 (134 px literals, regression risk, no visible gain).
+- [x] Responsive audit of cart/custom/account/admin pages at 375px — done 2026-09-21; fixed cart rows (stack below 640px) and the admin product drawer form (single column below 480px).
+- [x] Lighthouse pass — done 2026-09-21: home desktop 98/95/100/100. Fixed footer contrast, qty `aria-label`, sized logos, CLS min-heights. Open: white-on-orange buttons are 3.06:1 (brand decision).
+- [x] Error/empty states for every DB read — done 2026-09-21: Retry button on index/shop/product/cart, empty-catalogue message, product not-found state, admin overview failure rows, admin-check network error distinguished from "not admin".
 - [ ] Stripe → **live mode** keys; swap secrets; final live purchase test with a real card + refund.
-- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_5.md`).
+- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_6.md`).
 
 ### Backlog / ideas (not scheduled)
 - Product search, product variants (size/colour/material options).
@@ -187,6 +190,6 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 
 1. **Phase 7** — now, no blockers.
 2. **Phase 11 (admin)** — done; it now replaces the Supabase dashboard for day-to-day product/order/quote management.
-3. **Phase 9** when the user is ready (deferred 2026-09-20) — Hostinger is paid for; upload `site/` (including `admin/`).
-4. **Phase 10 → 12 → 13** toward launch.
+3. **Phase 9** when the user is ready — nothing blocks it after 2026-09-21; upload `site/` (including `admin/`, `robots.txt`, `sitemap.xml`).
+4. **Phase 12** (emails, password reset) and the remaining user-side content items toward launch.
 
