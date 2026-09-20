@@ -112,7 +112,7 @@
             '<p class="cart-item-material">' + ibEscape(p.material) + ' · ' + formatPrice(p.price) + '</p>' + stockNote +
           '</div>' +
           '<div class="cart-item-actions">' +
-            '<div class="qty-input"><button type="button" data-qty-down>−</button><input type="text" value="' + item.qty + '" readonly><button type="button" data-qty-up>+</button></div>' +
+            '<div class="qty-input"><button type="button" data-qty-down>−</button><input type="text" value="' + item.qty + '" readonly aria-label="Quantity"><button type="button" data-qty-up>+</button></div>' +
             '<p class="product-price">' + formatPrice(p.price * item.qty) + '</p>' +
             '<button class="cart-remove" data-remove>Remove</button>' +
           '</div>' +

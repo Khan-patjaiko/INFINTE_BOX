@@ -525,7 +525,7 @@ button { font-family: inherit; cursor: pointer; }
 .footer-brand a.logo-lockup img { height: 24px; width: auto; }
 .footer-brand a.logo-lockup .wordmark { font-family: var(--font-heading); font-weight: 700; font-size: 16px; letter-spacing: 0.02em; color: hsl(var(--foreground)); }
 .footer-brand p { font-size: 14px; line-height: 1.6; color: hsl(var(--muted-foreground)); max-width: 320px; }
-.footer-brand .tag { margin-top: 16px; font-size: 12px; color: hsl(var(--muted-foreground) / 0.6); }
+.footer-brand .tag { margin-top: 16px; font-size: 12px; color: hsl(var(--muted-foreground)); }
 .footer-col p.head {
   font-size: 12px;
   font-weight: 500;
@@ -549,9 +549,9 @@ button { font-family: inherit; cursor: pointer; }
   align-items: flex-start;
   justify-content: space-between;
 }
-.footer-bottom p { font-size: 12px; color: hsl(var(--muted-foreground) / 0.5); }
+.footer-bottom p { font-size: 12px; color: hsl(var(--muted-foreground)); }
 .footer-legal { display: flex; gap: 24px; }
-.footer-legal a { font-size: 12px; color: hsl(var(--muted-foreground) / 0.5); transition: color 0.15s; }
+.footer-legal a { font-size: 12px; color: hsl(var(--muted-foreground)); transition: color 0.15s; }
 .footer-legal a:hover { color: #fff; }
 @media (min-width: 768px) { .footer-bottom { flex-direction: row; align-items: center; } }
 
@@ -723,6 +723,8 @@ button { font-family: inherit; cursor: pointer; }
 
 /* ---------- Async status / loading ---------- */
 .grid-status { color: hsl(var(--muted-foreground)); font-size: 14px; padding: 24px 0; }
+/* Reserve space while async content loads so the footer does not jump (CLS) */
+.product-detail, .product-grid { min-height: 320px; }
 
 /* ---------- Product images (when real photos exist) ---------- */
 .product-thumb img, .cart-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }

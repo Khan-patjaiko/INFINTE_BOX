@@ -19,7 +19,7 @@ function socialLinksHTML() {
 var HEADER_HTML = [
 '<header class="site-header">',
   '<div class="header-inner">',
-    '<a class="brand" href="index.html"><img src="assets/img/icon-light.png" alt=""><span class="wordmark">INFINITE BOX</span></a>',
+    '<a class="brand" href="index.html"><img src="assets/img/icon-light.png" alt="" width="782" height="784"><span class="wordmark">INFINITE BOX</span></a>',
     '<nav class="main-nav" aria-label="Main navigation">',
       '<a href="shop.html">Shop</a>',
       '<a href="custom.html">Custom Orders</a>',
@@ -55,7 +55,7 @@ var FOOTER_HTML = [
   '<div class="footer-inner">',
     '<div class="footer-grid">',
       '<div class="footer-brand">',
-        '<a class="logo-lockup" href="index.html"><img src="assets/img/icon-light.png" alt=""><span class="wordmark">INFINITE BOX</span></a>',
+        '<a class="logo-lockup" href="index.html"><img src="assets/img/icon-light.png" alt="" width="782" height="784"><span class="wordmark">INFINITE BOX</span></a>',
         '<p>Custom 3D printed parts for small businesses. FDM &amp; resin printing. Fast turnaround. Built to your spec.</p>',
         '<p class="tag">infinite-box.co</p>',
       '</div>',

@@ -83,7 +83,7 @@
               ? '<div class="pd-actions"><span class="btn btn-outline pd-sold-out" aria-disabled="true">Sold out</span></div>' +
                 '<p class="form-note">This item is currently out of stock. <a href="custom.html" style="text-decoration:underline;">Request a custom order</a> or check back soon.</p>'
               : '<div class="pd-actions">' +
-                  '<div class="qty-input"><button type="button" data-qty="-1">−</button><input type="text" id="qty" value="1" readonly><button type="button" data-qty="1">+</button></div>' +
+                  '<div class="qty-input"><button type="button" data-qty="-1">−</button><input type="text" id="qty" value="1" readonly aria-label="Quantity"><button type="button" data-qty="1">+</button></div>' +
                   '<button class="btn btn-primary" id="add-to-cart-btn">Add to Cart</button>' +
                 '</div>' +
                 (p.stock <= 5 ? '<p class="form-note pd-low-stock">Only ' + p.stock + ' left in stock.</p>' : "") +
