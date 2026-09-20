@@ -33,12 +33,13 @@ and SEO/share metadata; it is not yet deployed (Hostinger hosting is purchased b
 | Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20 — **stock counts still need to be entered** (all 0 except Custom Enclosure) |
 | Footer social links (Facebook / Instagram / Line) | ⚠️ Added 2026-09-21 with **placeholder URLs** in `partials.js` `SOCIAL_LINKS` |
 | Legal pages (`privacy.html`, `terms.html`) + footer/signup links | ⚠️ Done 2026-09-21 — **orange bracketed placeholders** (legal name, address, jurisdiction, retention periods) need filling |
-| SEO / share prep (robots.txt, sitemap.xml, descriptions, noindex, canonical, Open Graph) | ✅ Done 2026-09-21 — assumes domain `https://infinite-box.co` |
+| SEO / share prep (robots.txt, sitemap.xml, descriptions, noindex, canonical, Open Graph) | ✅ Done 2026-09-21 — domain **`infinite-box.co` confirmed, registered at GoDaddy** (2026-09-21) |
+| Product categories (`store_settings.product_categories`, migration 0012) | ✅ Done 2026-09-21 — Enclosures · Mechanical · Prototyping · Resin · Accessories · Automotive · Home Decoration · Personal Gadgets · Pets Supplies |
 | Error/empty states + Retry on every DB read; 375px audit; Lighthouse (home 98/95/100/100) | ✅ Done 2026-09-21 |
 | Email notifications (order confirmation, new quote alert) | ❌ None |
 | Coming-soon page email capture | ❌ localStorage only, not a real list |
 
-**Immediate blockers on the user side:** (1) enter stock counts in Admin → Products, (2) real social URLs in `partials.js`, (3) fill the placeholders in `privacy.html` / `terms.html` and confirm the domain is `infinite-box.co`, (4) product photos (upload via Admin → Products), (5) upload `site/` to Hostinger
+**Immediate blockers on the user side:** (1) enter stock counts in Admin → Products, (2) real social URLs in `partials.js`, (3) fill the placeholders in `privacy.html` / `terms.html`, (4) product photos (upload via Admin → Products), (5) upload `site/` to Hostinger
 `public_html` and point the domain at it.
 
 ---
@@ -80,7 +81,7 @@ E-Commerce Web/
 │       └── img/                   icon-/logo- dark/light PNGs
 ├── supabase/                      ← backend source of truth (mirrors hosted project)
 │   ├── config.toml                project id, verify_jwt=false per function
-│   ├── migrations/*.sql           11 migrations (same versions as production)
+│   ├── migrations/*.sql           12 migrations (same versions as production)
 │   └── functions/<name>/index.ts  submit-quote · create-checkout-session · stripe-webhook · get-order
 ├── docs/ARCHITECTURE.md           Four-layer architecture reference
 ├── coming-soon/index.html         Standalone pre-launch page (separate deploy, no backend)
@@ -89,7 +90,7 @@ E-Commerce Web/
 └── HANDOVER*.md                   Session history
 
 Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
-├── Tables: profiles, products (+stock), orders (+stock_applied_at), order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (RLS on all; admins can update orders/quotes/messages)
+├── Tables: profiles, products (+stock), orders (+stock_applied_at), order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (shipping_cents, product_categories) (RLS on all; admins can update orders/quotes/messages)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
 ├── Auth: email/password (confirmation on), Google OAuth
@@ -133,7 +134,7 @@ Goal: clean state, everything known-good.
 
 ### Phase 9 — Deployment to Hostinger (Hostinger hosting purchased; no other blocker)
 - [ ] Upload `site/` contents to `public_html` (FTP/File Manager). No build step.
-- [ ] Confirm HTTPS active.
+- [ ] Point the GoDaddy DNS for `infinite-box.co` at Hostinger (A record / nameservers per the Hostinger panel), then confirm HTTPS active.
 - [ ] Supabase → Auth → URL Configuration: add `https://<domain>/**` to Redirect URLs; set Site URL.
 - [ ] Google Cloud Console: add production domain to authorized JS origins if required.
 - [ ] Re-run login (email + Google) and a test checkout on the live domain.

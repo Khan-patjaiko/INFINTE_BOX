@@ -81,6 +81,7 @@
   (function () {
     var A = window.IBAdmin;
     var all = [];
+    var configuredCategories = [];
     var current = null;       // row being edited (null = new)
     var pendingImage = null;  // File chosen but not yet uploaded
     var clearImage = false;   // "Remove photo" pressed
@@ -119,7 +120,8 @@
           '<td>' + (p.active ? '<span class="order-status paid">active</span>' : '<span class="order-status">inactive</span>') + '</td></tr>';
       }).join("") : '<tr><td colspan="8" class="muted">No products match.</td></tr>';
 
-      var cats = Array.from(new Set(all.map(function (p) { return p.category; }).filter(Boolean)));
+      var cats = configuredCategories.slice();
+      all.forEach(function (p) { if (p.category && cats.indexOf(p.category) === -1) cats.push(p.category); });
       $("category-list").innerHTML = cats.map(function (c) { return '<option value="' + ibEscape(c) + '">'; }).join("");
     }
 
@@ -254,6 +256,7 @@
       var res = await window.IBDB.from("products").select("*").order("sort", { ascending: true });
       if (res.error) throw res.error;
       all = res.data || [];
+      configuredCategories = await loadCategories();
       render();
       var open = new URLSearchParams(location.search).get("open");
       if (open) { var p = all.find(function (x) { return x.id === open; }); if (p) openDrawer(p); }

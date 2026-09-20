@@ -69,8 +69,11 @@
 
     function load() {
       grid.innerHTML = '<p class="grid-status">Loading products…</p>';
-      loadProducts().then(function () {
-        var categories = ["All"].concat(Array.from(new Set(PRODUCTS.map(function (p) { return p.category; }))));
+      Promise.all([loadProducts(), loadCategories()]).then(function (r) {
+        var inUse = Array.from(new Set(PRODUCTS.map(function (p) { return p.category; }).filter(Boolean)));
+        var ordered = r[1].filter(function (c) { return inUse.indexOf(c) !== -1; });
+        inUse.forEach(function (c) { if (ordered.indexOf(c) === -1) ordered.push(c); });
+        var categories = ["All"].concat(ordered);
         filterBar.innerHTML = categories.map(function (c, i) {
           return '<button class="filter-chip' + (i === 0 ? ' active' : '') + '" data-category="' + ibEscape(c) + '">' + ibEscape(c) + '</button>';
         }).join("");

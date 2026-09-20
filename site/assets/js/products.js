@@ -40,6 +40,18 @@ function loadProducts() {
   return _productsPromise;
 }
 
+// Configured category list from store_settings.product_categories (migration 0012).
+// Resolves to [] if the row is missing or the read fails, so callers can always fall back
+// to the categories actually present on products.
+function loadCategories() {
+  if (!window.IBDB) return Promise.resolve([]);
+  return window.IBDB.from("store_settings").select("value").eq("key", "product_categories").maybeSingle()
+    .then(function (res) {
+      var v = res && res.data && res.data.value;
+      return Array.isArray(v) ? v.filter(function (c) { return typeof c === "string" && c; }) : [];
+    }, function () { return []; });
+}
+
 // Error message with a Retry button. Pages listen for clicks on [data-retry]
 // inside their container and re-run their loader (see ibOnRetry).
 function loadErrorHTML(message) {
