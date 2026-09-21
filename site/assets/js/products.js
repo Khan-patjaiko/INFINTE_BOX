@@ -16,6 +16,8 @@ function _mapProductRow(row) {
     description: row.description,
     specs: row.specs || {},
     image: row.image_url || null,
+    // Gallery for product.html: image_url first, then the rest of products.images (no dupes).
+    images: [row.image_url].concat(Array.isArray(row.images) ? row.images : []).filter(function (u, i, a) { return u && a.indexOf(u) === i; }),
     stock: typeof row.stock === "number" ? row.stock : 0,
     soldOut: !(row.stock > 0)
   };

@@ -94,8 +94,11 @@
       return String(n);
     }
 
+    // image_url is either a storage URL or a path relative to the site root; admin/ is one level down.
+    function imgSrc(u) { return /^(https?:)?\/\//.test(u) || u.charAt(0) === "/" ? u : "../" + u; }
+
     function thumbHTML(p) {
-      if (p.image_url) return '<img src="' + ibEscape(p.image_url) + '" alt="">';
+      if (p.image_url) return '<img src="' + ibEscape(imgSrc(p.image_url)) + '" alt="">';
       return typeof productIconSVG === "function" ? productIconSVG(p.icon_key) : "";
     }
 
@@ -145,7 +148,7 @@
       if (pendingImage) {
         box.innerHTML = '<img src="' + URL.createObjectURL(pendingImage) + '" alt="" style="width:100%;height:100%;object-fit:cover;">';
       } else if (current && current.image_url && !clearImage) {
-        box.innerHTML = '<img src="' + ibEscape(current.image_url) + '" alt="" style="width:100%;height:100%;object-fit:cover;">';
+        box.innerHTML = '<img src="' + ibEscape(imgSrc(current.image_url)) + '" alt="" style="width:100%;height:100%;object-fit:cover;">';
       } else {
         box.innerHTML = typeof productIconSVG === "function" ? productIconSVG(current && current.icon_key ? current.icon_key : DEFAULT_ICON) : "";
       }

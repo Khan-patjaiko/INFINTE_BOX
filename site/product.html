@@ -71,8 +71,32 @@
           return '<div class="pd-meta-row"><span>' + ibEscape(k) + '</span><span>' + ibEscape(p.specs[k]) + '</span></div>';
         }).join("");
 
+        // Gallery: main image with prev/next arrows and a thumbnail strip when there is more
+        // than one photo; falls back to the placeholder icon when there are none.
+        var galleryHtml;
+        if (p.images.length) {
+          galleryHtml =
+            '<div class="pd-gallery" id="pd-gallery">' +
+              '<div class="pd-image">' +
+                '<img id="pd-main" src="' + ibEscape(p.images[0]) + '" alt="' + ibEscape(p.name) + '">' +
+                (p.images.length > 1
+                  ? '<button type="button" class="pd-nav pd-prev" data-dir="-1" aria-label="Previous photo">‹</button>' +
+                    '<button type="button" class="pd-nav pd-next" data-dir="1" aria-label="Next photo">›</button>' +
+                    '<span class="pd-count" id="pd-count">1 / ' + p.images.length + '</span>'
+                  : '') +
+              '</div>' +
+              (p.images.length > 1
+                ? '<div class="pd-thumbs" role="tablist">' + p.images.map(function (src, i) {
+                    return '<button type="button" class="pd-thumb' + (i === 0 ? ' is-active' : '') + '" data-index="' + i + '" role="tab" aria-selected="' + (i === 0) + '" aria-label="Photo ' + (i + 1) + '"><img src="' + ibEscape(src) + '" alt="" loading="lazy"></button>';
+                  }).join('') + '</div>'
+                : '') +
+            '</div>';
+        } else {
+          galleryHtml = '<div class="pd-image">' + productThumbHTML(p) + '</div>';
+        }
+
         detail.innerHTML =
-          '<div class="pd-image">' + productThumbHTML(p) + '</div>' +
+          galleryHtml +
           '<div class="pd-info">' +
             '<p class="eyebrow">' + ibEscape(p.category) + '</p>' +
             '<h1>' + ibEscape(p.name) + '</h1>' +
@@ -89,6 +113,42 @@
                 (p.stock <= 5 ? '<p class="form-note pd-low-stock">Only ' + p.stock + ' left in stock.</p>' : "") +
                 '<p class="add-msg" id="add-msg">Added to cart.</p>') +
           '</div>';
+
+        if (p.images.length > 1) {
+          var current = 0;
+          var mainImg = document.getElementById("pd-main");
+          var countEl = document.getElementById("pd-count");
+          var thumbs = document.querySelectorAll(".pd-thumb");
+          var show = function (i) {
+            current = (i + p.images.length) % p.images.length;
+            mainImg.src = p.images[current];
+            countEl.textContent = (current + 1) + " / " + p.images.length;
+            thumbs.forEach(function (t, j) {
+              t.classList.toggle("is-active", j === current);
+              t.setAttribute("aria-selected", j === current);
+            });
+          };
+          document.querySelectorAll(".pd-nav").forEach(function (b) {
+            b.addEventListener("click", function () { show(current + parseInt(b.dataset.dir, 10)); });
+          });
+          thumbs.forEach(function (t) {
+            t.addEventListener("click", function () { show(parseInt(t.dataset.index, 10)); });
+          });
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "ArrowLeft") show(current - 1);
+            if (e.key === "ArrowRight") show(current + 1);
+          });
+          // Swipe on touch devices.
+          var touchX = null;
+          var gal = document.getElementById("pd-gallery");
+          gal.addEventListener("touchstart", function (e) { touchX = e.touches[0].clientX; }, { passive: true });
+          gal.addEventListener("touchend", function (e) {
+            if (touchX === null) return;
+            var dx = e.changedTouches[0].clientX - touchX;
+            if (Math.abs(dx) > 40) show(current + (dx < 0 ? 1 : -1));
+            touchX = null;
+          });
+        }
 
         var qtyInput = document.getElementById("qty");
         document.querySelectorAll("[data-qty]").forEach(function (btn) {
