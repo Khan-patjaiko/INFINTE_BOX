@@ -146,7 +146,7 @@ button { font-family: inherit; cursor: pointer; }
   align-items: center;
   gap: 16px;
 }
-.header-actions a.account-link {
+.header-actions a.account-link, .header-actions a.store-link {
   font-size: 14px;
   font-weight: 500;
   color: hsl(var(--foreground) / 0.6);

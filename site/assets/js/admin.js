@@ -23,7 +23,7 @@
         '<a class="brand" href="index.html"><img src="../assets/img/icon-light.png" alt=""><span class="wordmark">INFINITE BOX</span><span class="admin-tag">Admin</span></a>' +
         '<nav class="admin-nav" aria-label="Admin navigation">' + links + "</nav>" +
         '<div class="header-actions">' +
-          '<a class="account-link" href="../index.html">View store</a>' +
+          '<a class="store-link" href="../index.html">View store</a>' +
           '<button type="button" class="btn btn-outline btn-sm" id="admin-logout">Log out</button>' +
         "</div>" +
       "</div>" +
