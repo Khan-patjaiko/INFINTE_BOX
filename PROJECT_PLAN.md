@@ -102,7 +102,7 @@ Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
 ├── Tables: profiles, products (+stock), orders (+stock_applied_at), order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (shipping_cents, product_categories) (RLS on all; admins can update orders/quotes/messages)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
-├── Auth: email/password (confirmation on, min length 8, SMTP via Resend from hello@infinite-box.co), Google OAuth · 1 user (owner, Google, admin)
+├── Auth: email/password (confirmation on, min length 8, SMTP via Resend from hello@infinite-box.co), Google OAuth · 2 users (owner chaopraya.khan@gmail.com = admin; khanleenine@gmail.com = customer)
 ├── Edge Functions: submit-quote ✅ (v3, + emails) · submit-contact ✅ (v1) · create-checkout-session ✅ (v10: **401 unless signed in**, THB, ฿50 shipping / free from ฿800 via `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v9: ฿ emails, pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
 └── Email: Resend, domain infinite-box.co verified; secrets RESEND_API_KEY / OWNER_EMAIL / EMAIL_FROM
 
@@ -145,7 +145,7 @@ Goal: clean state, everything known-good.
 ### Phase 9 — Deployment to Hostinger (Hostinger hosting purchased; no other blocker)
 - [ ] Upload `site/` contents to `public_html` (FTP/File Manager). No build step.
 - [ ] Point the GoDaddy DNS for `infinite-box.co` at Hostinger (A record / nameservers per the Hostinger panel), then confirm HTTPS active.
-- [ ] Supabase → Auth → URL Configuration: add `https://<domain>/**` to Redirect URLs; set Site URL.
+- [~] Supabase → Auth → URL Configuration: Redirect URLs now `http://localhost:8790/**` + `https://infinite-box.co/**` (2026-09-21). **Launch day:** change Site URL from `http://localhost:8790` to `https://infinite-box.co`.
 - [ ] Google Cloud Console → Google Auth Platform → **Audience → Publish app** (Testing → In production). Launch-day step: in Testing only listed test users can use Google sign-in. Branding (name, logo, home/privacy/terms URLs, authorized domains `ptwfidmlnuggxvqhimhe.supabase.co` + `infinite-box.co`) was filled in 2026-09-21.
 - [ ] After the site is live: verify `infinite-box.co` in Google Search Console, then submit the OAuth app for **brand verification** so the consent screen says "Sign in to Infinite Box" instead of the raw `…supabase.co` domain. If Google objects to the unowned supabase.co domain, the fallback is a Supabase custom domain (`api.infinite-box.co`, $10/mo add-on) + updating `config.js`, the Google redirect URI and the Stripe webhook URL.
 - [ ] Re-run login (email + Google) and a test checkout on the live domain.
