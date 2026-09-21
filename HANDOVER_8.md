@@ -17,7 +17,7 @@ Phase 9 (deploy to Hostinger) is now the only engineering phase left.
 | 7 | Password minimum → 8 | User (dashboard) + Claude | Dashboard min length set to 8; `signup.html` raised from `minlength="6"` to `8` to match `reset-password.html`; hint added under the field. |
 | 8 | Password conditions checklist | Claude (user request) | Replaced the hint sentence with a live "Password conditions" checklist on `signup.html` and `reset-password.html` (shared `IBAuth.attachPasswordRules` in `auth.js`, `.pw-rules` CSS): 8–50 chars, ≥1 uppercase, ≥1 lowercase, ≥1 number, ≥1 symbol, plus a Confirm-password field (new on signup) with a live "Passwords do not match" error. Submit stays disabled until all pass; handlers re-check before calling Supabase. Verified in the pane (weak / mismatch / match / too-long states). **Client-side only** — server-side enforcement is Supabase → Auth → Email → *Password Requirements* (free plan, not turned on). |
 
-## Commits (3, on top of `d4038ab`)
+## Commits (4, on top of `d4038ab`)
 
 ```
 d6c781d Live password-conditions checklist on signup and reset
