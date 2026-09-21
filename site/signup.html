@@ -64,7 +64,13 @@
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/partials.js"></script>
 <script>
-  IBAuth.getUser().then(function (user) { if (user) window.location.href = "account.html"; });
+  // Same-site pages only (e.g. "cart.html" when sent here from checkout) — never absolute/../ URLs.
+  function nextTarget() {
+    var next = new URLSearchParams(location.search).get("next");
+    return (next && /^(admin\/)?[a-zA-Z0-9_-]+\.html$/.test(next)) ? next : "account.html";
+  }
+
+  IBAuth.getUser().then(function (user) { if (user) window.location.href = nextTarget(); });
 
   async function handleGoogleSignup() {
     var btn = document.getElementById("google-signup-btn");
@@ -72,7 +78,7 @@
     errorEl.style.display = "none";
     btn.disabled = true;
     try {
-      var res = await IBAuth.signInWithGoogle("account.html");
+      var res = await IBAuth.signInWithGoogle(nextTarget());
       if (res.error) throw res.error;
     } catch (err) {
       errorEl.textContent = err && err.message ? err.message : "Google sign-in failed. Please try again.";
@@ -99,12 +105,13 @@
       if (res.error) throw res.error;
       if (res.data && res.data.session) {
         // Auto-confirmed: already logged in.
-        window.location.href = "account.html";
+        window.location.href = nextTarget();
         return false;
       }
       // Email confirmation required.
       document.getElementById("signup-form").reset();
-      successEl.textContent = "Almost there — check your email to confirm your account, then log in.";
+      successEl.textContent = "Almost there — check your email to confirm your account, then log in" +
+        (nextTarget() === "cart.html" ? " to finish your order (your cart is saved on this device)." : ".");
       successEl.style.display = "block";
     } catch (err) {
       errorEl.textContent = err && err.message ? err.message : "Couldn't create your account. Please try again.";

@@ -43,7 +43,7 @@
           <button class="btn btn-primary btn-block" type="submit" id="login-submit">Log in</button>
           <p class="form-note" id="login-error" style="display:none;color:hsl(var(--destructive));"></p>
         </form>
-        <p class="auth-alt">Don't have an account? <a href="signup.html">Create one</a></p>
+        <p class="auth-alt">Don't have an account? <a href="signup.html" id="signup-link">Create one</a></p>
       </div>
     </div>
   </section>
@@ -68,6 +68,11 @@
 
   // If already signed in, skip the form.
   IBAuth.getUser().then(function (user) { if (user) window.location.href = nextTarget(); });
+
+  // Carry ?next= over to signup so a new customer lands back where they started (e.g. the cart).
+  if (new URLSearchParams(location.search).get("next")) {
+    document.getElementById("signup-link").href = "signup.html?next=" + encodeURIComponent(nextTarget());
+  }
 
   async function handleGoogleLogin() {
     var btn = document.getElementById("google-login-btn");

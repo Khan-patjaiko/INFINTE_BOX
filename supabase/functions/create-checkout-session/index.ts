@@ -49,7 +49,8 @@ Deno.serve(async (req) => {
       ? shipRow!.value as number
       : DEFAULT_SHIPPING_CENTS;
 
-    // Optionally identify the signed-in user.
+    // Checkout requires a signed-in customer (no guest orders): every order is tied to
+    // an account so it shows up in account.html and the customer gets the receipt.
     let userId: string | null = null;
     let userEmail: string | null = null;
     const authHeader = req.headers.get("Authorization");
@@ -63,6 +64,7 @@ Deno.serve(async (req) => {
         userEmail = data.user.email ?? null;
       }
     }
+    if (!userId || !userEmail) return json({ error: "Please log in to check out." }, 401);
 
     // Authoritative price lookup by slug (never trust client prices).
     const slugs = items.map((i: { id: string }) => i.id);
@@ -100,7 +102,7 @@ Deno.serve(async (req) => {
 
     const { data: order, error: oErr } = await admin.from("orders").insert({
       user_id: userId,
-      email: userEmail ?? "guest@pending",
+      email: userEmail,
       status: "pending",
       subtotal_cents: subtotal,
       shipping_cents: shippingCents,
@@ -116,7 +118,7 @@ Deno.serve(async (req) => {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: lineItems as never,
-      customer_email: userEmail ?? undefined,
+      customer_email: userEmail,
       // Flat-rate shipping shown as a proper shipping line, and collect the address.
       shipping_options: [{
         shipping_rate_data: {
