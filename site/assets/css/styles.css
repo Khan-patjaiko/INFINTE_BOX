@@ -663,6 +663,24 @@ button { font-family: inherit; cursor: pointer; }
   font-size: 13px;
 }
 .form-note { font-size: 13px; color: hsl(var(--muted-foreground)); margin-top: 8px; }
+.field input.is-invalid { border-color: hsl(var(--destructive)); }
+.pw-rules { margin-top: 4px; }
+.pw-rules-title { font-size: 13px; font-weight: 500; color: hsl(var(--foreground) / 0.8); margin-bottom: 8px; }
+.pw-rules ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.pw-rules li { display: flex; align-items: center; gap: 10px; font-size: 13px; color: hsl(var(--muted-foreground)); transition: color 0.15s; }
+.pw-rule-mark {
+  flex: none; width: 18px; height: 18px; border-radius: 50%;
+  border: 1.5px solid hsl(var(--border));
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.pw-rule-mark::after {
+  content: ""; width: 5px; height: 9px; margin-top: -2px;
+  border: solid transparent; border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+.pw-rules li.is-ok { color: hsl(var(--success)); }
+.pw-rules li.is-ok .pw-rule-mark { border-color: hsl(var(--success)); background: hsl(var(--success) / 0.12); }
+.pw-rules li.is-ok .pw-rule-mark::after { border-color: hsl(var(--success)); }
 
 /* ---------- FAQ ---------- */
 .faq-item { border-bottom: 1px solid hsl(var(--border)); }

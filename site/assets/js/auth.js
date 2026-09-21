@@ -73,7 +73,64 @@
     return user;
   }
 
+  // ---- Password rules checklist (signup.html, reset-password.html) ----
+  // Renders "Password conditions" under the password field, re-checks on every
+  // keystroke, and keeps the submit button disabled until every rule passes
+  // (and the confirm field matches, when there is one).
+  var PASSWORD_RULES = [
+    { id: "len",    label: "Between 8 and 50 characters", test: function (p) { return p.length >= 8 && p.length <= 50; } },
+    { id: "upper",  label: "At least one uppercase letter (A–Z)", test: function (p) { return /[A-Z]/.test(p); } },
+    { id: "lower",  label: "At least one lowercase letter (a–z)", test: function (p) { return /[a-z]/.test(p); } },
+    { id: "number", label: "At least one number (0–9)", test: function (p) { return /[0-9]/.test(p); } },
+    { id: "symbol", label: "At least one symbol (e.g. ! @ # $ %)", test: function (p) { return /[^A-Za-z0-9\s]/.test(p); } }
+  ];
+
+  function passwordIsValid(p) {
+    return PASSWORD_RULES.every(function (r) { return r.test(p); });
+  }
+
+  // opts: { password, confirm (optional), list, submit, matchError (optional) } — element ids.
+  function attachPasswordRules(opts) {
+    var pw = document.getElementById(opts.password);
+    var pw2 = opts.confirm ? document.getElementById(opts.confirm) : null;
+    var list = document.getElementById(opts.list);
+    var submit = document.getElementById(opts.submit);
+    var matchEl = opts.matchError ? document.getElementById(opts.matchError) : null;
+    if (!pw || !list || !submit) return;
+
+    list.innerHTML = '<p class="pw-rules-title">Password conditions</p><ul>' +
+      PASSWORD_RULES.map(function (r) {
+        return '<li data-rule="' + r.id + '"><span class="pw-rule-mark" aria-hidden="true"></span>' + r.label + '</li>';
+      }).join("") + "</ul>";
+    var items = {};
+    PASSWORD_RULES.forEach(function (r) { items[r.id] = list.querySelector('[data-rule="' + r.id + '"]'); });
+
+    function update() {
+      var p = pw.value;
+      var allOk = true;
+      PASSWORD_RULES.forEach(function (r) {
+        var ok = r.test(p);
+        items[r.id].classList.toggle("is-ok", ok);
+        if (!ok) allOk = false;
+      });
+      var match = true;
+      if (pw2) {
+        match = pw2.value === p;
+        var showMismatch = pw2.value.length > 0 && !match;
+        pw2.classList.toggle("is-invalid", showMismatch);
+        if (matchEl) matchEl.style.display = showMismatch ? "block" : "none";
+      }
+      submit.disabled = !(allOk && match);
+    }
+    pw.addEventListener("input", update);
+    if (pw2) pw2.addEventListener("input", update);
+    update();
+  }
+
   window.IBAuth = {
+    passwordRules: PASSWORD_RULES,
+    passwordIsValid: passwordIsValid,
+    attachPasswordRules: attachPasswordRules,
     getUser: getUser,
     signUp: signUp,
     signIn: signIn,
