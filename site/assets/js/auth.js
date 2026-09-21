@@ -31,6 +31,18 @@
     });
   }
 
+  // Password reset: emails a recovery link that lands on reset-password.html
+  // (the URL must be in Supabase → Auth → URL Configuration → Redirect URLs).
+  function resetPassword(email) {
+    var target = new URL("reset-password.html", window.location.href);
+    return db().auth.resetPasswordForEmail(email, { redirectTo: target.href });
+  }
+
+  // Works for a recovery session (from the email link) and for a normal signed-in session.
+  function updatePassword(newPassword) {
+    return db().auth.updateUser({ password: newPassword });
+  }
+
   async function signOut() {
     if (db()) { try { await db().auth.signOut(); } catch (e) {} }
     window.location.href = "index.html";
@@ -66,6 +78,8 @@
     signUp: signUp,
     signIn: signIn,
     signInWithGoogle: signInWithGoogle,
+    resetPassword: resetPassword,
+    updatePassword: updatePassword,
     signOut: signOut,
     refreshHeader: refreshHeader,
     requireUser: requireUser
