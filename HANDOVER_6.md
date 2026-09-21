@@ -6,7 +6,8 @@ Last updated: 2026-09-21 (session ran 2026-09-21)
 
 Starting point was [HANDOVER_5.md](HANDOVER_5.md): admin dashboard and stock enforcement done,
 nothing deployed. The user chose **launch readiness** (Phase 10 legal pages + Phase 9 SEO prep +
-Phase 13 hardening) over Phase 12 notifications. Four commits, all local (see [Git state](#git-state)).
+Phase 13 hardening) over Phase 12 notifications, then asked for product categories and two
+layout fixes. Eight commits, all local (see [Git state](#git-state)).
 
 ## Part 1 — Legal pages (Phase 10)
 
@@ -80,6 +81,32 @@ Left alone, deliberately:
   fix it but isn't worth it pre-launch.
 - `bf-cache`, `unused-css`, `render-blocking` — CDN supabase-js + one stylesheet; fine.
 
+## Part 6 — Product categories (migration 0012) + domain confirmed
+
+- **Domain:** the user has registered ** at GoDaddy** — exactly what Part 2 assumed,
+  so nothing in the code changed. DNS is not yet pointed at Hostinger (Phase 9).
+- **Categories** were only ever free text on ; the shop chips and the admin
+  datalist were derived from whatever products existed. Now there is a configured list:
+  migration  upserts  (jsonb array,
+  applied to the hosted project):
+  Enclosures · Mechanical · Prototyping · Resin · Accessories · **Automotive · Home Decoration ·
+  Personal Gadgets · Pets Supplies** (the user listed "Home Decoration" and "Home Decorations";
+  treated as one). Change it with one SQL update, no redeploy.
+-  gained  (public read, resolves to  on any failure).
+  Admin → Products Category field offers the list plus any category already on a product; the
+  shop shows **every** configured category as a chip (so new ones are visible before products
+  are assigned) and an empty category shows "Nothing in this category yet" + custom-order link.
+
+## Part 7 — Layout fixes from user screenshots
+
+1. **Shop page blank space**: hero bottom padding + a 64px section top left ~130px of nothing
+   before the chips. Chips moved *into* the hero under the intro text (,
+    rules); hero-to-grid gap is now 40px. Only  changed; other pages
+   keep the shared .
+2. **Home hero blank space**:  had , so it filled the
+   whole screen with empty bands on tall monitors. Removed; now fixed padding (64px mobile /
+   80px desktop) and . Hero is 625px tall at 1400×800.
+
 ## Not done / deferred
 
 - `--space-*` migration (134 px literals) — skipped on purpose, regression risk with no
@@ -107,23 +134,27 @@ Left alone, deliberately:
 
 ## Git state
 
-Working tree clean. `main` is **14 commits ahead of `origin/main`** (push only when the user asks):
+Working tree clean. `main` is **19 commits ahead of `origin/main`** (push only when the user asks):
 
 ```
+0feda3b Home hero: size by content instead of filling the viewport
+2e7e2a8 Shop: move category chips into the hero and show every configured category
+42c92b6 Add configurable product categories (store_settings.product_categories)
+272e2ad Add Handover #6 and update project plan for launch-readiness work
 95826c6 Make the admin product drawer form single-column below 480px
 e80537a Lighthouse fixes: footer contrast, qty input labels, sized logos, CLS
 b0e8d16 Add error/retry states for DB reads and stack cart rows on mobile
 4925900 Add privacy/terms pages, robots.txt, sitemap and SEO/Open Graph meta
 eb59643 Add Handover #5 and update project plan                          (from Handover #5)
 ```
-(plus this handover commit)
+(plus the final handover commit)
 
 ## Suggested next steps
 
-1. **User:** fill the orange placeholders in `privacy.html` / `terms.html`; confirm the domain
-   is `infinite-box.co`; enter stock counts; real social URLs; push `main`.
-2. **Phase 9 — Hostinger**: nothing else blocks it now. Upload `site/` (incl. `admin/`,
-   `robots.txt`, `sitemap.xml`), add the domain to Supabase Auth redirect URLs, re-test login +
-   checkout live.
+1. **User:** fill the orange placeholders in `privacy.html` / `terms.html`; enter stock counts
+   and assign products to the new categories (Admin → Products); real social URLs; push `main`.
+2. **Phase 9 — Hostinger**: nothing else blocks it now. Point GoDaddy DNS for `infinite-box.co`
+   at Hostinger, upload `site/` (incl. `admin/`, `robots.txt`, `sitemap.xml`), add
+   `https://infinite-box.co/**` to Supabase Auth redirect URLs, re-test login + checkout live.
 3. **Phase 12** — order/quote emails, password reset, profile edit.
 4. Optional design call on the orange button contrast before launch.

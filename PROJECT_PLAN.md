@@ -26,7 +26,7 @@ and SEO/share metadata; it is not yet deployed (Hostinger hosting is purchased b
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
 | Hosting | ⚠️ **Hostinger purchased**, not yet deployed |
-| Git | ⚠️ Local `main` is **15 commits ahead of `origin/main`** (not pushed) as of 2026-09-21 |
+| Git | ⚠️ Local `main` is **20 commits ahead of `origin/main`** (not pushed) as of 2026-09-21 |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
 | Real product photography | ❌ None (SVG placeholders; frontend ready for `image_url`) |
 | Admin UI (`site/admin/` — overview, orders, quotes, messages, products) | ✅ Done 2026-09-20, verified signed in as admin (`testuser@infinitebox.dev` is admin) |
@@ -36,10 +36,11 @@ and SEO/share metadata; it is not yet deployed (Hostinger hosting is purchased b
 | SEO / share prep (robots.txt, sitemap.xml, descriptions, noindex, canonical, Open Graph) | ✅ Done 2026-09-21 — domain **`infinite-box.co` confirmed, registered at GoDaddy** (2026-09-21) |
 | Product categories (`store_settings.product_categories`, migration 0012) | ✅ Done 2026-09-21 — Enclosures · Mechanical · Prototyping · Resin · Accessories · Automotive · Home Decoration · Personal Gadgets · Pets Supplies |
 | Error/empty states + Retry on every DB read; 375px audit; Lighthouse (home 98/95/100/100) | ✅ Done 2026-09-21 |
+| Layout: shop chips in hero, home hero content-sized (no more viewport-height blank space) | ✅ Done 2026-09-21 |
 | Email notifications (order confirmation, new quote alert) | ❌ None |
 | Coming-soon page email capture | ❌ localStorage only, not a real list |
 
-**Immediate blockers on the user side:** (1) enter stock counts in Admin → Products, (2) real social URLs in `partials.js`, (3) fill the placeholders in `privacy.html` / `terms.html`, (4) product photos (upload via Admin → Products), (5) upload `site/` to Hostinger
+**Immediate blockers on the user side:** (1) enter stock counts and assign the new categories in Admin → Products, (2) real social URLs in `partials.js`, (3) fill the placeholders in `privacy.html` / `terms.html`, (4) product photos (upload via Admin → Products), (5) upload `site/` to Hostinger
 `public_html` and point the domain at it.
 
 ---
@@ -50,7 +51,7 @@ and SEO/share metadata; it is not yet deployed (Hostinger hosting is purchased b
 E-Commerce Web/
 ├── site/                          ← main storefront (static, deploy to Hostinger public_html)
 │   ├── index.html                 Home (hero, featured products)          [partials.js header/footer]
-│   ├── shop.html                  Catalogue grid + category filter (live DB)
+│   ├── shop.html                  Catalogue grid; category chips in the hero from store_settings.product_categories
 │   ├── product.html?id=<slug>     Product detail + spec table
 │   ├── cart.html                  Cart → Stripe Checkout / link to custom quote
 │   ├── custom.html                Custom-order quote form (+ file upload)
@@ -172,6 +173,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [ ] Enter real stock counts for all products (Admin → Products) — until then the store shows almost everything as *Sold out*.
 - [ ] Replace placeholder social URLs in `partials.js` `SOCIAL_LINKS` (or blank a `url` to hide it).
 - [x] Page-hero top padding fixed (2026-09-20) — all 13 non-home pages; cart heading gap fixed; admin filter-chip contrast fixed.
+- [x] Blank-space fixes (2026-09-21): shop chips moved into the hero; home `.hero` no longer `min-height: 100vh`.
 - [ ] Migrate remaining hardcoded px spacing onto `--space-*` — deliberately skipped 2026-09-21 (134 px literals, regression risk, no visible gain).
 - [x] Responsive audit of cart/custom/account/admin pages at 375px — done 2026-09-21; fixed cart rows (stack below 640px) and the admin product drawer form (single column below 480px).
 - [x] Lighthouse pass — done 2026-09-21: home desktop 98/95/100/100. Fixed footer contrast, qty `aria-label`, sized logos, CLS min-heights. Open: white-on-orange buttons are 3.06:1 (brand decision).
@@ -181,6 +183,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 
 ### Backlog / ideas (not scheduled)
 - Product search, product variants (size/colour/material options).
+- Admin UI for editing `store_settings` (shipping fee, category list) instead of SQL.
 - Discount codes (Stripe Coupons).
 - Multi-currency (site is USD; business appears Thailand-based — confirm currency + Stripe country support).
 - PWA / offline cart, analytics (Plausible/GA4), reviews.
