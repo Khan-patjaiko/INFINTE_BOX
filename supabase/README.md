@@ -8,13 +8,26 @@ the backend can be reviewed in PRs and rebuilt from git.
 ```
 supabase/
 ├── config.toml            project id + per-function verify_jwt settings
-├── migrations/            11 SQL migrations, same version stamps as supabase_migrations.schema_migrations
+├── migrations/            12 SQL migrations, same version stamps as supabase_migrations.schema_migrations
 └── functions/
-    ├── submit-quote/              v2  custom-quote form + private file upload
-    ├── create-checkout-session/   v6  server-side pricing, stock check (409), shipping fee from store_settings → pending order → Stripe Checkout
-    ├── stripe-webhook/            v5  signature-verified; pending→paid + decrement stock / expired→cancelled
-    └── get-order/                 v1  single order by session_id (guest) or id (owner/admin)
+    ├── _shared/email.ts           Resend helper: sendEmail()/sendOwnerAlert() (never throw) + HTML templates
+    ├── submit-quote/              v3  custom-quote form + private file upload → owner alert + customer ack
+    ├── submit-contact/            v1  contact form → contact_messages → owner alert (contact.html invokes it)
+    ├── create-checkout-session/   v9  requires a signed-in user (401 otherwise); server-side pricing, stock check (409), shipping fee from store_settings → pending order → Stripe Checkout
+    ├── stripe-webhook/            v6  signature-verified; pending→paid (guarded, no double-send) + decrement stock + receipt/owner emails / expired→cancelled
+    └── get-order/                 v1  single order by session_id (Stripe redirect) or id (owner/admin)
 ```
+
+Functions that import `../_shared/email.ts` are deployed with **two files** — pass
+`<name>/index.ts` and `_shared/email.ts` in `deploy_edge_function`'s `files` with
+`entrypoint_path = "<name>/index.ts"` (verified working 2026-09-21).
+
+## Email
+
+Transactional mail goes through [Resend](https://resend.com) (domain `infinite-box.co`
+verified 2026-09-21 via GoDaddy Domain Connect). Secrets: `RESEND_API_KEY`, `OWNER_EMAIL`
+(alert inbox), `EMAIL_FROM` (`Infinite Box <hello@infinite-box.co>`). With `RESEND_API_KEY`
+unset the functions log "email disabled" and carry on — email never fails a request.
 
 ## Rules
 
@@ -22,8 +35,8 @@ supabase/
   mirroring it in this directory in the same commit.
 - **New schema change = new migration file** `YYYYMMDDHHMMSS_<name>.sql`. Never edit an
   applied migration.
-- **Secrets never live here.** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` are set in
-  Supabase → Edge Functions → Secrets. `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
+- **Secrets never live here.** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`,
+  `OWNER_EMAIL`, `EMAIL_FROM` are set in Supabase → Edge Functions → Secrets. `SUPABASE_URL`, `SUPABASE_ANON_KEY`,
   `SUPABASE_SERVICE_ROLE_KEY` are injected automatically.
 
 ## Deploying
@@ -45,5 +58,5 @@ npx supabase db push
 ## Verifying the copy matches production
 
 `list_edge_functions` reports an `ezbr_sha256` per function; redeploying an unchanged file
-leaves that hash unchanged. `list_migrations` should list exactly the 11 versions in
+leaves that hash unchanged. `list_migrations` should list exactly the 12 versions in
 `migrations/`.

@@ -2,15 +2,18 @@
 
 Last updated: 2026-09-21 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
-[HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md). How the system is built (four-layer architecture review) lives in
+[HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md),
+[HANDOVER_7.md](HANDOVER_7.md). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
 ## Where we are now (as of 2026-09-21)
 
-**Overall: ~93% to a launchable v1.** The store works end-to-end locally including test-mode
-payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages
-and SEO/share metadata; it is not yet deployed (Hostinger hosting is purchased but nothing uploaded — deferred by the user).
+**Overall: ~96% to a launchable v1.** The store works end-to-end locally including test-mode
+payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages,
+SEO/share metadata, **transactional email (Resend, live)**, **password reset** and **profile
+edit**; checkout now **requires a signed-in customer**. It is not yet deployed (Hostinger hosting
+is purchased but nothing uploaded — deferred by the user).
 
 | Area | Status |
 |---|---|
@@ -20,28 +23,30 @@ and SEO/share metadata; it is not yet deployed (Hostinger hosting is purchased b
 | Cart (localStorage) | ✅ Done |
 | Custom quote form → `submit-quote` Edge Function + file upload | ✅ Live, verified |
 | Contact form → `contact_messages` | ✅ Live, verified |
-| Auth: email/password + `account.html` order history | ✅ Done |
-| Auth: Google OAuth | ⚠️ Provider enabled + button wired; **no Google user exists in `auth.users`** (checked 2026-09-18) — end-to-end sign-in still unconfirmed, needs a real re-test |
+| Auth: email/password + `account.html` order history + **profile edit (name/phone)** | ✅ Done (profile edit 2026-09-21) |
+| Auth: Google OAuth | ✅ **Verified end-to-end 2026-09-21** — the owner signed in with Google and placed a paid order tied to that user. Google Cloud OAuth app is in **Testing** status (branding + logo + domains filled in); must be **published** before launch and brand-verified after deploy (Phase 9) |
+| Auth: password reset (`forgot-password.html` → `reset-password.html`) | ✅ Done 2026-09-21 (Supabase default SMTP; consider Resend SMTP later) |
+| **Checkout requires login** (no guest orders; `create-checkout-session` returns 401) | ✅ Done 2026-09-21 — product decision by the owner |
 | UI polish pass #1 (spacing scale, focus ring, mobile padding, nav animation) | ✅ Done |
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
 | Hosting | ⚠️ **Hostinger purchased**, not yet deployed |
-| Git | ⚠️ Local `main` is **20 commits ahead of `origin/main`** (not pushed) as of 2026-09-21 |
+| Git | ⚠️ Local `main` is **25 commits ahead of `origin/main`** (not pushed) as of 2026-09-21 |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
 | Real product photography | ❌ None (SVG placeholders; frontend ready for `image_url`) |
 | Admin UI (`site/admin/` — overview, orders, quotes, messages, products) | ✅ Done 2026-09-20, verified signed in as admin (`testuser@infinitebox.dev` is admin) |
-| Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20 — **stock counts still need to be entered** (all 0 except Custom Enclosure) |
+| Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20 — **stock counts still need to be entered** (all 0 except Custom Enclosure = 1) |
 | Footer social links (Facebook / Instagram / Line) | ⚠️ Added 2026-09-21 with **placeholder URLs** in `partials.js` `SOCIAL_LINKS` |
 | Legal pages (`privacy.html`, `terms.html`) + footer/signup links | ⚠️ Done 2026-09-21 — **orange bracketed placeholders** (legal name, address, jurisdiction, retention periods) need filling |
 | SEO / share prep (robots.txt, sitemap.xml, descriptions, noindex, canonical, Open Graph) | ✅ Done 2026-09-21 — domain **`infinite-box.co` confirmed, registered at GoDaddy** (2026-09-21) |
 | Product categories (`store_settings.product_categories`, migration 0012) | ✅ Done 2026-09-21 — Enclosures · Mechanical · Prototyping · Resin · Accessories · Automotive · Home Decoration · Personal Gadgets · Pets Supplies |
 | Error/empty states + Retry on every DB read; 375px audit; Lighthouse (home 98/95/100/100) | ✅ Done 2026-09-21 |
 | Layout: shop chips in hero, home hero content-sized (no more viewport-height blank space) | ✅ Done 2026-09-21 |
-| Email notifications (order confirmation, new quote alert) | ❌ None |
+| Email notifications (order receipt + owner alert, quote ack + alert, contact alert) | ✅ **Live 2026-09-21** via Resend — domain `infinite-box.co` verified, from `hello@infinite-box.co`, alerts to `OWNER_EMAIL`; all three flows verified with real deliveries |
 | Coming-soon page email capture | ❌ localStorage only, not a real list |
 
 **Immediate blockers on the user side:** (1) enter stock counts and assign the new categories in Admin → Products, (2) real social URLs in `partials.js`, (3) fill the placeholders in `privacy.html` / `terms.html`, (4) product photos (upload via Admin → Products), (5) upload `site/` to Hostinger
-`public_html` and point the domain at it.
+`public_html` and point the domain at it, (6) publish the Google OAuth app (Testing → In production) on launch day.
 
 ---
 
@@ -53,13 +58,14 @@ E-Commerce Web/
 │   ├── index.html                 Home (hero, featured products)          [partials.js header/footer]
 │   ├── shop.html                  Catalogue grid; category chips in the hero from store_settings.product_categories
 │   ├── product.html?id=<slug>     Product detail + spec table
-│   ├── cart.html                  Cart → Stripe Checkout / link to custom quote
-│   ├── custom.html                Custom-order quote form (+ file upload)
-│   ├── contact.html               Contact form
+│   ├── cart.html                  Cart → Stripe Checkout (signed-in only; "Log in to check out" otherwise) / link to custom quote
+│   ├── custom.html                Custom-order quote form (+ file upload) → submit-quote
+│   ├── contact.html               Contact form → submit-contact Edge Function
 │   ├── about.html · faq.html · materials.html   Static content
 │   ├── privacy.html · terms.html  Legal pages (placeholders to fill; `.legal` prose class)
-│   ├── login.html · signup.html   Email/password + Google OAuth
-│   ├── account.html               Auth-guarded: profile + order history (cards link to order.html)
+│   ├── login.html · signup.html   Email/password + Google OAuth; both honour ?next= (e.g. cart.html)
+│   ├── forgot-password.html · reset-password.html   Password reset (noindex; reset also serves "Change password" when signed in)
+│   ├── account.html               Auth-guarded: profile edit (name/phone) + order history (cards link to order.html)
 │   ├── order.html?id=<uuid> or ?session_id=<cs_...>  Single-order status (items, total, shipping address)
 │   ├── success.html · cancel.html Stripe return pages (success.html has a "My order" button → order.html)
 │   ├── robots.txt · sitemap.xml   Crawler config (admin + transactional pages disallowed)
@@ -73,7 +79,7 @@ E-Commerce Web/
 │       ├── css/styles.css         Single stylesheet, HSL tokens, --space-* scale
 │       ├── js/config.js           Supabase URL + anon key (public)
 │       ├── js/supabase-client.js  window.IBDB
-│       ├── js/auth.js             window.IBAuth (signUp/signIn/signInWithGoogle/signOut/requireUser/refreshHeader)
+│       ├── js/auth.js             window.IBAuth (signUp/signIn/signInWithGoogle/resetPassword/updatePassword/signOut/requireUser/refreshHeader)
 │       ├── js/admin.js            window.IBAdmin (requireAdmin/money/date/statusBadge/toast/signedUrl) + admin header
 │       ├── js/products.js         loadProducts()/getProduct() + render helpers + loadErrorHTML()/ibOnRetry()
 │       ├── js/icons.js            SVG placeholder icons
@@ -83,7 +89,8 @@ E-Commerce Web/
 ├── supabase/                      ← backend source of truth (mirrors hosted project)
 │   ├── config.toml                project id, verify_jwt=false per function
 │   ├── migrations/*.sql           12 migrations (same versions as production)
-│   └── functions/<name>/index.ts  submit-quote · create-checkout-session · stripe-webhook · get-order
+│   ├── functions/_shared/email.ts Resend helper (sendEmail/sendOwnerAlert + templates), bundled into each function on deploy
+│   └── functions/<name>/index.ts  submit-quote · submit-contact · create-checkout-session · stripe-webhook · get-order
 ├── docs/ARCHITECTURE.md           Four-layer architecture reference
 ├── coming-soon/index.html         Standalone pre-launch page (separate deploy, no backend)
 ├── Example/                       Original Airo export (reference only)
@@ -95,7 +102,8 @@ Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
 ├── Auth: email/password (confirmation on), Google OAuth
-└── Edge Functions: submit-quote ✅ · create-checkout-session ✅ (v6: shipping fee from `store_settings`, refuses over-stock carts with 409) · stripe-webhook ✅ (v5: also calls `decrement_order_stock` on paid) · get-order ✅ (v1, returns a single order for its owner or by Stripe session id)
+├── Edge Functions: submit-quote ✅ (v3, + emails) · submit-contact ✅ (v1) · create-checkout-session ✅ (v9: **401 unless signed in**, shipping fee from `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v6: pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
+└── Email: Resend, domain infinite-box.co verified; secrets RESEND_API_KEY / OWNER_EMAIL / EMAIL_FROM
 
 Nav: Shop · Custom Orders · About · Account/Log in · Cart · Shop Now
 Footer: Shop (All Products / Custom Orders / Materials) · Company (About / Contact / FAQ) · Follow · Privacy / Terms
@@ -111,10 +119,10 @@ Phases 0–6 of the original plan are complete. Numbering continues from there.
 ### Phase 7 — Housekeeping & verification (now, ~1 session)
 Goal: clean state, everything known-good.
 - [x] Commit Handover #3 working tree (`styles.css`, `auth.js`, `login.html`, `signup.html`) + `HANDOVER_2.md`, `HANDOVER_3.md`, `PROJECT_PLAN.md` — done 2026-09-19 (Handover #4 session).
-- [ ] Push `main` to `origin/main` — local is 3 commits ahead as of 2026-09-19; not pushed yet (only push when the user asks).
+- [ ] Push `main` to `origin/main` — local is 25 commits ahead as of 2026-09-21; not pushed yet (only push when the user asks).
 - [x] Fix CRLF warning: added `.gitattributes` (`* text=auto eol=lf`, PNGs binary).
 - [x] Supabase sanity check (2026-09-18): only `testuser@infinitebox.dev` (email provider) exists; **no Google user** → Google sign-in must be re-tested end-to-end. Tables otherwise clean (0 orders/quotes/messages, 8 products, 1 leftover test file in `custom-uploads`).
-- [ ] Re-test Google sign-in from `login.html` in a real browser and confirm a `provider = google` row + `profiles.full_name` appear.
+- [x] Re-test Google sign-in — done 2026-09-21: owner signed in with Google from the cart, `auth.users` row with `provider = google`, paid order `4ea2920d` tied to that `user_id`.
 - [ ] Remove the SQL-created test user (`testuser@infinitebox.dev`) or keep it deliberately and note it.
 - [x] Smoke-test all 15 pages in the preview — done 2026-09-20: every page loads header/footer with the right title, `account.html` redirects to login when signed out; only console error is the expected 401 from `order.html?id=x` while unauthenticated.
 - [x] Architecture review (2026-09-19) → `docs/ARCHITECTURE.md`; exported migrations + Edge Functions into `supabase/`; pinned supabase-js CDN to `2.116.0` on all 15 pages.
@@ -137,7 +145,8 @@ Goal: clean state, everything known-good.
 - [ ] Upload `site/` contents to `public_html` (FTP/File Manager). No build step.
 - [ ] Point the GoDaddy DNS for `infinite-box.co` at Hostinger (A record / nameservers per the Hostinger panel), then confirm HTTPS active.
 - [ ] Supabase → Auth → URL Configuration: add `https://<domain>/**` to Redirect URLs; set Site URL.
-- [ ] Google Cloud Console: add production domain to authorized JS origins if required.
+- [ ] Google Cloud Console → Google Auth Platform → **Audience → Publish app** (Testing → In production). Launch-day step: in Testing only listed test users can use Google sign-in. Branding (name, logo, home/privacy/terms URLs, authorized domains `ptwfidmlnuggxvqhimhe.supabase.co` + `infinite-box.co`) was filled in 2026-09-21.
+- [ ] After the site is live: verify `infinite-box.co` in Google Search Console, then submit the OAuth app for **brand verification** so the consent screen says "Sign in to Infinite Box" instead of the raw `…supabase.co` domain. If Google objects to the unowned supabase.co domain, the fallback is a Supabase custom domain (`api.infinite-box.co`, $10/mo add-on) + updating `config.js`, the Google redirect URI and the Stripe webhook URL.
 - [ ] Re-run login (email + Google) and a test checkout on the live domain.
 - [ ] Deploy `coming-soon/` separately (or retire it once the store is live — user decision).
 - [x] Add `robots.txt`, `sitemap.xml`, `<meta description>` per page, `noindex` on transactional pages, canonical + Open Graph tags — done 2026-09-21 (Handover #6). Origin hardcoded as `https://infinite-box.co`.
@@ -162,12 +171,13 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] Admin granted to `testuser@infinitebox.dev` (user ran the SQL, 2026-09-20). For a real owner account later: `update public.profiles set is_admin = true where email = '<you>';`.
 - [x] Signed-in end-to-end test (2026-09-20): overview stats, orders list/drawer, products list + stock edit + save verified live; quotes/messages render (no data yet to exercise the drawers).
 
-### Phase 12 — Notifications & customer experience
-- [ ] Email on order paid (customer receipt) and on new quote/contact (owner alert) — Resend (or similar) called from `stripe-webhook` / `submit-quote` Edge Functions; API key as a secret.
-- [x] Single-order detail page linked from `account.html` — done early, 2026-09-19: built as `order.html` (not `orders.html`) accepting `?id=` (signed-in, ownership-checked) or `?session_id=` (guest, straight off the Stripe redirect); see Handover #4.
-- [ ] Profile edit on `account.html` (name, phone, default shipping address).
-- [ ] Password reset flow (`reset-password.html` using Supabase `resetPasswordForEmail`).
-- [ ] Decide on Supabase email-confirmation setting for signup (keep on for prod; consider custom SMTP so emails don't come from Supabase's rate-limited default).
+### Phase 12 — Notifications & customer experience ✅ Done (2026-09-21, Handover #7)
+- [x] Email on order paid (customer receipt + owner alert), new quote (customer ack + owner alert), new contact message (owner alert) — Resend via `functions/_shared/email.ts`; contact form moved to a new `submit-contact` Edge Function so it has a server hook. All three verified with real deliveries.
+- [x] Single-order detail page linked from `account.html` — done early, 2026-09-19: built as `order.html` (not `orders.html`) accepting `?id=` (signed-in, ownership-checked) or `?session_id=` (straight off the Stripe redirect); see Handover #4.
+- [x] Profile edit on `account.html` — name + phone (address deferred: no column, and Stripe Checkout can't be prefilled with it).
+- [x] Password reset flow — `forgot-password.html` + `reset-password.html`, "Forgot password?" on login, `IBAuth.resetPassword/updatePassword`.
+- [x] **Checkout requires a signed-in customer** (owner's decision 2026-09-21): `create-checkout-session` returns 401 for guests; cart shows "Log in to check out"; `signup.html` honours `?next=`.
+- [ ] Decide on Supabase email-confirmation setting for signup (keep on for prod). Auth emails (confirmation, password reset) still go out via Supabase's rate-limited default SMTP — switch Supabase → Auth → SMTP to Resend (`smtp.resend.com`, user `resend`, password = API key) now that the domain is verified.
 
 ### Phase 13 — Polish pass #2 & launch readiness
 - [ ] Enter real stock counts for all products (Admin → Products) — until then the store shows almost everything as *Sold out*.
@@ -179,7 +189,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] Lighthouse pass — done 2026-09-21: home desktop 98/95/100/100. Fixed footer contrast, qty `aria-label`, sized logos, CLS min-heights. Open: white-on-orange buttons are 3.06:1 (brand decision).
 - [x] Error/empty states for every DB read — done 2026-09-21: Retry button on index/shop/product/cart, empty-catalogue message, product not-found state, admin overview failure rows, admin-check network error distinguished from "not admin".
 - [ ] Stripe → **live mode** keys; swap secrets; final live purchase test with a real card + refund.
-- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_6.md`).
+- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_7.md`).
 
 ### Backlog / ideas (not scheduled)
 - Product search, product variants (size/colour/material options).
@@ -194,6 +204,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 
 1. **Phase 7** — now, no blockers.
 2. **Phase 11 (admin)** — done; it now replaces the Supabase dashboard for day-to-day product/order/quote management.
-3. **Phase 9** when the user is ready — nothing blocks it after 2026-09-21; upload `site/` (including `admin/`, `robots.txt`, `sitemap.xml`).
-4. **Phase 12** (emails, password reset) and the remaining user-side content items toward launch.
+3. **Phase 12** — done 2026-09-21.
+4. **Phase 9** when the user is ready — nothing blocks it; upload `site/` (including `admin/`, `robots.txt`, `sitemap.xml`), then the launch-day toggles (Supabase redirect URLs, publish the Google OAuth app) and the post-deploy brand verification.
+5. Remaining user-side content items (stock, photos, legal placeholders, social URLs) and Phase 13 (Stripe live mode).
 
