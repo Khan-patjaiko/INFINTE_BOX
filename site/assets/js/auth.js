@@ -60,6 +60,25 @@
         a.setAttribute("href", "login.html");
       }
     });
+    // Admins get an "Admin" link next to Account (storefront header only; admin pages
+    // build their own header). RLS lets a user read only their own profile row.
+    var isAdmin = false;
+    if (user) {
+      try {
+        var res = await db().from("profiles").select("is_admin").eq("id", user.id).maybeSingle();
+        isAdmin = !!(res && res.data && res.data.is_admin);
+      } catch (e) {}
+    }
+    document.querySelectorAll(".admin-link").forEach(function (a) { a.remove(); });
+    if (isAdmin) {
+      document.querySelectorAll(".account-link").forEach(function (a) {
+        var link = document.createElement("a");
+        link.className = "admin-link";
+        link.href = "admin/index.html";
+        link.textContent = "Admin";
+        a.parentNode.insertBefore(link, a);
+      });
+    }
   }
 
   // Guard for pages that require a signed-in user; redirects if absent.
