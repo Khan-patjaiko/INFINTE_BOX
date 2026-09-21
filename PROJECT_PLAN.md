@@ -18,7 +18,8 @@ is purchased but nothing uploaded — deferred by the user).
 | Area | Status |
 |---|---|
 | Static site design (14 pages, dark theme, design tokens) | ✅ Done |
-| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, seed (11 migrations) | ✅ Done, advisor clean |
+| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 13 migrations | ✅ Done, advisor clean |
+| **Currency: THB** (switched 2026-09-21, Handover #8) — `*_cents` = satang, ฿ everywhere, Stripe `thb`; shipping ฿50 flat, **free from ฿800** (`store_settings`) | ✅ Done |
 | Live product catalogue from DB (index/shop/product/cart) | ✅ Done |
 | Cart (localStorage) | ✅ Done |
 | Custom quote form → `submit-quote` Edge Function + file upload | ✅ Live, verified |
@@ -33,9 +34,9 @@ is purchased but nothing uploaded — deferred by the user).
 | Hosting | ⚠️ **Hostinger purchased**, not yet deployed |
 | Git | ✅ `main` pushed to `origin/main` 2026-09-21 (in sync) |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
-| Real product photography | ❌ None (SVG placeholders; frontend ready for `image_url`) |
+| Real product catalogue | ✅ 4 real products live (2026-09-21): W201 190E cup holder ฿399, Mazda 7" phone mount ฿279, W124 cup holder ฿599, BMW E90 console insert ฿259 — with stock and bundled photos (`site/assets/img/products/`). Placeholders deleted; Custom Enclosure deactivated. |
 | Admin UI (`site/admin/` — overview, orders, quotes, messages, products) | ✅ Done 2026-09-20, verified signed in as admin (`testuser@infinitebox.dev` is admin) |
-| Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20 — **stock counts still need to be entered** (all 0 except Custom Enclosure = 1) |
+| Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20; real stock entered with the catalogue 2026-09-21 (2 / 5 / 3 / 3) |
 | Footer social links (Facebook / Instagram / Line) | ⚠️ Added 2026-09-21 with **placeholder URLs** in `partials.js` `SOCIAL_LINKS` |
 | Legal pages (`privacy.html`, `terms.html`) + footer/signup links | ⚠️ Done 2026-09-21 — **orange bracketed placeholders** (legal name, address, jurisdiction, retention periods) need filling |
 | SEO / share prep (robots.txt, sitemap.xml, descriptions, noindex, canonical, Open Graph) | ✅ Done 2026-09-21 — domain **`infinite-box.co` confirmed, registered at GoDaddy** (2026-09-21) |
@@ -45,7 +46,7 @@ is purchased but nothing uploaded — deferred by the user).
 | Email notifications (order receipt + owner alert, quote ack + alert, contact alert) | ✅ **Live 2026-09-21** via Resend — domain `infinite-box.co` verified, from `hello@infinite-box.co`, alerts to `OWNER_EMAIL`; all three flows verified with real deliveries |
 | Coming-soon page email capture | ❌ localStorage only, not a real list |
 
-**Immediate blockers on the user side:** (1) enter stock counts and assign the new categories in Admin → Products, (2) real social URLs in `partials.js`, (3) fill the placeholders in `privacy.html` / `terms.html`, (4) product photos (upload via Admin → Products), (5) upload `site/` to Hostinger
+**Immediate blockers on the user side:** (1) fill the placeholders in `privacy.html` / `terms.html`, (2) upload `site/` to Hostinger
 `public_html` and point the domain at it, (6) publish the Google OAuth app (Testing → In production) on launch day.
 
 ---
@@ -102,7 +103,7 @@ Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
 ├── Auth: email/password (confirmation on, min length 8, SMTP via Resend from hello@infinite-box.co), Google OAuth · 1 user (owner, Google, admin)
-├── Edge Functions: submit-quote ✅ (v3, + emails) · submit-contact ✅ (v1) · create-checkout-session ✅ (v9: **401 unless signed in**, shipping fee from `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v6: pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
+├── Edge Functions: submit-quote ✅ (v3, + emails) · submit-contact ✅ (v1) · create-checkout-session ✅ (v10: **401 unless signed in**, THB, ฿50 shipping / free from ฿800 via `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v9: ฿ emails, pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
 └── Email: Resend, domain infinite-box.co verified; secrets RESEND_API_KEY / OWNER_EMAIL / EMAIL_FROM
 
 Nav: Shop · Custom Orders · About · Account/Log in · Cart · Shop Now
@@ -127,7 +128,7 @@ Goal: clean state, everything known-good.
 - [x] Smoke-test all 15 pages in the preview — done 2026-09-20: every page loads header/footer with the right title, `account.html` redirects to login when signed out; only console error is the expected 401 from `order.html?id=x` while unauthenticated.
 - [x] Architecture review (2026-09-19) → `docs/ARCHITECTURE.md`; exported migrations + Edge Functions into `supabase/`; pinned supabase-js CDN to `2.116.0` on all 15 pages.
 - [x] ~~Enable Leaked Password Protection~~ — **not available on the free plan** (Pro-only, confirmed 2026-09-21). Instead: Auth → Email → minimum password length set to 8 (matches `signup.html` / `reset-password.html` `minlength="8"`). Signup + reset pages show a live "Password conditions" checklist (8–50, upper, lower, number, symbol, confirm match) since 2026-09-21; that is client-side — optional server-side enforcement: Auth → Email → Password Requirements → letters+digits+symbols.
-- [x] Single source of truth for the shipping fee — done 2026-09-20: migration 0008 adds `store_settings` (key/value jsonb, public read, admin write) seeded with `shipping_cents = 650`; `cart.html` and `create-checkout-session` (v5) both read it and fall back to 650 if the row is missing. Change the fee with one SQL update; no redeploy needed.
+- [x] Single source of truth for the shipping fee — done 2026-09-20: migration 0008 adds `store_settings` (key/value jsonb, public read, admin write) seeded with `shipping_cents = 650`; `cart.html` and `create-checkout-session` (v5) both read it and fall back to 650 if the row is missing. Change the fee with one SQL update; no redeploy needed. **2026-09-21:** now ฿50 (`5000` satang) plus `free_shipping_threshold_cents = 80000` (migration 0013); both cart.html and create-checkout-session read the pair.
 
 ### Phase 8 — Payments go-live (test mode) ✅ Done (2026-09-19)
 - [x] User created a Stripe account (sandbox/test mode), got `sk_test_…`.
@@ -152,7 +153,7 @@ Goal: clean state, everything known-good.
 - [x] Add `robots.txt`, `sitemap.xml`, `<meta description>` per page, `noindex` on transactional pages, canonical + Open Graph tags — done 2026-09-21 (Handover #6). Origin hardcoded as `https://infinite-box.co`.
 
 ### Phase 10 — Content & catalogue
-- [ ] Real product photography → upload through **Admin → Products → Photo** (writes to `product-images` and sets `image_url`). Zero code changes needed.
+- [x] Real product photos — done 2026-09-21 for the first 4 products (optimised 1200px JPEGs bundled in `site/assets/img/products/`, root-absolute `image_url`). Future products: upload through **Admin → Products → Photo** (storage bucket) — both paths work.
 - [ ] Review copy on about/faq/materials (currently from the Airo export).
 - [x] Add `privacy.html` and `terms.html` + footer links — done 2026-09-21. **User must fill the bracketed placeholders** (legal name, address, jurisdiction, retention/return periods) and ideally have the copy checked.
 - [ ] Turn coming-soon email capture into a real list (Mailchimp/Brevo) **or** drop the page.
@@ -162,7 +163,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] `site/admin/index.html` — overview: to-fulfil / new-quote / unread counts, 30-day revenue, recent orders + quotes.
 - [x] `site/admin/products.html` — CRUD on `products` (name, slug, price, category, material, description, specs, icon, stock, sort, active, photo upload to `product-images`). Stock column added 2026-09-20 (migration 0010, `products.stock`, default 0; red badge at 0, amber at ≤5).
 - [x] **Stock enforcement** (2026-09-20): shop cards show a "Sold out" pill + dimmed thumb; product page swaps Add-to-cart for a disabled "Sold out" button and clamps qty to stock ("Only N left" at ≤5); cart clamps quantities, flags sold-out rows, excludes them from the subtotal and disables Checkout; `create-checkout-session` v6 returns 409 with a readable message if any line exceeds stock (cart shows that message and refreshes); `stripe-webhook` v5 calls `decrement_order_stock` (migration 0011: SECURITY DEFINER, service_role only, idempotent via `orders.stock_applied_at`, floors at 0). Verified end-to-end in the preview + SQL.
-- [ ] **Set real stock values in Admin → Products** — every product starts at 0, so the whole store shows *Sold out* until you enter counts (Custom Enclosure is at 2 after testing).
+- [x] Real stock values — entered with the real catalogue 2026-09-21 (migration 0013). Adjust in Admin → Products as units sell/print.
 - [x] `site/admin/orders.html` — filter/search, drawer with items + shipping address + Stripe ids, status change (`paid → fulfilled` etc.).
 - [x] `site/admin/quotes.html` — filter/search, drawer with details, design-file download via signed URL, set status / quoted price / internal note.
 - [x] `site/admin/messages.html` — `contact_messages` inbox with read/unread and mailto reply.
@@ -180,7 +181,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] Supabase Auth → SMTP switched to Resend — done 2026-09-21 (Handover #8): sender `Infinite Box <hello@infinite-box.co>`, host `smtp.resend.com:465`, user `resend`, password = Resend API key `supabase-auth` (Sending access, scoped to infinite-box.co). Email rate limit auto-raised 2/h → 30/h. Verified: password-reset email arrived from hello@infinite-box.co. Email confirmation on signup stays **on**.
 
 ### Phase 13 — Polish pass #2 & launch readiness
-- [ ] Enter real stock counts for all products (Admin → Products) — until then the store shows almost everything as *Sold out*.
+- [x] Real stock counts — done 2026-09-21 with the real catalogue.
 - [x] Real social URLs in `partials.js` `SOCIAL_LINKS` — done 2026-09-21 (Facebook, Instagram, Line).
 - [x] Page-hero top padding fixed (2026-09-20) — all 13 non-home pages; cart heading gap fixed; admin filter-chip contrast fixed.
 - [x] Blank-space fixes (2026-09-21): shop chips moved into the hero; home `.hero` no longer `min-height: 100vh`.
@@ -196,7 +197,9 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - Admin UI for editing `store_settings` (shipping fee, category list) instead of SQL.
 - Admin drag-to-reorder for products (the Sort field was removed from the product form 2026-09-21; `products.sort` is now auto-assigned).
 - Discount codes (Stripe Coupons).
-- Multi-currency (site is USD; business appears Thailand-based — confirm currency + Stripe country support).
+- Multi-currency — store is **THB** since 2026-09-21 (was USD). Stripe presents THB; confirm the Stripe account's settlement currency before live mode (Phase 13).
+- Multiple photos per product (only `image_url` today; the Facebook posters have 4–6 shots each).
+- Fix the "BWM E90" typo in the BMW poster `1.png` (the store uses `2.png` instead).
 - PWA / offline cart, analytics (Plausible/GA4), reviews.
 
 ---

@@ -17,11 +17,17 @@ Phase 9 (deploy to Hostinger) is now the only engineering phase left.
 | 7 | Password minimum → 8 | User (dashboard) + Claude | Dashboard min length set to 8; `signup.html` raised from `minlength="6"` to `8` to match `reset-password.html`; hint added under the field. |
 | 9 | Admin header bug | Claude | The admin "View store" link used class `account-link`, so `IBAuth.refreshHeader()` rewrote it to `account.html` after sign-in → `admin/account.html` 404 (found by the user on first admin login with the Google account). Renamed to `store-link` (`admin.js`, CSS selector widened). Commit `6f6916b`, pushed. |
 | 10 | Admin product form simplified | Claude (user request) | Removed *Placeholder icon* and *Sort order* from the product drawer + the Sort column. New products: `sort = max+1`, `icon_key = "enclosure"`; edits keep existing values. Commit `098ab8b`, pushed. Reordering now = SQL on `products.sort` (backlog: drag-to-reorder). |
+| 11 | **Store currency → THB** | Claude (user decision) | Prices supplied in THB, store was USD. `price_cents`/`*_cents` now hold satang (Stripe treats THB as 2-decimal, so no arithmetic changed). `฿` formatting in `products.js formatPrice`, `money()` in account/order/admin.js and `_shared/email.ts` (whole amounts without decimals: ฿399, ฿1,299). Admin labels "Price (THB)", terms.html copy updated. `create-checkout-session` **v10**: `currency: "thb"` + shipping rule; `stripe-webhook` **v9** redeployed for the email formatter. **Note:** the kept test order `4ea2920d` (3050) now displays as ฿30.50 — it was a USD test. |
+| 12 | Shipping ฿50, free from ฿800 | Claude (user decision) | `store_settings.shipping_cents = 5000`, new `free_shipping_threshold_cents = 80000`. Cart shows "Free" + an "Add ฿X more for free shipping" nudge; checkout function applies the same rule and labels the Stripe shipping line "Free shipping" at ฿0. Verified in the pane: 1× Mazda → ฿279 + ฿50; 3× → ฿837, Free. |
+| 13 | Real catalogue (4 products) | Claude, from the user's `Product/` folder | Migration **0013** (applied): deleted the 7 unordered seed products, deactivated Custom Enclosure (order 4ea2920d references it), inserted **W201 190E Cup Holder ฿399 (stock 2)**, **Mazda Phone Mount 7" ฿279 (5)**, **W124 Cup Holder ฿599 (3)**, **BMW E90 Center Console Insert ฿259 (3)** — category `Automotive` (the existing chip; the user wrote "Automotive Accessories"), material ABS, specs as `Compatible with` / `Material`. Descriptions keep their bullet lines (`.pd-desc { white-space: pre-line }`). Photos: `1.png` of each poster (Mazda → `4.png` showing the phone in the mount; BMW → `2.png` because `1.png` has a "BWM E90" typo) converted with `sharp-cli` to 1200px JPEG (115–200 KB) in `site/assets/img/products/`, referenced root-absolute so admin/ pages resolve them too. The raw `Product/` folder stays **untracked** (15 MB of posters). |
 | 8 | Password conditions checklist | Claude (user request) | Replaced the hint sentence with a live "Password conditions" checklist on `signup.html` and `reset-password.html` (shared `IBAuth.attachPasswordRules` in `auth.js`, `.pw-rules` CSS): 8–50 chars, ≥1 uppercase, ≥1 lowercase, ≥1 number, ≥1 symbol, plus a Confirm-password field (new on signup) with a live "Passwords do not match" error. Submit stays disabled until all pass; handlers re-check before calling Supabase. Verified in the pane (weak / mismatch / match / too-long states). **Client-side only** — server-side enforcement is Supabase → Auth → Email → *Password Requirements* (free plan, not turned on). |
 
 ## Commits (5, on top of `d4038ab`)
 
 ```
+4781bc5 Catalogue: replace placeholders with the first 4 real products + photos
+6909811 Switch store currency to THB; flat ฿50 shipping, free from ฿800
+098ab8b Admin products: drop Placeholder icon and Sort order fields
 6f6916b Admin header: stop auth.js rewriting View store link
 d6c781d Live password-conditions checklist on signup and reset
 c5f3d9d Password hints: suggest a mix of upper/lower/number/symbol
@@ -35,8 +41,8 @@ plus the docs commits for this handover. **Pushed to `origin/main`** at the end 
 - `auth.users`: 1 (`khanleenine@gmail.com`, provider google, admin)
 - `orders`: 1 (`4ea2920d`, paid — the owner's own test; kept deliberately)
 - `quote_requests` / `contact_messages`: 0
-- `products`: 8; stock all **0** except Custom Enclosure = 1 → store still shows "Sold out"
-- `store_settings`: `shipping_cents = 650`, 5 categories
+- `products`: 4 active real products (stock 2/5/3/3) + Custom Enclosure inactive; placeholders deleted
+- `store_settings`: `shipping_cents = 5000`, `free_shipping_threshold_cents = 80000`, 9 categories
 - Hostinger: nothing uploaded; GoDaddy DNS not pointed
 
 ## Gotchas noted this session
@@ -55,8 +61,8 @@ plus the docs commits for this handover. **Pushed to `origin/main`** at the end 
    GoDaddy DNS, HTTPS on, then Supabase → Auth → URL Configuration (Site URL +
    `https://infinite-box.co/**`), **publish the Google OAuth app**, re-test email + Google
    login and a test checkout on the live domain, then Search Console + brand verification.
-2. **User content:** stock counts + product photos (Admin → Products — now reachable with the
-   Google account), legal placeholders in `privacy.html` / `terms.html`.
+2. **User content:** legal placeholders in `privacy.html` / `terms.html`. Stock/photos are done for the first 4 products; more products go in via Admin → Products.
+   Before Stripe live mode, confirm the Stripe account settles in THB (Phase 13).
 3. Optional: Supabase → Auth → Email → Password Requirements → letters+digits+symbols.
 4. Phase 13: Stripe live keys + real purchase/refund test.
 5. Session-end: `main` was pushed (`d4038ab..6f6916b` + docs).
