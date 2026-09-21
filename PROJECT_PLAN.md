@@ -169,7 +169,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] `site/admin/messages.html` — `contact_messages` inbox with read/unread and mailto reply.
 - [x] Guard: `IBAdmin.requireAdmin()` in `assets/js/admin.js` (signed out → `login.html?next=admin/…`; signed in but not admin → friendly message). `login.html` now accepts `next=admin/<page>.html`.
 - [x] Migration 0009 (`admin_access`): admin UPDATE policies on orders/quote_requests/contact_messages, `quote_requests.quoted_price_cents` + `admin_note`, `contact_messages.is_read`, admin SELECT on `custom-uploads` storage objects.
-- [x] Admin: `khanleenine@gmail.com` (owner, Google) is admin since 2026-09-21; the earlier `testuser` admin was deleted. For another admin later: `update public.profiles set is_admin = true where email = '<them>';`.
+- [x] Admin: `chaopraya.khan@gmail.com` (owner, Google) is the sole admin since 2026-09-21 (was briefly `khanleenine@gmail.com`, now a customer account; the SQL `testuser` was deleted). For another admin: `update public.profiles set is_admin = true where email = '<them>';`.
 - [x] Signed-in end-to-end test (2026-09-20): overview stats, orders list/drawer, products list + stock edit + save verified live; quotes/messages render (no data yet to exercise the drawers).
 
 ### Phase 12 — Notifications & customer experience ✅ Done (2026-09-21, Handover #7)
