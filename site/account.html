@@ -25,7 +25,36 @@
     </div>
   </section>
 
-  <section class="section" style="padding-top:32px;">
+  <section class="section" style="padding-top:32px;padding-bottom:0;">
+    <div class="container">
+      <p class="eyebrow">Profile</p>
+      <h2 style="margin-bottom:24px;">Your details</h2>
+      <form class="form-grid two-col" id="profile-form" onsubmit="return handleProfileSave(event)">
+        <div class="field">
+          <label for="p-name">Full name</label>
+          <input type="text" id="p-name" autocomplete="name" maxlength="120">
+        </div>
+        <div class="field">
+          <label for="p-phone">Phone</label>
+          <input type="tel" id="p-phone" autocomplete="tel" maxlength="40">
+        </div>
+        <div class="field">
+          <label for="p-email">Email</label>
+          <input type="email" id="p-email" disabled>
+        </div>
+        <div class="field" style="justify-content:flex-end;">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:auto;">
+            <button class="btn btn-primary" type="submit" id="profile-submit">Save changes</button>
+            <a href="reset-password.html" class="form-note" style="margin:0;">Change password</a>
+          </div>
+        </div>
+        <p class="form-note" id="profile-success" style="display:none;color:hsl(var(--success));grid-column:1 / -1;">Saved.</p>
+        <p class="form-note" id="profile-error" style="display:none;color:hsl(var(--destructive));grid-column:1 / -1;"></p>
+      </form>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:48px;">
     <div class="container">
       <p class="eyebrow">Order history</p>
       <h2 style="margin-bottom:32px;">Your orders</h2>
@@ -90,11 +119,69 @@
       }
     }
 
+    var currentUser = null;
+
+    function setGreeting(name) {
+      var greeting = document.getElementById("account-greeting");
+      if (greeting) greeting.textContent = "Signed in as " + (name || currentUser.email);
+    }
+
+    // profiles row is the source of truth (RLS: own row only); user_metadata is the fallback.
+    async function loadProfile(user) {
+      document.getElementById("p-email").value = user.email || "";
+      var metaName = (user.user_metadata && user.user_metadata.full_name) || "";
+      document.getElementById("p-name").value = metaName;
+      try {
+        var res = await window.IBDB.from("profiles").select("full_name, phone").eq("id", user.id).maybeSingle();
+        if (res.error) throw res.error;
+        if (res.data) {
+          document.getElementById("p-name").value = res.data.full_name || metaName;
+          document.getElementById("p-phone").value = res.data.phone || "";
+          setGreeting(res.data.full_name || metaName);
+        }
+      } catch (e) {
+        console.error("Failed to load profile", e);
+      }
+    }
+
+    window.handleProfileSave = async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById("profile-submit");
+      var okEl = document.getElementById("profile-success");
+      var errEl = document.getElementById("profile-error");
+      okEl.style.display = "none";
+      errEl.style.display = "none";
+      btn.disabled = true;
+      btn.textContent = "Saving…";
+      var fullName = document.getElementById("p-name").value.trim();
+      var phone = document.getElementById("p-phone").value.trim();
+      try {
+        var res = await window.IBDB.from("profiles")
+          .update({ full_name: fullName || null, phone: phone || null })
+          .eq("id", currentUser.id);
+        if (res.error) throw res.error;
+        // Keep auth metadata in sync so the greeting/header agree everywhere.
+        var meta = await window.IBDB.auth.updateUser({ data: { full_name: fullName } });
+        if (meta.error) console.warn("user_metadata not updated", meta.error);
+        setGreeting(fullName);
+        okEl.style.display = "block";
+        setTimeout(function () { okEl.style.display = "none"; }, 3000);
+      } catch (err) {
+        console.error("Profile save failed", err);
+        errEl.textContent = err && err.message ? err.message : "Couldn't save your details. Please try again.";
+        errEl.style.display = "block";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Save changes";
+      }
+      return false;
+    };
+
     IBAuth.requireUser().then(function (user) {
       if (!user) return; // requireUser already redirected
-      var name = (user.user_metadata && user.user_metadata.full_name) || user.email;
-      var greeting = document.getElementById("account-greeting");
-      if (greeting) greeting.textContent = "Signed in as " + name;
+      currentUser = user;
+      setGreeting((user.user_metadata && user.user_metadata.full_name) || "");
+      loadProfile(user);
       loadOrders();
     });
   })();
