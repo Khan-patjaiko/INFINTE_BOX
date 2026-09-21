@@ -83,16 +83,17 @@ Left alone, deliberately:
 
 ## Part 6 — Product categories (migration 0012) + domain confirmed
 
-- **Domain:** the user has registered ** at GoDaddy** — exactly what Part 2 assumed,
-  so nothing in the code changed. DNS is not yet pointed at Hostinger (Phase 9).
-- **Categories** were only ever free text on ; the shop chips and the admin
+- **Domain:** the user has registered **`infinite-box.co` at GoDaddy** — exactly what Part 2
+  assumed, so nothing in the code changed. DNS is not yet pointed at Hostinger (Phase 9).
+- **Categories** were only ever free text on `products.category`; the shop chips and the admin
   datalist were derived from whatever products existed. Now there is a configured list:
-  migration  upserts  (jsonb array,
+  migration `0012_product_categories` upserts `store_settings.product_categories` (jsonb array,
   applied to the hosted project):
   Enclosures · Mechanical · Prototyping · Resin · Accessories · **Automotive · Home Decoration ·
   Personal Gadgets · Pets Supplies** (the user listed "Home Decoration" and "Home Decorations";
-  treated as one). Change it with one SQL update, no redeploy.
--  gained  (public read, resolves to  on any failure).
+  treated as one). Change it with one SQL update, no redeploy:
+  `update store_settings set value = '["A","B"]' where key = 'product_categories';`
+- `products.js` gained `loadCategories()` (public read, resolves to `[]` on any failure).
   Admin → Products Category field offers the list plus any category already on a product; the
   shop shows **every** configured category as a chip (so new ones are visible before products
   are assigned) and an empty category shows "Nothing in this category yet" + custom-order link.
@@ -100,12 +101,12 @@ Left alone, deliberately:
 ## Part 7 — Layout fixes from user screenshots
 
 1. **Shop page blank space**: hero bottom padding + a 64px section top left ~130px of nothing
-   before the chips. Chips moved *into* the hero under the intro text (,
-    rules); hero-to-grid gap is now 40px. Only  changed; other pages
-   keep the shared .
-2. **Home hero blank space**:  had , so it filled the
+   before the chips. Chips moved *into* the hero under the intro text (`.shop-hero`,
+   `.shop-section` rules in `styles.css`); hero-to-grid gap is now 40px. Only `shop.html`
+   changed; other pages keep the shared `.page-hero`.
+2. **Home hero blank space**: `.hero` had `min-height: calc(100vh - 64px)`, so it filled the
    whole screen with empty bands on tall monitors. Removed; now fixed padding (64px mobile /
-   80px desktop) and . Hero is 625px tall at 1400×800.
+   80px desktop) and `.hero-media { min-height: 480px }`. Hero is 625px tall at 1400×800.
 
 ## Not done / deferred
 
