@@ -31,7 +31,7 @@ is purchased but nothing uploaded — deferred by the user).
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
 | Hosting | ⚠️ **Hostinger purchased**, not yet deployed |
-| Git | ⚠️ Local `main` is **25 commits ahead of `origin/main`** (not pushed) as of 2026-09-21 |
+| Git | ✅ `main` pushed to `origin/main` 2026-09-21 (in sync) |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
 | Real product photography | ❌ None (SVG placeholders; frontend ready for `image_url`) |
 | Admin UI (`site/admin/` — overview, orders, quotes, messages, products) | ✅ Done 2026-09-20, verified signed in as admin (`testuser@infinitebox.dev` is admin) |
@@ -119,7 +119,7 @@ Phases 0–6 of the original plan are complete. Numbering continues from there.
 ### Phase 7 — Housekeeping & verification (now, ~1 session)
 Goal: clean state, everything known-good.
 - [x] Commit Handover #3 working tree (`styles.css`, `auth.js`, `login.html`, `signup.html`) + `HANDOVER_2.md`, `HANDOVER_3.md`, `PROJECT_PLAN.md` — done 2026-09-19 (Handover #4 session).
-- [ ] Push `main` to `origin/main` — local is 25 commits ahead as of 2026-09-21; not pushed yet (only push when the user asks).
+- [x] Push `main` to `origin/main` — done 2026-09-21 (25 commits, `47867e6..a0621e8`).
 - [x] Fix CRLF warning: added `.gitattributes` (`* text=auto eol=lf`, PNGs binary).
 - [x] Supabase sanity check (2026-09-18): only `testuser@infinitebox.dev` (email provider) exists; **no Google user** → Google sign-in must be re-tested end-to-end. Tables otherwise clean (0 orders/quotes/messages, 8 products, 1 leftover test file in `custom-uploads`).
 - [x] Re-test Google sign-in — done 2026-09-21: owner signed in with Google from the cart, `auth.users` row with `provider = google`, paid order `4ea2920d` tied to that `user_id`.

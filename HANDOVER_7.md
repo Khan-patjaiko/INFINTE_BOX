@@ -119,8 +119,8 @@ Supabase / Stripe / Resend) — untracked, deliberately not committed.
 
 ## Git state
 
-Working tree clean apart from the untracked `Service Providers.txt`. `main` is **25 commits
-ahead of `origin/main`** (push only when the user asks):
+Working tree clean apart from the untracked `Service Providers.txt`. `main` was **pushed to `origin/main`** at the end of the session (25 commits
+, `47867e6..a0621e8`):
 
 ```
 bbb49d4 Require a signed-in customer to check out (no guest orders)
