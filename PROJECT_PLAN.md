@@ -194,6 +194,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 ### Backlog / ideas (not scheduled)
 - Product search, product variants (size/colour/material options).
 - Admin UI for editing `store_settings` (shipping fee, category list) instead of SQL.
+- Admin drag-to-reorder for products (the Sort field was removed from the product form 2026-09-21; `products.sort` is now auto-assigned).
 - Discount codes (Stripe Coupons).
 - Multi-currency (site is USD; business appears Thailand-based — confirm currency + Stripe country support).
 - PWA / offline cart, analytics (Plausible/GA4), reviews.
