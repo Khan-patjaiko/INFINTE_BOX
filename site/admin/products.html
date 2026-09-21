@@ -46,7 +46,7 @@
     <div class="field"><label for="f-category">Category</label><input type="text" id="f-category" list="category-list"><datalist id="category-list"></datalist></div>
     <div class="field"><label for="f-material">Material</label><input type="text" id="f-material" placeholder="e.g. PETG"></div>
     <div class="field span-2"><label for="f-description">Description</label><textarea id="f-description" rows="4" style="min-height:96px;"></textarea></div>
-    <div class="field span-2"><label for="f-specs">Specs <span class="muted">(one per line, <code>Label: value</code>)</span></label><textarea id="f-specs" rows="5" style="min-height:110px;font-size:13px;" placeholder="Material: PETG&#10;Layer height: 0.2mm&#10;Lead time: 3-5 days"></textarea></div>
+    <div class="field span-2"><label for="f-specs">Specs <span class="muted">(one per line, <code>Label: value</code>; separate list items with <code> | </code>)</span></label><textarea id="f-specs" rows="5" style="min-height:110px;font-size:13px;" placeholder="Material: PETG&#10;Layer height: 0.2mm&#10;Lead time: 3-5 days"></textarea></div>
     <div class="field"><label for="f-stock">Stock on hand</label><input type="number" id="f-stock" min="0" step="1" value="0"></div>
     <div class="field span-2">
       <label>Photo</label>
@@ -125,8 +125,9 @@
       $("category-list").innerHTML = cats.map(function (c) { return '<option value="' + ibEscape(c) + '">'; }).join("");
     }
 
+    // Multi-line spec values (rendered as bullets on the product page) are edited as "A | B | C".
     function specsToText(specs) {
-      return Object.keys(specs || {}).map(function (k) { return k + ": " + specs[k]; }).join("\n");
+      return Object.keys(specs || {}).map(function (k) { return k + ": " + String(specs[k]).split(/\r?\n/).join(" | "); }).join("\n");
     }
     function textToSpecs(text) {
       var out = {};
@@ -134,7 +135,7 @@
         var i = line.indexOf(":");
         if (i > 0) {
           var k = line.slice(0, i).trim(), v = line.slice(i + 1).trim();
-          if (k) out[k] = v;
+          if (k) out[k] = v.split(" | ").map(function (x) { return x.trim(); }).filter(Boolean).join("\n");
         }
       });
       return out;
