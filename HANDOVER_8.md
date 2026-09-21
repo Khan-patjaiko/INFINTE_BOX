@@ -15,6 +15,7 @@ Phase 9 (deploy to Hostinger) is now the only engineering phase left.
 | 5 | Verify SMTP | Claude + user | Triggered `forgot-password.html` for the owner's address from the preview; `auth_logs` show `user_recovery_requested` with no SMTP error; **user confirmed the email arrived from `hello@infinite-box.co`**. |
 | 6 | Leaked Password Protection | — | **Pro-plan only** — Supabase refused the toggle on the free plan. Skipped; documented in the plan. |
 | 7 | Password minimum → 8 | User (dashboard) + Claude | Dashboard min length set to 8; `signup.html` raised from `minlength="6"` to `8` to match `reset-password.html`; hint added under the field. |
+| 9 | Admin header bug | Claude | The admin "View store" link used class `account-link`, so `IBAuth.refreshHeader()` rewrote it to `account.html` after sign-in → `admin/account.html` 404 (found by the user on first admin login with the Google account). Renamed to `store-link` (`admin.js`, CSS selector widened). Commit `6f6916b`, pushed. |
 | 8 | Password conditions checklist | Claude (user request) | Replaced the hint sentence with a live "Password conditions" checklist on `signup.html` and `reset-password.html` (shared `IBAuth.attachPasswordRules` in `auth.js`, `.pw-rules` CSS): 8–50 chars, ≥1 uppercase, ≥1 lowercase, ≥1 number, ≥1 symbol, plus a Confirm-password field (new on signup) with a live "Passwords do not match" error. Submit stays disabled until all pass; handlers re-check before calling Supabase. Verified in the pane (weak / mismatch / match / too-long states). **Client-side only** — server-side enforcement is Supabase → Auth → Email → *Password Requirements* (free plan, not turned on). |
 
 ## Commits (4, on top of `d4038ab`)
@@ -56,4 +57,4 @@ plus the docs commit for this handover. **Not pushed** — the user pushes on re
    Google account), legal placeholders in `privacy.html` / `terms.html`.
 3. Optional: Supabase → Auth → Email → Password Requirements → letters+digits+symbols.
 4. Phase 13: Stripe live keys + real purchase/refund test.
-5. `push main` when ready.
+5. Session-end: `main` was pushed (`d4038ab..6f6916b` + docs).
