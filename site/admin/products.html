@@ -27,8 +27,8 @@
 
       <div class="admin-table-wrap">
         <table class="admin-table">
-          <thead><tr><th></th><th>Product</th><th>Category</th><th>Material</th><th class="num">Price</th><th class="num">Stock</th><th class="num">Sort</th><th>Status</th></tr></thead>
-          <tbody id="rows"><tr><td colspan="8" class="muted">Loading…</td></tr></tbody>
+          <thead><tr><th></th><th>Product</th><th>Category</th><th>Material</th><th class="num">Price</th><th class="num">Stock</th><th>Status</th></tr></thead>
+          <tbody id="rows"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
         </table>
       </div>
       <p class="form-note">Changes appear on the store immediately. Inactive products are hidden from customers but keep their order history.</p>
@@ -47,9 +47,7 @@
     <div class="field"><label for="f-material">Material</label><input type="text" id="f-material" placeholder="e.g. PETG"></div>
     <div class="field span-2"><label for="f-description">Description</label><textarea id="f-description" rows="4" style="min-height:96px;"></textarea></div>
     <div class="field span-2"><label for="f-specs">Specs <span class="muted">(one per line, <code>Label: value</code>)</span></label><textarea id="f-specs" rows="5" style="min-height:110px;font-size:13px;" placeholder="Material: PETG&#10;Layer height: 0.2mm&#10;Lead time: 3-5 days"></textarea></div>
-    <div class="field"><label for="f-icon">Placeholder icon</label><select id="f-icon"></select></div>
     <div class="field"><label for="f-stock">Stock on hand</label><input type="number" id="f-stock" min="0" step="1" value="0"></div>
-    <div class="field"><label for="f-sort">Sort order</label><input type="number" id="f-sort" step="1" value="0"></div>
     <div class="field span-2">
       <label>Photo</label>
       <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
@@ -59,7 +57,7 @@
           <button type="button" class="btn btn-outline btn-sm" id="f-image-clear" style="align-self:flex-start;">Remove photo</button>
         </div>
       </div>
-      <p class="form-note">JPG/PNG/WebP, up to 5 MB. Uploaded to the <code>product-images</code> bucket; the placeholder icon shows when there is no photo.</p>
+      <p class="form-note">JPG/PNG/WebP, up to 5 MB. Uploaded to the <code>product-images</code> bucket; a generic placeholder icon shows when there is no photo.</p>
     </div>
     <div class="field span-2"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="f-active" checked> Active (visible in the store)</label></div>
     <div class="drawer-actions span-2">
@@ -116,9 +114,8 @@
           '<td>' + ibEscape(p.material || "—") + '</td>' +
           '<td class="num">' + A.money(p.price_cents) + '</td>' +
           '<td class="num">' + stockHTML(p.stock) + '</td>' +
-          '<td class="num">' + p.sort + '</td>' +
           '<td>' + (p.active ? '<span class="order-status paid">active</span>' : '<span class="order-status">inactive</span>') + '</td></tr>';
-      }).join("") : '<tr><td colspan="8" class="muted">No products match.</td></tr>';
+      }).join("") : '<tr><td colspan="7" class="muted">No products match.</td></tr>';
 
       var cats = configuredCategories.slice();
       all.forEach(function (p) { if (p.category && cats.indexOf(p.category) === -1) cats.push(p.category); });
@@ -150,7 +147,7 @@
       } else if (current && current.image_url && !clearImage) {
         box.innerHTML = '<img src="' + ibEscape(current.image_url) + '" alt="" style="width:100%;height:100%;object-fit:cover;">';
       } else {
-        box.innerHTML = typeof productIconSVG === "function" ? productIconSVG($("f-icon").value) : "";
+        box.innerHTML = typeof productIconSVG === "function" ? productIconSVG(current && current.icon_key ? current.icon_key : DEFAULT_ICON) : "";
       }
       $("f-image-clear").style.display = (pendingImage || (current && current.image_url && !clearImage)) ? "" : "none";
     }
@@ -167,9 +164,7 @@
       $("f-material").value = p ? (p.material || "") : "";
       $("f-description").value = p ? (p.description || "") : "";
       $("f-specs").value = p ? specsToText(p.specs) : "";
-      $("f-icon").value = p && p.icon_key ? p.icon_key : $("f-icon").options[0].value;
       $("f-stock").value = p ? p.stock : 0;
-      $("f-sort").value = p ? p.sort : (all.length ? Math.max.apply(null, all.map(function (x) { return x.sort; })) + 1 : 1);
       $("f-active").checked = p ? !!p.active : true;
       $("f-image").value = "";
       $("d-error").style.display = "none";
@@ -227,9 +222,10 @@
           material: $("f-material").value.trim() || null,
           description: $("f-description").value.trim() || null,
           specs: textToSpecs($("f-specs").value),
-          icon_key: $("f-icon").value,
+          // Icon and sort order are not editable in the UI: keep them on edit, default on create.
+          icon_key: current && current.icon_key ? current.icon_key : DEFAULT_ICON,
           stock: stock,
-          sort: parseInt($("f-sort").value, 10) || 0,
+          sort: current ? current.sort : nextSort(),
           active: $("f-active").checked
         };
         if (pendingImage) patch.image_url = await uploadImage(pendingImage, slug);
@@ -262,9 +258,9 @@
       if (open) { var p = all.find(function (x) { return x.id === open; }); if (p) openDrawer(p); }
     }
 
-    // Icon options come from icons.js so the list stays in sync with what the store can draw.
-    var iconKeys = (typeof PRODUCT_ICONS === "object" && PRODUCT_ICONS) ? Object.keys(PRODUCT_ICONS) : ["enclosure", "bracket", "shell", "detail", "cable", "gear", "tray", "stand"];
-    $("f-icon").innerHTML = iconKeys.map(function (k) { return '<option value="' + k + '">' + k + '</option>'; }).join("");
+    // Placeholder icon for new products (used until a photo is uploaded); must be a key in icons.js.
+    var DEFAULT_ICON = "enclosure";
+    function nextSort() { return all.length ? Math.max.apply(null, all.map(function (x) { return x.sort; })) + 1 : 1; }
 
     $("new-btn").addEventListener("click", function () { openDrawer(null); });
     $("search").addEventListener("input", function (e) { search = e.target.value.trim().toLowerCase(); render(); });
@@ -276,7 +272,6 @@
       if (p) openDrawer(p);
     });
     $("f-name").addEventListener("input", function () { if (!current) $("f-slug").value = slugify($("f-name").value); });
-    $("f-icon").addEventListener("change", updatePreview);
     $("f-image").addEventListener("change", function (e) { pendingImage = e.target.files[0] || null; clearImage = false; updatePreview(); });
     $("f-image-clear").addEventListener("click", function () { pendingImage = null; clearImage = true; $("f-image").value = ""; updatePreview(); });
     $("d-form").addEventListener("submit", save);
@@ -288,7 +283,7 @@
       if (!user) return;
       load().catch(function (e) {
         console.error("Products load failed", e);
-        $("rows").innerHTML = '<tr><td colspan="8" class="muted">Couldn\'t load products. Refresh to retry.</td></tr>';
+        $("rows").innerHTML = '<tr><td colspan="7" class="muted">Couldn\'t load products. Refresh to retry.</td></tr>';
       });
     });
   })();
