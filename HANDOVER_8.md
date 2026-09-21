@@ -23,11 +23,22 @@ Phase 9 (deploy to Hostinger) is now the only engineering phase left.
 | 14 | Test order deleted | Claude (user request) | Order `4ea2920d` + its item removed; Custom Enclosure then deleted too (nothing references it). `orders` / `order_items` are empty; `products` = the 4 real ones only. |
 | 15 | Product photo gallery | Claude (user request) | User's Chrome showed a broken product image (their server root differs from the pane's, so the root-absolute `/assets/…` path 404'd) → paths are now **relative to the site root** (`assets/img/products/…`); `admin/products.html` `imgSrc()` prefixes `../` for relative paths. Migration **0014**: `products.images jsonb` (ordered gallery); all poster shots converted (18 JPEGs, 2.2 MB total). `products.js` exposes `p.images` (image_url first, de-duped). `product.html`: main image + ‹ › arrows + "n / N" counter + thumbnail strip, keyboard arrows and touch swipe; single-photo products show no controls. Verified in the pane. **Admin cannot edit the gallery yet** (only the thumbnail via Photo upload) — backlog. |
 | 16 | Admin account changed | Claude (user decision) | Google sign-in from `admin/` first bounced to `localhost:3000` (Supabase default Site URL) because the Redirect URLs list did not cover `admin/`; user set Site URL = `http://localhost:8790` and Redirect URLs `http://localhost:8790/**`, `https://infinite-box.co/**`. They then signed in with a **different** Google account, `chaopraya.khan@gmail.com`, and chose to make it the sole admin: `is_admin` moved from `khanleenine@gmail.com` (now a normal customer) to `chaopraya.khan@gmail.com`. Launch day: change Site URL to `https://infinite-box.co`. |
+| 17 | Home strip | Claude (user request) | Centred; "Lead time" / "Layer res" replaced with "Free shipping from ฿800" / "Designed & printed in Thailand". |
+| 18 | Product page text | Claude (user request) | Spec labels fixed at 140px (no wrap); multi-line spec values and "- " description lines render as bullet lists; admin Specs editor round-trips lists as `A | B | C`. Mazda/W124 "Compatible with" split into one model per line. |
+| 19 | Cart stale lines | Claude (user report) | Badge showed 2 with an empty cart: localStorage still held deleted placeholder slugs. `cart.html` now prunes lines whose product no longer exists and re-saves. |
+| 20 | Admin link in header | Claude | `IBAuth.refreshHeader()` reads the user's own `profiles.is_admin` and inserts an orange **Admin** link (desktop header + mobile nav) → `admin/index.html`. Root cause of "can't reach admin": the user signed in via the storefront Log in button, which lands on account.html by design. |
+| 21 | **Product options (variants)** | Claude (user request) | Migration **0015**: `products.options jsonb` (`[{name, values[]}]`), `order_items.options jsonb`. Admin drawer: **Options** editor (+ Add option; name + comma-separated values). `product.html`: chip picker per group, must choose before Add to Cart, single-value groups preselect. Cart lines keyed by product+options (`IB.lineKey`), choice shown under the name. `create-checkout-session` **v11** validates values against the product, sums stock across variant lines, stores options per order line, adds them as the Stripe line-item description. `stripe-webhook` **v10** prints them in receipts; account/order/admin-orders show them. **v1 limits:** same price and shared stock across variants. Test data: BMW insert has `Slot type: 3 slot / 4 slot` + `Color: Black` — **edit/remove in Admin → Products** if that's not real. Verified in the pane (picker, cart lines, qty/remove per line); the admin editor and a paid checkout with options are untested — user to try. |
 | 8 | Password conditions checklist | Claude (user request) | Replaced the hint sentence with a live "Password conditions" checklist on `signup.html` and `reset-password.html` (shared `IBAuth.attachPasswordRules` in `auth.js`, `.pw-rules` CSS): 8–50 chars, ≥1 uppercase, ≥1 lowercase, ≥1 number, ≥1 symbol, plus a Confirm-password field (new on signup) with a live "Passwords do not match" error. Submit stays disabled until all pass; handlers re-check before calling Supabase. Verified in the pane (weak / mismatch / match / too-long states). **Client-side only** — server-side enforcement is Supabase → Auth → Email → *Password Requirements* (free plan, not turned on). |
 
-## Commits (9, on top of `d4038ab`)
+## Commits (17, on top of `d4038ab`)
 
 ```
+b7c6eab Product options (variants) end to end
+464d639 Header: Admin link for admins
+762f9a4 Product page: bullet lists + fixed spec labels
+af0d3e5 Home strip: centre + new items
+b9a71fa Cart: prune deleted products
+d676e6b Shop cards: square photo box
 a5f68a5 Product photo gallery: products.images + prev/next, thumbnails, swipe
 4781bc5 Catalogue: replace placeholders with the first 4 real products + photos
 6909811 Switch store currency to THB; flat ฿50 shipping, free from ฿800
@@ -47,6 +58,8 @@ plus the docs commits for this handover. **Pushed to `origin/main`** at the end 
 - `quote_requests` / `contact_messages`: 0
 - `products`: exactly the 4 real products (stock 2/5/3/3), each with a 2–6 photo gallery
 - `store_settings`: `shipping_cents = 5000`, `free_shipping_threshold_cents = 80000`, 9 categories
+- Supabase Auth: Site URL `http://localhost:8790`, Redirect URLs `http://localhost:8790/**`, `https://infinite-box.co/**`
+- Edge Functions: create-checkout-session v11 · stripe-webhook v10 · submit-quote v3 · submit-contact v1 · get-order v1
 - Hostinger: nothing uploaded; GoDaddy DNS not pointed
 
 ## Gotchas noted this session

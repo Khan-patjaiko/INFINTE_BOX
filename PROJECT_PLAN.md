@@ -18,7 +18,8 @@ is purchased but nothing uploaded — deferred by the user).
 | Area | Status |
 |---|---|
 | Static site design (14 pages, dark theme, design tokens) | ✅ Done |
-| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 14 migrations | ✅ Done, advisor clean |
+| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 15 migrations | ✅ Done, advisor clean |
+| Product options / variants (admin-defined groups → picker on product page → cart/checkout/orders/emails) | ✅ Done 2026-09-21 (v1: same price, shared stock) |
 | **Currency: THB** (switched 2026-09-21, Handover #8) — `*_cents` = satang, ฿ everywhere, Stripe `thb`; shipping ฿50 flat, **free from ฿800** (`store_settings`) | ✅ Done |
 | Live product catalogue from DB (index/shop/product/cart) | ✅ Done |
 | Cart (localStorage) | ✅ Done |
@@ -103,7 +104,7 @@ Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
 ├── Auth: email/password (confirmation on, min length 8, SMTP via Resend from hello@infinite-box.co), Google OAuth · 2 users (owner chaopraya.khan@gmail.com = admin; khanleenine@gmail.com = customer)
-├── Edge Functions: submit-quote ✅ (v3, + emails) · submit-contact ✅ (v1) · create-checkout-session ✅ (v10: **401 unless signed in**, THB, ฿50 shipping / free from ฿800 via `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v9: ฿ emails, pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
+├── Edge Functions: submit-quote ✅ (v3, + emails) · submit-contact ✅ (v1) · create-checkout-session ✅ (v11: options validated per line, **401 unless signed in**, THB, ฿50 shipping / free from ฿800 via `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v10: ฿ emails with options, pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
 └── Email: Resend, domain infinite-box.co verified; secrets RESEND_API_KEY / OWNER_EMAIL / EMAIL_FROM
 
 Nav: Shop · Custom Orders · About · Account/Log in · Cart · Shop Now
@@ -193,7 +194,8 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_8.md`).
 
 ### Backlog / ideas (not scheduled)
-- Product search, product variants (size/colour/material options).
+- Product search.
+- Product variants — **v1 done 2026-09-21** (option groups, same price, shared stock). v2 ideas: per-variant price and stock, variant photos.
 - Admin UI for editing `store_settings` (shipping fee, category list) instead of SQL.
 - Admin drag-to-reorder for products (the Sort field was removed from the product form 2026-09-21; `products.sort` is now auto-assigned).
 - Discount codes (Stripe Coupons).
