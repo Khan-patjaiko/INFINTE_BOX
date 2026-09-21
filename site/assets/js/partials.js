@@ -1,13 +1,13 @@
 // Shared header/footer markup, injected into every page to avoid duplication.
 
-// Social links shown in the footer "Follow" column. Fill in the real profile URLs;
+// Social links shown in the footer "Follow" column. Real profile URLs (set 2026-09-21);
 // an entry with an empty url is skipped so unfinished channels never show a dead link.
 var SOCIAL_LINKS = [
-  { name: "Facebook",  url: "https://www.facebook.com/infinitebox",
+  { name: "Facebook",  url: "https://www.facebook.com/profile.php?id=61573015261066",
     icon: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 21v-7.5h2.5l.4-3h-2.9V8.6c0-.9.3-1.5 1.5-1.5h1.6V4.4c-.3 0-1.2-.1-2.3-.1-2.3 0-3.8 1.4-3.8 3.9v2.3H8v3h2.5V21h3z"/></svg>' },
-  { name: "Instagram", url: "https://www.instagram.com/infinitebox",
+  { name: "Instagram", url: "https://www.instagram.com/infinite_box_2024",
     icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="currentColor" stroke="none"/></svg>' },
-  { name: "Line",      url: "https://line.me/R/ti/p/@infinitebox",
+  { name: "Line",      url: "https://line.me/ti/p/ejUu2UnLOG",
     icon: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3C6.9 3 2.8 6.4 2.8 10.6c0 3.8 3.3 6.9 7.8 7.5.3.1.7.2.8.5.1.3 0 .7 0 1l-.1.8c0 .2-.2.9.8.5s5.2-3.1 7.1-5.2c1.3-1.4 1.9-2.9 1.9-4.6C21.2 6.4 17.1 3 12 3zM8.2 13.1H6.4c-.3 0-.5-.2-.5-.5V9.1c0-.3.2-.5.5-.5s.5.2.5.5v3h1.3c.3 0 .5.2.5.5s-.2.5-.5.5zm1.9-.5c0 .3-.2.5-.5.5s-.5-.2-.5-.5V9.1c0-.3.2-.5.5-.5s.5.2.5.5v3.5zm4.3 0c0 .2-.1.4-.3.5h-.2c-.2 0-.3-.1-.4-.2l-1.8-2.5v2.2c0 .3-.2.5-.5.5s-.5-.2-.5-.5V9.1c0-.2.1-.4.3-.5h.2c.2 0 .3.1.4.2l1.8 2.5V9.1c0-.3.2-.5.5-.5s.5.2.5.5v3.5zm2.9-2.3c.3 0 .5.2.5.5s-.2.5-.5.5h-1.3v.8h1.3c.3 0 .5.2.5.5s-.2.5-.5.5h-1.8c-.3 0-.5-.2-.5-.5V9.1c0-.3.2-.5.5-.5h1.8c.3 0 .5.2.5.5s-.2.5-.5.5h-1.3v.8h1.3z"/></svg>' }
 ];
 
