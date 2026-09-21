@@ -18,15 +18,16 @@ Phase 9 (deploy to Hostinger) is now the only engineering phase left.
 | 9 | Admin header bug | Claude | The admin "View store" link used class `account-link`, so `IBAuth.refreshHeader()` rewrote it to `account.html` after sign-in → `admin/account.html` 404 (found by the user on first admin login with the Google account). Renamed to `store-link` (`admin.js`, CSS selector widened). Commit `6f6916b`, pushed. |
 | 8 | Password conditions checklist | Claude (user request) | Replaced the hint sentence with a live "Password conditions" checklist on `signup.html` and `reset-password.html` (shared `IBAuth.attachPasswordRules` in `auth.js`, `.pw-rules` CSS): 8–50 chars, ≥1 uppercase, ≥1 lowercase, ≥1 number, ≥1 symbol, plus a Confirm-password field (new on signup) with a live "Passwords do not match" error. Submit stays disabled until all pass; handlers re-check before calling Supabase. Verified in the pane (weak / mismatch / match / too-long states). **Client-side only** — server-side enforcement is Supabase → Auth → Email → *Password Requirements* (free plan, not turned on). |
 
-## Commits (4, on top of `d4038ab`)
+## Commits (5, on top of `d4038ab`)
 
 ```
+6f6916b Admin header: stop auth.js rewriting View store link
 d6c781d Live password-conditions checklist on signup and reset
 c5f3d9d Password hints: suggest a mix of upper/lower/number/symbol
 9285f36 Signup: require 8-character passwords to match reset page and Auth setting
 44586e2 Footer: real Facebook / Instagram / Line profile URLs
 ```
-plus the docs commit for this handover. **Not pushed** — the user pushes on request.
+plus the docs commits for this handover. **Pushed to `origin/main`** at the end of the session.
 
 ## Live state at end of session (verified via SQL)
 
