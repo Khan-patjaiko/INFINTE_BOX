@@ -91,6 +91,14 @@
     function render() {
       var cart = IB.getCart();
 
+      // Drop entries for products that no longer exist (deleted or deactivated in admin);
+      // otherwise the header badge keeps counting items the cart can't show.
+      var known = cart.filter(function (item) { return !!getProduct(item.id); });
+      if (known.length !== cart.length) {
+        cart = known;
+        IB.saveCart(cart);
+      }
+
       if (cart.length === 0) {
         container.innerHTML =
           '<div class="empty-state">' +
