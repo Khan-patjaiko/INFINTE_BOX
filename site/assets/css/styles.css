@@ -424,7 +424,7 @@ button { font-family: inherit; cursor: pointer; }
 .product-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -8px hsl(0 0% 0% / 0.4); }
 .product-thumb {
   position: relative;
-  aspect-ratio: 4/3;
+  aspect-ratio: 1/1;
   background: hsl(var(--product-img-bg));
   display: flex;
   align-items: center;
@@ -777,7 +777,8 @@ button { font-family: inherit; cursor: pointer; }
 .product-detail, .product-grid { min-height: 320px; }
 
 /* ---------- Product images (when real photos exist) ---------- */
-.product-thumb img, .cart-thumb img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.product-thumb img, .cart-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+.product-card:hover .product-thumb img { transform: scale(1.04); }
 .pd-image img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
 /* ---------- Legal pages (privacy.html / terms.html) ---------- */
