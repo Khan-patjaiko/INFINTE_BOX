@@ -564,6 +564,11 @@ button { font-family: inherit; cursor: pointer; }
 .page-hero h1 { font-size: 32px; font-weight: 700; margin-bottom: 16px; }
 .page-hero p { font-size: 16px; color: hsl(var(--muted-foreground)); max-width: 560px; line-height: 1.6; }
 @media (min-width: 768px) { .page-hero { padding: 80px 0 var(--space-6); } .page-hero h1 { font-size: 52px; } }
+/* Shop: category chips live in the hero, so trim the gaps around them */
+.shop-hero { padding-bottom: var(--space-4); }
+.shop-hero .filter-bar { margin: var(--space-4) 0 0; }
+.shop-section { padding-top: var(--space-5); }
+@media (min-width: 768px) { .shop-hero { padding: 56px 0 var(--space-5); } .shop-section { padding-top: var(--space-5); } }
 
 /* ---------- Filter bar (shop) ---------- */
 .filter-bar {

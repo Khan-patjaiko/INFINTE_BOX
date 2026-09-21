@@ -21,17 +21,17 @@
 <div id="header-placeholder"></div>
 
 <main>
-  <section class="page-hero">
+  <section class="page-hero shop-hero">
     <div class="container">
       <p class="eyebrow">Catalogue</p>
       <h1>Shop</h1>
-      <p>Ready-to-ship parts, printed on demand. Pick a material and category, or send us a custom design for a quote.</p>
+      <p>Ready-to-ship parts, printed on demand. Pick a category, or send us a custom design for a quote.</p>
+      <div class="filter-bar" id="filter-bar" aria-label="Product categories"></div>
     </div>
   </section>
 
-  <section class="section" style="padding-top:64px;">
+  <section class="section shop-section">
     <div class="container">
-      <div class="filter-bar" id="filter-bar"></div>
       <div class="product-grid" id="shop-product-grid"></div>
     </div>
   </section>
@@ -56,7 +56,7 @@
       var items = category === "All" ? PRODUCTS : PRODUCTS.filter(function (p) { return p.category === category; });
       grid.innerHTML = items.length
         ? items.map(productCardHTML).join("")
-        : '<p class="grid-status">No products in this category.</p>';
+        : '<p class="grid-status">Nothing in this category yet — <a href="custom.html">request a custom part</a> and we will print it.</p>';
     }
 
     filterBar.addEventListener("click", function (e) {
@@ -70,9 +70,10 @@
     function load() {
       grid.innerHTML = '<p class="grid-status">Loading products…</p>';
       Promise.all([loadProducts(), loadCategories()]).then(function (r) {
-        var inUse = Array.from(new Set(PRODUCTS.map(function (p) { return p.category; }).filter(Boolean)));
-        var ordered = r[1].filter(function (c) { return inUse.indexOf(c) !== -1; });
-        inUse.forEach(function (c) { if (ordered.indexOf(c) === -1) ordered.push(c); });
+        // Every configured category is shown so customers can see the range; any category
+        // only present on a product is appended.
+        var ordered = r[1].slice();
+        PRODUCTS.forEach(function (p) { if (p.category && ordered.indexOf(p.category) === -1) ordered.push(p.category); });
         var categories = ["All"].concat(ordered);
         filterBar.innerHTML = categories.map(function (c, i) {
           return '<button class="filter-chip' + (i === 0 ? ' active' : '') + '" data-category="' + ibEscape(c) + '">' + ibEscape(c) + '</button>';
