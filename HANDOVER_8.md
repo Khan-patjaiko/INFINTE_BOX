@@ -20,11 +20,14 @@ Phase 9 (deploy to Hostinger) is now the only engineering phase left.
 | 11 | **Store currency → THB** | Claude (user decision) | Prices supplied in THB, store was USD. `price_cents`/`*_cents` now hold satang (Stripe treats THB as 2-decimal, so no arithmetic changed). `฿` formatting in `products.js formatPrice`, `money()` in account/order/admin.js and `_shared/email.ts` (whole amounts without decimals: ฿399, ฿1,299). Admin labels "Price (THB)", terms.html copy updated. `create-checkout-session` **v10**: `currency: "thb"` + shipping rule; `stripe-webhook` **v9** redeployed for the email formatter. **Note:** the kept test order `4ea2920d` (3050) now displays as ฿30.50 — it was a USD test. |
 | 12 | Shipping ฿50, free from ฿800 | Claude (user decision) | `store_settings.shipping_cents = 5000`, new `free_shipping_threshold_cents = 80000`. Cart shows "Free" + an "Add ฿X more for free shipping" nudge; checkout function applies the same rule and labels the Stripe shipping line "Free shipping" at ฿0. Verified in the pane: 1× Mazda → ฿279 + ฿50; 3× → ฿837, Free. |
 | 13 | Real catalogue (4 products) | Claude, from the user's `Product/` folder | Migration **0013** (applied): deleted the 7 unordered seed products, deactivated Custom Enclosure (order 4ea2920d references it), inserted **W201 190E Cup Holder ฿399 (stock 2)**, **Mazda Phone Mount 7" ฿279 (5)**, **W124 Cup Holder ฿599 (3)**, **BMW E90 Center Console Insert ฿259 (3)** — category `Automotive` (the existing chip; the user wrote "Automotive Accessories"), material ABS, specs as `Compatible with` / `Material`. Descriptions keep their bullet lines (`.pd-desc { white-space: pre-line }`). Photos: `1.png` of each poster (Mazda → `4.png` showing the phone in the mount; BMW → `2.png` because `1.png` has a "BWM E90" typo) converted with `sharp-cli` to 1200px JPEG (115–200 KB) in `site/assets/img/products/`, referenced root-absolute so admin/ pages resolve them too. The raw `Product/` folder stays **untracked** (15 MB of posters). |
+| 14 | Test order deleted | Claude (user request) | Order `4ea2920d` + its item removed; Custom Enclosure then deleted too (nothing references it). `orders` / `order_items` are empty; `products` = the 4 real ones only. |
+| 15 | Product photo gallery | Claude (user request) | User's Chrome showed a broken product image (their server root differs from the pane's, so the root-absolute `/assets/…` path 404'd) → paths are now **relative to the site root** (`assets/img/products/…`); `admin/products.html` `imgSrc()` prefixes `../` for relative paths. Migration **0014**: `products.images jsonb` (ordered gallery); all poster shots converted (18 JPEGs, 2.2 MB total). `products.js` exposes `p.images` (image_url first, de-duped). `product.html`: main image + ‹ › arrows + "n / N" counter + thumbnail strip, keyboard arrows and touch swipe; single-photo products show no controls. Verified in the pane. **Admin cannot edit the gallery yet** (only the thumbnail via Photo upload) — backlog. |
 | 8 | Password conditions checklist | Claude (user request) | Replaced the hint sentence with a live "Password conditions" checklist on `signup.html` and `reset-password.html` (shared `IBAuth.attachPasswordRules` in `auth.js`, `.pw-rules` CSS): 8–50 chars, ≥1 uppercase, ≥1 lowercase, ≥1 number, ≥1 symbol, plus a Confirm-password field (new on signup) with a live "Passwords do not match" error. Submit stays disabled until all pass; handlers re-check before calling Supabase. Verified in the pane (weak / mismatch / match / too-long states). **Client-side only** — server-side enforcement is Supabase → Auth → Email → *Password Requirements* (free plan, not turned on). |
 
-## Commits (8, on top of `d4038ab`)
+## Commits (9, on top of `d4038ab`)
 
 ```
+a5f68a5 Product photo gallery: products.images + prev/next, thumbnails, swipe
 4781bc5 Catalogue: replace placeholders with the first 4 real products + photos
 6909811 Switch store currency to THB; flat ฿50 shipping, free from ฿800
 098ab8b Admin products: drop Placeholder icon and Sort order fields
@@ -39,9 +42,9 @@ plus the docs commits for this handover. **Pushed to `origin/main`** at the end 
 ## Live state at end of session (verified via SQL)
 
 - `auth.users`: 1 (`khanleenine@gmail.com`, provider google, admin)
-- `orders`: 1 (`4ea2920d`, paid — the owner's own test; kept deliberately)
+- `orders`: 0 (test order deleted at the user's request)
 - `quote_requests` / `contact_messages`: 0
-- `products`: 4 active real products (stock 2/5/3/3) + Custom Enclosure inactive; placeholders deleted
+- `products`: exactly the 4 real products (stock 2/5/3/3), each with a 2–6 photo gallery
 - `store_settings`: `shipping_cents = 5000`, `free_shipping_threshold_cents = 80000`, 9 categories
 - Hostinger: nothing uploaded; GoDaddy DNS not pointed
 

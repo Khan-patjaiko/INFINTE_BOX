@@ -18,7 +18,7 @@ is purchased but nothing uploaded — deferred by the user).
 | Area | Status |
 |---|---|
 | Static site design (14 pages, dark theme, design tokens) | ✅ Done |
-| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 13 migrations | ✅ Done, advisor clean |
+| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 14 migrations | ✅ Done, advisor clean |
 | **Currency: THB** (switched 2026-09-21, Handover #8) — `*_cents` = satang, ฿ everywhere, Stripe `thb`; shipping ฿50 flat, **free from ฿800** (`store_settings`) | ✅ Done |
 | Live product catalogue from DB (index/shop/product/cart) | ✅ Done |
 | Cart (localStorage) | ✅ Done |
@@ -34,7 +34,7 @@ is purchased but nothing uploaded — deferred by the user).
 | Hosting | ⚠️ **Hostinger purchased**, not yet deployed |
 | Git | ✅ `main` pushed to `origin/main` 2026-09-21 (in sync) |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
-| Real product catalogue | ✅ 4 real products live (2026-09-21): W201 190E cup holder ฿399, Mazda 7" phone mount ฿279, W124 cup holder ฿599, BMW E90 console insert ฿259 — with stock and bundled photos (`site/assets/img/products/`). Placeholders deleted; Custom Enclosure deactivated. |
+| Real product catalogue | ✅ 4 real products live (2026-09-21): W201 190E cup holder ฿399, Mazda 7" phone mount ฿279, W124 cup holder ฿599, BMW E90 console insert ฿259 — with stock and a 2–6 photo gallery each (`products.images`, `site/assets/img/products/`). Placeholders and the test order deleted. |
 | Admin UI (`site/admin/` — overview, orders, quotes, messages, products) | ✅ Done 2026-09-20, verified signed in as admin (`testuser@infinitebox.dev` is admin) |
 | Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20; real stock entered with the catalogue 2026-09-21 (2 / 5 / 3 / 3) |
 | Footer social links (Facebook / Instagram / Line) | ⚠️ Added 2026-09-21 with **placeholder URLs** in `partials.js` `SOCIAL_LINKS` |
@@ -198,7 +198,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - Admin drag-to-reorder for products (the Sort field was removed from the product form 2026-09-21; `products.sort` is now auto-assigned).
 - Discount codes (Stripe Coupons).
 - Multi-currency — store is **THB** since 2026-09-21 (was USD). Stripe presents THB; confirm the Stripe account's settlement currency before live mode (Phase 13).
-- Multiple photos per product (only `image_url` today; the Facebook posters have 4–6 shots each).
+- Admin UI for the product photo gallery (`products.images`, added 2026-09-21 — today only editable via SQL; the Photo upload sets the thumbnail `image_url`).
 - Fix the "BWM E90" typo in the BMW poster `1.png` (the store uses `2.png` instead).
 - PWA / offline cart, analytics (Plausible/GA4), reviews.
 
