@@ -133,13 +133,15 @@
         var p = getProduct(item.id);
         return sum + (p && !p.soldOut ? p.price * item.qty : 0);
       }, 0);
-      var shipping = subtotal > 0 ? shippingUsd : 0;
+      var freeShipping = freeShippingFrom > 0 && subtotal >= freeShippingFrom;
+      var shipping = subtotal > 0 && !freeShipping ? shippingBaht : 0;
       var total = subtotal + shipping;
 
       container.innerHTML = rows +
         '<div class="cart-summary">' +
           '<div class="cart-summary-row"><span>Subtotal</span><span>' + formatPrice(subtotal) + '</span></div>' +
-          '<div class="cart-summary-row"><span>Shipping</span><span>' + formatPrice(shipping) + '</span></div>' +
+          '<div class="cart-summary-row"><span>Shipping</span><span>' + (freeShipping ? 'Free' : formatPrice(shipping)) + '</span></div>' +
+          (!freeShipping && freeShippingFrom > 0 && subtotal > 0 ? '<p class="cart-ship-note">Add ' + formatPrice(freeShippingFrom - subtotal) + ' more for free shipping.</p>' : '') +
           '<div class="cart-summary-row total"><span>Total</span><span>' + formatPrice(total) + '</span></div>' +
           (blocked
             ? '<button class="btn btn-primary btn-block mt-16" id="checkout-btn" disabled title="Remove sold-out items first">Checkout</button>'
@@ -174,15 +176,20 @@
       }
     }
 
-    // Flat shipping fee comes from store_settings (same row create-checkout-session uses);
-    // fall back to $6.50 if the read fails so the cart still renders.
-    var shippingUsd = 6.5;
+    // Shipping comes from store_settings (same rows create-checkout-session uses):
+    // flat shipping_cents, waived once the subtotal reaches free_shipping_threshold_cents.
+    // Fallbacks (฿50, free from ฿800) keep the cart rendering if the read fails.
+    var shippingBaht = 50;
+    var freeShippingFrom = 800;
     function loadShipping() {
       if (!window.IBDB) return Promise.resolve();
-      return window.IBDB.from("store_settings").select("value").eq("key", "shipping_cents").maybeSingle()
+      return window.IBDB.from("store_settings").select("key,value").in("key", ["shipping_cents", "free_shipping_threshold_cents"])
         .then(function (res) {
-          var cents = res && res.data && res.data.value;
-          if (typeof cents === "number" && cents >= 0) shippingUsd = cents / 100;
+          (res && res.data || []).forEach(function (row) {
+            if (typeof row.value !== "number" || row.value < 0) return;
+            if (row.key === "shipping_cents") shippingBaht = row.value / 100;
+            if (row.key === "free_shipping_threshold_cents") freeShippingFrom = row.value / 100;
+          });
         }, function () {});
     }
 

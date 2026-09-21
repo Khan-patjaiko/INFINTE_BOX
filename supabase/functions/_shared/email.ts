@@ -77,7 +77,8 @@ export function esc(s: unknown): string {
 }
 
 export function money(cents: number | null | undefined): string {
-  return "$" + ((cents ?? 0) / 100).toFixed(2);
+  // Thai baht; whole amounts print without decimals (฿399, ฿1,299).
+  return "฿" + ((cents ?? 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
 export function nl2br(s: unknown): string {

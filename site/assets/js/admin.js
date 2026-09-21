@@ -67,7 +67,7 @@
     return user;
   }
 
-  function money(cents) { return "$" + ((cents || 0) / 100).toFixed(2); }
+  function money(cents) { return "฿" + ((cents || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
 
   function date(iso, withTime) {
     var d = new Date(iso);

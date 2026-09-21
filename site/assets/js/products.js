@@ -76,8 +76,10 @@ function ibEscape(s) {
   });
 }
 
-function formatPrice(dollars) {
-  return "$" + Number(dollars || 0).toFixed(2);
+// Store currency is Thai baht. price_cents holds satang (Stripe treats THB as 2-decimal);
+// p.price is baht. Whole amounts print without decimals: ฿399, ฿1,299, ฿399.50.
+function formatPrice(baht) {
+  return "฿" + Number(baht || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
 function productThumbHTML(p) {

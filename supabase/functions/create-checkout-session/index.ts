@@ -17,9 +17,13 @@ function json(body: unknown, status = 200) {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-// Flat-rate shipping lives in store_settings.shipping_cents (see migration 0008);
-// this is only the fallback if that row is missing or unreadable.
-const DEFAULT_SHIPPING_CENTS = 650;
+// Store currency: Thai baht. All *_cents values are satang (Stripe treats THB as 2-decimal).
+const CURRENCY = "thb";
+// Flat-rate shipping lives in store_settings.shipping_cents, waived once the subtotal reaches
+// store_settings.free_shipping_threshold_cents (migrations 0008 / 0013). These are only the
+// fallbacks if those rows are missing or unreadable.
+const DEFAULT_SHIPPING_CENTS = 5000;
+const DEFAULT_FREE_SHIPPING_FROM_CENTS = 80000;
 // Countries Stripe Checkout will accept a shipping address for. Edit freely.
 const SHIP_TO = [
   "US", "CA", "GB", "IE", "AU", "NZ", "TH", "SG", "MY", "JP", "KR", "HK",
@@ -43,11 +47,14 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
-    const { data: shipRow } = await admin.from("store_settings")
-      .select("value").eq("key", "shipping_cents").maybeSingle();
-    const shippingCents = Number.isInteger(shipRow?.value) && shipRow!.value >= 0
-      ? shipRow!.value as number
-      : DEFAULT_SHIPPING_CENTS;
+    const { data: settingRows } = await admin.from("store_settings")
+      .select("key,value").in("key", ["shipping_cents", "free_shipping_threshold_cents"]);
+    const setting = (key: string, fallback: number) => {
+      const v = (settingRows ?? []).find((r: { key: string }) => r.key === key)?.value;
+      return Number.isInteger(v) && (v as number) >= 0 ? v as number : fallback;
+    };
+    const flatShippingCents = setting("shipping_cents", DEFAULT_SHIPPING_CENTS);
+    const freeShippingFromCents = setting("free_shipping_threshold_cents", DEFAULT_FREE_SHIPPING_FROM_CENTS);
 
     // Checkout requires a signed-in customer (no guest orders): every order is tied to
     // an account so it shows up in account.html and the customer gets the receipt.
@@ -88,7 +95,7 @@ Deno.serve(async (req) => {
       lineItems.push({
         quantity: qty,
         price_data: {
-          currency: "usd",
+          currency: CURRENCY,
           unit_amount: p.price_cents,
           product_data: { name: p.name, metadata: { slug: p.slug } },
         },
@@ -98,6 +105,7 @@ Deno.serve(async (req) => {
     if (soldOut.length) return json({ error: "Not enough stock: " + soldOut.join(", ") + ". Please update your cart.", sold_out: soldOut }, 409);
     if (lineItems.length === 0) return json({ error: "No valid items in cart" }, 400);
 
+    const shippingCents = freeShippingFromCents > 0 && subtotal >= freeShippingFromCents ? 0 : flatShippingCents;
     const total = subtotal + shippingCents;
 
     const { data: order, error: oErr } = await admin.from("orders").insert({
@@ -123,8 +131,8 @@ Deno.serve(async (req) => {
       shipping_options: [{
         shipping_rate_data: {
           type: "fixed_amount",
-          display_name: "Standard shipping",
-          fixed_amount: { amount: shippingCents, currency: "usd" },
+          display_name: shippingCents === 0 ? "Free shipping" : "Standard shipping",
+          fixed_amount: { amount: shippingCents, currency: CURRENCY },
         },
       }],
       shipping_address_collection: { allowed_countries: SHIP_TO as never },
