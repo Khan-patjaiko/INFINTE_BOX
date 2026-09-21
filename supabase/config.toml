@@ -15,3 +15,6 @@ verify_jwt = false
 
 [functions.get-order]
 verify_jwt = false
+
+[functions.submit-contact]
+verify_jwt = false

@@ -95,13 +95,15 @@
     btn.disabled = true;
     btn.textContent = "Sending…";
     try {
-      var res = await window.IBDB.from("contact_messages").insert({
+      // Goes through the submit-contact Edge Function so the owner gets an email alert.
+      var res = await window.IBDB.functions.invoke("submit-contact", { body: {
         name: document.getElementById("c-name").value,
         email: document.getElementById("c-email").value,
         subject: document.getElementById("c-subject").value,
         message: document.getElementById("c-message").value
-      });
+      } });
       if (res.error) throw res.error;
+      if (res.data && res.data.error) throw new Error(res.data.error);
       document.getElementById("contact-form").reset();
       successEl.style.display = "block";
     } catch (err) {

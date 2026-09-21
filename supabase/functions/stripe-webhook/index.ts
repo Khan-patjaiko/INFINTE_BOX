@@ -1,5 +1,8 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@17.7.0?target=denonext";
+import {
+  addressLines, button, esc, kv, layout, money, sendEmail, sendOwnerAlert, SITE_URL,
+} from "../_shared/email.ts";
 
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -54,11 +57,16 @@ Deno.serve(async (req) => {
             ...(address as Record<string, unknown>),
           };
         }
-        const { error } = await admin.from("orders").update(update).eq("id", orderId);
+        // Only the delivery that flips pending → paid gets a row back; Stripe retries
+        // and duplicate deliveries see none and skip the emails below.
+        const { data: paidRows, error } = await admin.from("orders").update(update)
+          .eq("id", orderId).eq("status", "pending").select("*");
         if (error) throw error;
         // Reduce stock for the items sold (idempotent per order; see migration 0011).
         const { error: stockErr } = await admin.rpc("decrement_order_stock", { p_order_id: orderId });
         if (stockErr) throw stockErr;
+
+        if (paidRows && paidRows.length) await sendOrderEmails(admin, paidRows[0]);
       }
     } else if (event.type === "checkout.session.expired") {
       const session = event.data.object as Stripe.Checkout.Session;
@@ -77,3 +85,52 @@ Deno.serve(async (req) => {
     headers: { "Content-Type": "application/json" },
   });
 });
+
+// Customer receipt + owner alert. Never throws (sendEmail swallows errors).
+async function sendOrderEmails(
+  admin: ReturnType<typeof createClient>,
+  order: Record<string, unknown>,
+) {
+  const { data: items } = await admin.from("order_items")
+    .select("name, qty, unit_price_cents").eq("order_id", order.id as string);
+  const id8 = String(order.id).slice(0, 8);
+  const total = money(order.total_cents as number);
+
+  const itemRows = (items ?? []).map((it) =>
+    `<tr><td style="padding:6px 0;">${esc(it.name)} × ${it.qty}</td>` +
+    `<td style="padding:6px 0;text-align:right;">${money(it.unit_price_cents * it.qty)}</td></tr>`
+  ).join("");
+  const summary = `<table role="presentation" cellspacing="0" cellpadding="0" style="width:100%;font-size:14px;border-top:1px solid #e7e5e4;margin-top:12px;">
+    ${itemRows}
+    <tr><td style="padding:6px 0;border-top:1px solid #e7e5e4;color:#78716c;">Subtotal</td><td style="padding:6px 0;border-top:1px solid #e7e5e4;text-align:right;">${money(order.subtotal_cents as number)}</td></tr>
+    <tr><td style="padding:6px 0;color:#78716c;">Shipping</td><td style="padding:6px 0;text-align:right;">${money(order.shipping_cents as number)}</td></tr>
+    <tr><td style="padding:8px 0;font-weight:700;border-top:1px solid #e7e5e4;">Total</td><td style="padding:8px 0;font-weight:700;text-align:right;border-top:1px solid #e7e5e4;">${total}</td></tr>
+  </table>`;
+  const addr = addressLines(order.shipping_address as Record<string, unknown> | null);
+  const addrBlock = addr ? `<p style="margin:16px 0 4px;color:#78716c;font-size:14px;">Shipping to</p><p style="margin:0;font-size:14px;">${addr}</p>` : "";
+
+  const email = String(order.email ?? "");
+  if (email && email !== "guest@pending") {
+    const link = order.stripe_session_id
+      ? `${SITE_URL}/order.html?session_id=${encodeURIComponent(String(order.stripe_session_id))}`
+      : `${SITE_URL}/order.html?id=${encodeURIComponent(String(order.id))}`;
+    await sendEmail({
+      to: email,
+      subject: `Order ${id8} confirmed — Infinite Box`,
+      html: layout(`Thanks for your order`, `
+        <p style="margin:0 0 8px;font-size:15px;">We've received your payment for order <strong>${id8}</strong> and will start printing shortly. You'll hear from us again when it ships.</p>
+        ${summary}${addrBlock}
+        ${button(link, "View your order")}
+        <p style="margin:16px 0 0;font-size:13px;color:#78716c;">Questions? Reply to this email or write to hello@infinite-box.co.</p>`),
+    });
+  }
+
+  await sendOwnerAlert({
+    subject: `New order ${id8} · ${total}`,
+    replyTo: email && email !== "guest@pending" ? email : undefined,
+    html: layout(`New paid order ${id8}`, `
+      ${kv([["Customer", esc(email)], ["Order id", esc(String(order.id))], ["Stripe PI", esc(String(order.stripe_payment_intent ?? ""))]])}
+      ${summary}${addrBlock}
+      ${button(`${SITE_URL}/admin/orders.html`, "Open in admin")}`),
+  });
+}

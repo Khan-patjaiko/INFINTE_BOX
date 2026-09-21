@@ -1,4 +1,5 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { button, esc, kv, layout, nl2br, sendEmail, sendOwnerAlert, SITE_URL } from "../_shared/email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,7 +60,7 @@ Deno.serve(async (req) => {
       fileUrl = path;
     }
 
-    const { error } = await admin.from("quote_requests").insert({
+    const { data: row, error } = await admin.from("quote_requests").insert({
       user_id: userId,
       name,
       email,
@@ -67,10 +68,34 @@ Deno.serve(async (req) => {
       quantity,
       details,
       file_url: fileUrl,
-    });
+    }).select("id").single();
     if (error) throw error;
 
-    return json({ ok: true });
+    // Notifications (never throw; see _shared/email.ts).
+    const id8 = String(row.id).slice(0, 8);
+    const summary = kv([
+      ["Name", esc(name)],
+      ["Email", esc(email)],
+      ["Material", esc(material || "—")],
+      ["Quantity", esc(String(quantity))],
+      ["Design file", fileUrl ? "attached (download from admin)" : "none"],
+      ["Details", nl2br(details || "—")],
+    ]);
+    await sendOwnerAlert({
+      subject: `New custom quote request ${id8} from ${name}`,
+      replyTo: email,
+      html: layout(`New quote request ${id8}`, summary + button(`${SITE_URL}/admin/quotes.html`, "Open in admin")),
+    });
+    await sendEmail({
+      to: email,
+      subject: "We received your custom order request — Infinite Box",
+      html: layout(`Thanks, ${name}`, `
+        <p style="margin:0 0 8px;font-size:15px;">We've received your custom order request (ref <strong>${id8}</strong>) and will review it and reply with a quote, usually within 2 business days.</p>
+        ${summary}
+        <p style="margin:16px 0 0;font-size:13px;color:#78716c;">Need to add something? Just reply to this email.</p>`),
+    });
+
+    return json({ ok: true, id: row.id });
   } catch (e) {
     console.error("submit-quote error", e);
     return json({ error: String((e as Error)?.message ?? e) }, 500);
