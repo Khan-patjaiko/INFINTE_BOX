@@ -3,7 +3,7 @@
 Last updated: 2026-09-21 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
 [HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md),
-[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md). How the system is built (four-layer architecture review) lives in
+[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
@@ -12,8 +12,7 @@ Tick boxes here as work lands; add a new phase rather than rewriting history.
 **Overall: ~97% to a launchable v1.** The store works end-to-end locally including test-mode
 payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages,
 SEO/share metadata, **transactional email (Resend, live)**, **password reset** and **profile
-edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. It is not yet deployed (Hostinger hosting
-is purchased but nothing uploaded — deferred by the user).
+edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles.
 
 | Area | Status |
 |---|---|
@@ -32,7 +31,7 @@ is purchased but nothing uploaded — deferred by the user).
 | UI polish pass #1 (spacing scale, focus ring, mobile padding, nav animation) | ✅ Done |
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
-| Hosting | ⚠️ **Hostinger purchased**, not yet deployed |
+| Hosting | ✅ **Coming-soon page live at `https://infinite-box.co`** (2026-09-21, Handover #9). Hostinger website `infinite-box.co` (Premium, Malaysia DC), DNS via GoDaddy **A record** `145.79.26.182` + `CNAME www`. Store `site/` **not yet uploaded** |
 | Git | ✅ `main` pushed to `origin/main` 2026-09-21 (in sync) |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
 | Real product catalogue | ✅ 4 real products live (2026-09-21): W201 190E cup holder ฿399, Mazda 7" phone mount ฿279, W124 cup holder ฿599, BMW E90 console insert ฿259 — with stock and a 2–6 photo gallery each (`products.images`, `site/assets/img/products/`). Placeholders and the test order deleted. |
@@ -48,7 +47,7 @@ is purchased but nothing uploaded — deferred by the user).
 | Coming-soon page email capture | ❌ localStorage only, not a real list |
 
 **Immediate blockers on the user side:** (1) fill the placeholders in `privacy.html` / `terms.html`, (2) upload `site/` to Hostinger
-`public_html` and point the domain at it, (6) publish the Google OAuth app (Testing → In production) on launch day.
+`public_html` (domain + HTTPS already done — the coming-soon page is there now), (6) publish the Google OAuth app (Testing → In production) on launch day.
 
 ---
 
@@ -94,7 +93,7 @@ E-Commerce Web/
 │   ├── functions/_shared/email.ts Resend helper (sendEmail/sendOwnerAlert + templates), bundled into each function on deploy
 │   └── functions/<name>/index.ts  submit-quote · submit-contact · create-checkout-session · stripe-webhook · get-order
 ├── docs/ARCHITECTURE.md           Four-layer architecture reference
-├── coming-soon/index.html         Standalone pre-launch page (separate deploy, no backend)
+├── coming-soon/index.html         Standalone pre-launch page — LIVE at https://infinite-box.co since 2026-09-21 (noindex, no backend)
 ├── Example/                       Original Airo export (reference only)
 ├── .claude/launch.json            preview servers: infinite-box-site :8790, infinite-box-coming-soon :8791
 └── HANDOVER*.md                   Session history
@@ -144,13 +143,13 @@ Goal: clean state, everything known-good.
 - One further test order (`9acb36b4…`, "Custom Enclosure", $30.50, `paid`) was placed by the user directly while testing the preview on 2026-09-19 — left in the database deliberately (not Claude's to delete). Clear it manually before launch, or ask Claude to.
 
 ### Phase 9 — Deployment to Hostinger (Hostinger hosting purchased; no other blocker)
-- [ ] Upload `site/` contents to `public_html` (FTP/File Manager). No build step.
-- [ ] Point the GoDaddy DNS for `infinite-box.co` at Hostinger (A record / nameservers per the Hostinger panel), then confirm HTTPS active.
+- [ ] Upload `site/` contents to `public_html` (Hostinger File Manager — extract at the root, not into a subfolder; delete the coming-soon `index.html`/`assets` first). No build step.
+- [x] Point the GoDaddy DNS for `infinite-box.co` at Hostinger — done 2026-09-21 via **A record `@` → `145.79.26.182`** (`CNAME www → infinite-box.co` already existed). **Never switch to Hostinger nameservers**: the Resend DKIM/SPF/`send`/`rsend` records live in GoDaddy DNS and would be lost. Let's Encrypt installed automatically, Force HTTPS on, `http://` → 301 `https://`, `www` works.
 - [~] Supabase → Auth → URL Configuration: Redirect URLs now `http://localhost:8790/**` + `https://infinite-box.co/**` (2026-09-21). **Launch day:** change Site URL from `http://localhost:8790` to `https://infinite-box.co`.
 - [ ] Google Cloud Console → Google Auth Platform → **Audience → Publish app** (Testing → In production). Launch-day step: in Testing only listed test users can use Google sign-in. Branding (name, logo, home/privacy/terms URLs, authorized domains `ptwfidmlnuggxvqhimhe.supabase.co` + `infinite-box.co`) was filled in 2026-09-21.
 - [ ] After the site is live: verify `infinite-box.co` in Google Search Console, then submit the OAuth app for **brand verification** so the consent screen says "Sign in to Infinite Box" instead of the raw `…supabase.co` domain. If Google objects to the unowned supabase.co domain, the fallback is a Supabase custom domain (`api.infinite-box.co`, $10/mo add-on) + updating `config.js`, the Google redirect URI and the Stripe webhook URL.
 - [ ] Re-run login (email + Google) and a test checkout on the live domain.
-- [ ] Deploy `coming-soon/` separately (or retire it once the store is live — user decision).
+- [x] Deploy `coming-soon/` — done 2026-09-21: it is what `public_html` serves now (`index.html` + `assets/`), with `<meta name="robots" content="noindex, nofollow">` so Google doesn't cache a "coming soon" snippet. Retired automatically when `site/` is uploaded over it.
 - [x] Add `robots.txt`, `sitemap.xml`, `<meta description>` per page, `noindex` on transactional pages, canonical + Open Graph tags — done 2026-09-21 (Handover #6). Origin hardcoded as `https://infinite-box.co`.
 
 ### Phase 10 — Content & catalogue
@@ -211,6 +210,6 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 1. **Phase 7** — now, no blockers.
 2. **Phase 11 (admin)** — done; it now replaces the Supabase dashboard for day-to-day product/order/quote management.
 3. **Phase 12** — done 2026-09-21.
-4. **Phase 9** when the user is ready — nothing blocks it; upload `site/` (including `admin/`, `robots.txt`, `sitemap.xml`), then the launch-day toggles (Supabase redirect URLs, publish the Google OAuth app) and the post-deploy brand verification.
+4. **Phase 9** when the user is ready — domain + HTTPS already live with the coming-soon page (Handover #9); upload `site/` (including `admin/`, `robots.txt`, `sitemap.xml`), then the launch-day toggles (Supabase redirect URLs, publish the Google OAuth app) and the post-deploy brand verification.
 5. Remaining user-side content items (stock, photos, legal placeholders) and Phase 13 (Stripe live mode). Social URLs, admin account, test-user cleanup and Auth SMTP were done 2026-09-21 (Handover #8).
 
