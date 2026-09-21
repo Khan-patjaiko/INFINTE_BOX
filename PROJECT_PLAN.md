@@ -3,16 +3,16 @@
 Last updated: 2026-09-21 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
 [HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md),
-[HANDOVER_7.md](HANDOVER_7.md). How the system is built (four-layer architecture review) lives in
+[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
 ## Where we are now (as of 2026-09-21)
 
-**Overall: ~96% to a launchable v1.** The store works end-to-end locally including test-mode
+**Overall: ~97% to a launchable v1.** The store works end-to-end locally including test-mode
 payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages,
 SEO/share metadata, **transactional email (Resend, live)**, **password reset** and **profile
-edit**; checkout now **requires a signed-in customer**. It is not yet deployed (Hostinger hosting
+edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. It is not yet deployed (Hostinger hosting
 is purchased but nothing uploaded — deferred by the user).
 
 | Area | Status |
@@ -101,7 +101,7 @@ Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
 ├── Tables: profiles, products (+stock), orders (+stock_applied_at), order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (shipping_cents, product_categories) (RLS on all; admins can update orders/quotes/messages)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
-├── Auth: email/password (confirmation on), Google OAuth
+├── Auth: email/password (confirmation on, min length 8, SMTP via Resend from hello@infinite-box.co), Google OAuth · 1 user (owner, Google, admin)
 ├── Edge Functions: submit-quote ✅ (v3, + emails) · submit-contact ✅ (v1) · create-checkout-session ✅ (v9: **401 unless signed in**, shipping fee from `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v6: pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
 └── Email: Resend, domain infinite-box.co verified; secrets RESEND_API_KEY / OWNER_EMAIL / EMAIL_FROM
 
@@ -123,10 +123,10 @@ Goal: clean state, everything known-good.
 - [x] Fix CRLF warning: added `.gitattributes` (`* text=auto eol=lf`, PNGs binary).
 - [x] Supabase sanity check (2026-09-18): only `testuser@infinitebox.dev` (email provider) exists; **no Google user** → Google sign-in must be re-tested end-to-end. Tables otherwise clean (0 orders/quotes/messages, 8 products, 1 leftover test file in `custom-uploads`).
 - [x] Re-test Google sign-in — done 2026-09-21: owner signed in with Google from the cart, `auth.users` row with `provider = google`, paid order `4ea2920d` tied to that `user_id`.
-- [ ] Remove the SQL-created test user (`testuser@infinitebox.dev`) or keep it deliberately and note it.
+- [x] Remove the SQL-created test user — done 2026-09-21 (Handover #8): `testuser@infinitebox.dev` deleted from `auth.users` (profile cascaded); the owner’s Google account `khanleenine@gmail.com` is now the only user and the only admin.
 - [x] Smoke-test all 15 pages in the preview — done 2026-09-20: every page loads header/footer with the right title, `account.html` redirects to login when signed out; only console error is the expected 401 from `order.html?id=x` while unauthenticated.
 - [x] Architecture review (2026-09-19) → `docs/ARCHITECTURE.md`; exported migrations + Edge Functions into `supabase/`; pinned supabase-js CDN to `2.116.0` on all 15 pages.
-- [ ] Enable **Leaked Password Protection** in Supabase → Auth → Providers → Email (the only open security-advisor warning; user-side toggle).
+- [x] ~~Enable Leaked Password Protection~~ — **not available on the free plan** (Pro-only, confirmed 2026-09-21). Instead: Auth → Email → minimum password length set to 8 (matches `signup.html` / `reset-password.html` `minlength="8"`). Optional: Auth → Email → Password Requirements → letters+digits+symbols to enforce the hint server-side.
 - [x] Single source of truth for the shipping fee — done 2026-09-20: migration 0008 adds `store_settings` (key/value jsonb, public read, admin write) seeded with `shipping_cents = 650`; `cart.html` and `create-checkout-session` (v5) both read it and fall back to 650 if the row is missing. Change the fee with one SQL update; no redeploy needed.
 
 ### Phase 8 — Payments go-live (test mode) ✅ Done (2026-09-19)
@@ -168,7 +168,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] `site/admin/messages.html` — `contact_messages` inbox with read/unread and mailto reply.
 - [x] Guard: `IBAdmin.requireAdmin()` in `assets/js/admin.js` (signed out → `login.html?next=admin/…`; signed in but not admin → friendly message). `login.html` now accepts `next=admin/<page>.html`.
 - [x] Migration 0009 (`admin_access`): admin UPDATE policies on orders/quote_requests/contact_messages, `quote_requests.quoted_price_cents` + `admin_note`, `contact_messages.is_read`, admin SELECT on `custom-uploads` storage objects.
-- [x] Admin granted to `testuser@infinitebox.dev` (user ran the SQL, 2026-09-20). For a real owner account later: `update public.profiles set is_admin = true where email = '<you>';`.
+- [x] Admin: `khanleenine@gmail.com` (owner, Google) is admin since 2026-09-21; the earlier `testuser` admin was deleted. For another admin later: `update public.profiles set is_admin = true where email = '<them>';`.
 - [x] Signed-in end-to-end test (2026-09-20): overview stats, orders list/drawer, products list + stock edit + save verified live; quotes/messages render (no data yet to exercise the drawers).
 
 ### Phase 12 — Notifications & customer experience ✅ Done (2026-09-21, Handover #7)
@@ -177,11 +177,11 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] Profile edit on `account.html` — name + phone (address deferred: no column, and Stripe Checkout can't be prefilled with it).
 - [x] Password reset flow — `forgot-password.html` + `reset-password.html`, "Forgot password?" on login, `IBAuth.resetPassword/updatePassword`.
 - [x] **Checkout requires a signed-in customer** (owner's decision 2026-09-21): `create-checkout-session` returns 401 for guests; cart shows "Log in to check out"; `signup.html` honours `?next=`.
-- [ ] Decide on Supabase email-confirmation setting for signup (keep on for prod). Auth emails (confirmation, password reset) still go out via Supabase's rate-limited default SMTP — switch Supabase → Auth → SMTP to Resend (`smtp.resend.com`, user `resend`, password = API key) now that the domain is verified.
+- [x] Supabase Auth → SMTP switched to Resend — done 2026-09-21 (Handover #8): sender `Infinite Box <hello@infinite-box.co>`, host `smtp.resend.com:465`, user `resend`, password = Resend API key `supabase-auth` (Sending access, scoped to infinite-box.co). Email rate limit auto-raised 2/h → 30/h. Verified: password-reset email arrived from hello@infinite-box.co. Email confirmation on signup stays **on**.
 
 ### Phase 13 — Polish pass #2 & launch readiness
 - [ ] Enter real stock counts for all products (Admin → Products) — until then the store shows almost everything as *Sold out*.
-- [ ] Replace placeholder social URLs in `partials.js` `SOCIAL_LINKS` (or blank a `url` to hide it).
+- [x] Real social URLs in `partials.js` `SOCIAL_LINKS` — done 2026-09-21 (Facebook, Instagram, Line).
 - [x] Page-hero top padding fixed (2026-09-20) — all 13 non-home pages; cart heading gap fixed; admin filter-chip contrast fixed.
 - [x] Blank-space fixes (2026-09-21): shop chips moved into the hero; home `.hero` no longer `min-height: 100vh`.
 - [ ] Migrate remaining hardcoded px spacing onto `--space-*` — deliberately skipped 2026-09-21 (134 px literals, regression risk, no visible gain).
@@ -189,7 +189,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] Lighthouse pass — done 2026-09-21: home desktop 98/95/100/100. Fixed footer contrast, qty `aria-label`, sized logos, CLS min-heights. Open: white-on-orange buttons are 3.06:1 (brand decision).
 - [x] Error/empty states for every DB read — done 2026-09-21: Retry button on index/shop/product/cart, empty-catalogue message, product not-found state, admin overview failure rows, admin-check network error distinguished from "not admin".
 - [ ] Stripe → **live mode** keys; swap secrets; final live purchase test with a real card + refund.
-- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_7.md`).
+- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_8.md`).
 
 ### Backlog / ideas (not scheduled)
 - Product search, product variants (size/colour/material options).
@@ -206,5 +206,5 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 2. **Phase 11 (admin)** — done; it now replaces the Supabase dashboard for day-to-day product/order/quote management.
 3. **Phase 12** — done 2026-09-21.
 4. **Phase 9** when the user is ready — nothing blocks it; upload `site/` (including `admin/`, `robots.txt`, `sitemap.xml`), then the launch-day toggles (Supabase redirect URLs, publish the Google OAuth app) and the post-deploy brand verification.
-5. Remaining user-side content items (stock, photos, legal placeholders, social URLs) and Phase 13 (Stripe live mode).
+5. Remaining user-side content items (stock, photos, legal placeholders) and Phase 13 (Stripe live mode). Social URLs, admin account, test-user cleanup and Auth SMTP were done 2026-09-21 (Handover #8).
 
