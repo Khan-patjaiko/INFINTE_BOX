@@ -81,26 +81,51 @@ Deno.serve(async (req) => {
 
     const bySlug = new Map((products ?? []).map((p: { slug: string }) => [p.slug, p]));
     const lineItems: unknown[] = [];
-    const orderItems: { product_id: string; name: string; unit_price_cents: number; qty: number }[] = [];
+    const orderItems: { product_id: string; name: string; unit_price_cents: number; qty: number; options: Record<string, string> }[] = [];
     const soldOut: string[] = [];
     let subtotal = 0;
 
+    type OptionGroup = { name: string; values: string[] };
+    type ProductRow = { id: string; slug: string; name: string; price_cents: number; stock: number; options?: OptionGroup[] };
+    // Several cart lines may point at one product (different options): stock is checked on the sum.
+    const qtyByProduct = new Map<string, number>();
     for (const i of items) {
-      const p = bySlug.get(i.id) as { id: string; slug: string; name: string; price_cents: number; stock: number } | undefined;
+      const p = bySlug.get(i.id) as ProductRow | undefined;
       if (!p) continue;
-      const qty = Math.max(1, parseInt(String(i.qty), 10) || 1);
+      qtyByProduct.set(p.id, (qtyByProduct.get(p.id) ?? 0) + Math.max(1, parseInt(String(i.qty), 10) || 1));
+    }
+    const overStock = new Set<string>();
+    for (const [pid, total] of qtyByProduct) {
+      const p = [...bySlug.values()].find((x) => (x as ProductRow).id === pid) as ProductRow;
       // Stock is authoritative here; the cart page only mirrors it for UX.
-      if (qty > (p.stock ?? 0)) { soldOut.push(p.stock > 0 ? `${p.name} (only ${p.stock} left)` : `${p.name} (sold out)`); continue; }
+      if (total > (p.stock ?? 0)) { overStock.add(pid); soldOut.push(p.stock > 0 ? `${p.name} (only ${p.stock} left)` : `${p.name} (sold out)`); }
+    }
+
+    for (const i of items) {
+      const p = bySlug.get(i.id) as ProductRow | undefined;
+      if (!p || overStock.has(p.id)) continue;
+      const qty = Math.max(1, parseInt(String(i.qty), 10) || 1);
+      // Options: every group the product defines must have a value from its list; anything
+      // else the client sent is dropped.
+      const groups = Array.isArray(p.options) ? p.options : [];
+      const sent = (i.options && typeof i.options === "object") ? i.options as Record<string, unknown> : {};
+      const options: Record<string, string> = {};
+      for (const g of groups) {
+        const v = String(sent[g.name] ?? "");
+        if (!g.values.includes(v)) return json({ error: `Please choose ${g.name} for ${p.name}.` }, 400);
+        options[g.name] = v;
+      }
+      const optionText = Object.keys(options).map((k) => `${k}: ${options[k]}`).join(" · ");
       subtotal += p.price_cents * qty;
       lineItems.push({
         quantity: qty,
         price_data: {
           currency: CURRENCY,
           unit_amount: p.price_cents,
-          product_data: { name: p.name, metadata: { slug: p.slug } },
+          product_data: { name: p.name, ...(optionText ? { description: optionText } : {}), metadata: { slug: p.slug, ...options } },
         },
       });
-      orderItems.push({ product_id: p.id, name: p.name, unit_price_cents: p.price_cents, qty });
+      orderItems.push({ product_id: p.id, name: p.name, unit_price_cents: p.price_cents, qty, options });
     }
     if (soldOut.length) return json({ error: "Not enough stock: " + soldOut.join(", ") + ". Please update your cart.", sold_out: soldOut }, 409);
     if (lineItems.length === 0) return json({ error: "No valid items in cart" }, 400);

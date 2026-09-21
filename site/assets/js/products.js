@@ -15,6 +15,8 @@ function _mapProductRow(row) {
     category: row.category,
     description: row.description,
     specs: row.specs || {},
+    // Option groups the customer must choose from: [{name, values:[...]}] (may be empty).
+    options: Array.isArray(row.options) ? row.options.filter(function (o) { return o && o.name && Array.isArray(o.values) && o.values.length; }) : [],
     image: row.image_url || null,
     // Gallery for product.html: image_url first, then the rest of products.images (no dupes).
     images: [row.image_url].concat(Array.isArray(row.images) ? row.images : []).filter(function (u, i, a) { return u && a.indexOf(u) === i; }),

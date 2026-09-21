@@ -85,6 +85,16 @@
         });
         flush();
 
+        // Option groups (Color, Slot type, …): one row of chips per group; the customer
+        // must pick a value in every group before Add to Cart works.
+        var optionsHtml = p.options.length ? '<div class="pd-options">' + p.options.map(function (g, gi) {
+          return '<div class="pd-option" data-group="' + gi + '">' +
+            '<p class="pd-option-name">' + ibEscape(g.name) + ' <span class="pd-option-pick">— choose one</span></p>' +
+            '<div class="pd-option-values" role="radiogroup" aria-label="' + ibEscape(g.name) + '">' + g.values.map(function (v) {
+              return '<button type="button" class="pd-chip" role="radio" aria-checked="false" data-value="' + ibEscape(v) + '">' + ibEscape(v) + '</button>';
+            }).join('') + '</div></div>';
+        }).join('') + '</div>' : '';
+
         // Gallery: main image with prev/next arrows and a thumbnail strip when there is more
         // than one photo; falls back to the placeholder icon when there are none.
         var galleryHtml;
@@ -117,6 +127,7 @@
             '<p class="pd-price">' + formatPrice(p.price) + '</p>' +
             '<div class="pd-desc">' + descHtml + '</div>' +
             '<div class="pd-meta">' + specsHtml + '</div>' +
+            optionsHtml +
             (p.soldOut
               ? '<div class="pd-actions"><span class="btn btn-outline pd-sold-out" aria-disabled="true">Sold out</span></div>' +
                 '<p class="form-note">This item is currently out of stock. <a href="custom.html" style="text-decoration:underline;">Request a custom order</a> or check back soon.</p>'
@@ -173,9 +184,39 @@
           });
         });
 
+        var chosen = {};
+        document.querySelectorAll('.pd-option').forEach(function (groupEl) {
+          var name = p.options[parseInt(groupEl.dataset.group, 10)].name;
+          var chips = groupEl.querySelectorAll('.pd-chip');
+          var pick = groupEl.querySelector('.pd-option-pick');
+          chips.forEach(function (chip) {
+            chip.addEventListener('click', function () {
+              chips.forEach(function (c) { c.classList.remove('is-selected'); c.setAttribute('aria-checked', 'false'); });
+              chip.classList.add('is-selected'); chip.setAttribute('aria-checked', 'true');
+              chosen[name] = chip.dataset.value;
+              pick.textContent = '— ' + chip.dataset.value;
+              groupEl.classList.remove('is-missing');
+            });
+          });
+          if (chips.length === 1) chips[0].click(); // only one value → preselect it
+        });
+        var missingOptions = function () {
+          var missing = [];
+          document.querySelectorAll('.pd-option').forEach(function (groupEl) {
+            var name = p.options[parseInt(groupEl.dataset.group, 10)].name;
+            if (!chosen[name]) { missing.push(name); groupEl.classList.add('is-missing'); }
+          });
+          return missing;
+        };
+
         var addBtn = document.getElementById("add-to-cart-btn");
         if (addBtn) addBtn.addEventListener("click", function () {
-          IB.addToCart(p.id, parseInt(qtyInput.value, 10));
+          var missing = missingOptions();
+          if (missing.length) {
+            document.querySelector('.pd-option.is-missing').scrollIntoView({ block: 'center', behavior: 'smooth' });
+            return;
+          }
+          IB.addToCart(p.id, parseInt(qtyInput.value, 10), chosen);
           var msg = document.getElementById("add-msg");
           msg.classList.add("show");
           setTimeout(function () { msg.classList.remove("show"); }, 2500);

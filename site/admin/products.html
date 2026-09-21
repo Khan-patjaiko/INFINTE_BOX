@@ -47,6 +47,12 @@
     <div class="field"><label for="f-material">Material</label><input type="text" id="f-material" placeholder="e.g. PETG"></div>
     <div class="field span-2"><label for="f-description">Description</label><textarea id="f-description" rows="4" style="min-height:96px;"></textarea></div>
     <div class="field span-2"><label for="f-specs">Specs <span class="muted">(one per line, <code>Label: value</code>; separate list items with <code> | </code>)</span></label><textarea id="f-specs" rows="5" style="min-height:110px;font-size:13px;" placeholder="Material: PETG&#10;Layer height: 0.2mm&#10;Lead time: 3-5 days"></textarea></div>
+    <div class="field span-2">
+      <label>Options <span class="muted">(customer picks one value per option, e.g. Color: Black, White)</span></label>
+      <div id="f-options" class="opt-rows"></div>
+      <button type="button" class="btn btn-outline btn-sm" id="f-option-add" style="align-self:flex-start;">+ Add option</button>
+      <p class="form-note">Same price and shared stock for every choice. Leave empty for products without options.</p>
+    </div>
     <div class="field"><label for="f-stock">Stock on hand</label><input type="number" id="f-stock" min="0" step="1" value="0"></div>
     <div class="field span-2">
       <label>Photo</label>
@@ -126,6 +132,28 @@
     }
 
     // Multi-line spec values (rendered as bullets on the product page) are edited as "A | B | C".
+    // ---- Options editor: rows of {name, values[]} → products.options ----
+    function optionRowHTML(o) {
+      return '<div class="opt-row">' +
+        '<input type="text" class="opt-name" placeholder="Option name (e.g. Color)" value="' + ibEscape(o && o.name || '') + '">' +
+        '<input type="text" class="opt-values" placeholder="Values, comma-separated (e.g. Black, White)" value="' + ibEscape(o && o.values ? o.values.join(', ') : '') + '">' +
+        '<button type="button" class="btn btn-outline btn-sm opt-remove" aria-label="Remove option">×</button>' +
+      '</div>';
+    }
+    function setOptions(options) {
+      $("f-options").innerHTML = (options || []).map(optionRowHTML).join('');
+    }
+    function getOptions() {
+      var out = [];
+      $("f-options").querySelectorAll('.opt-row').forEach(function (row) {
+        var name = row.querySelector('.opt-name').value.trim();
+        var values = row.querySelector('.opt-values').value.split(',').map(function (v) { return v.trim(); }).filter(Boolean);
+        values = values.filter(function (v, i) { return values.indexOf(v) === i; });
+        if (name && values.length) out.push({ name: name, values: values });
+      });
+      return out;
+    }
+
     function specsToText(specs) {
       return Object.keys(specs || {}).map(function (k) { return k + ": " + String(specs[k]).split(/\r?\n/).join(" | "); }).join("\n");
     }
@@ -168,6 +196,7 @@
       $("f-material").value = p ? (p.material || "") : "";
       $("f-description").value = p ? (p.description || "") : "";
       $("f-specs").value = p ? specsToText(p.specs) : "";
+      setOptions(p ? p.options : []);
       $("f-stock").value = p ? p.stock : 0;
       $("f-active").checked = p ? !!p.active : true;
       $("f-image").value = "";
@@ -226,6 +255,7 @@
           material: $("f-material").value.trim() || null,
           description: $("f-description").value.trim() || null,
           specs: textToSpecs($("f-specs").value),
+          options: getOptions(),
           // Icon and sort order are not editable in the UI: keep them on edit, default on create.
           icon_key: current && current.icon_key ? current.icon_key : DEFAULT_ICON,
           stock: stock,
@@ -267,6 +297,8 @@
     function nextSort() { return all.length ? Math.max.apply(null, all.map(function (x) { return x.sort; })) + 1 : 1; }
 
     $("new-btn").addEventListener("click", function () { openDrawer(null); });
+    $("f-option-add").addEventListener("click", function () { $("f-options").insertAdjacentHTML('beforeend', optionRowHTML(null)); $("f-options").lastElementChild.querySelector('.opt-name').focus(); });
+    $("f-options").addEventListener("click", function (e) { var b = e.target.closest('.opt-remove'); if (b) b.closest('.opt-row').remove(); });
     $("search").addEventListener("input", function (e) { search = e.target.value.trim().toLowerCase(); render(); });
     $("show-inactive").addEventListener("change", function (e) { showInactive = e.target.checked; render(); });
     $("rows").addEventListener("click", function (e) {

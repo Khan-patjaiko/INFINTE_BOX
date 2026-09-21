@@ -54,6 +54,11 @@
 <script>
   (function () {
     var A = window.IBAdmin;
+    function optionsHTML(it) {
+      var o = it.options || {};
+      var keys = Object.keys(o);
+      return keys.length ? '<span class="order-line-options">' + keys.map(function (k) { return ibEscape(k) + ': ' + ibEscape(o[k]); }).join(' · ') + '</span>' : '';
+    }
     var STATUSES = ["pending", "paid", "fulfilled", "cancelled"];
     var all = [];
     var status = new URLSearchParams(location.search).get("status") || "";
@@ -97,7 +102,7 @@
       if (!o) return;
       document.getElementById("d-title").textContent = "Order " + o.id.slice(0, 8);
       var items = (o.order_items || []).map(function (it) {
-        return '<div class="order-line"><span>' + ibEscape(it.name) + ' × ' + it.qty + '</span><span>' + A.money(it.unit_price_cents * it.qty) + '</span></div>';
+        return '<div class="order-line"><span>' + ibEscape(it.name) + ' × ' + it.qty + optionsHTML(it) + '</span><span>' + A.money(it.unit_price_cents * it.qty) + '</span></div>';
       }).join("");
       var opts = STATUSES.map(function (s) {
         return '<option value="' + s + '"' + (s === o.status ? " selected" : "") + '>' + s + '</option>';

@@ -114,7 +114,7 @@
         var p = getProduct(item.id);
         if (!p) return;
         if (p.soldOut) { blocked = true; }
-        else if (item.qty > p.stock) { IB.setQty(p.id, p.stock); item.qty = p.stock; }
+        else if (item.qty > p.stock) { IB.setQty(IB.lineKey(item), p.stock); item.qty = p.stock; }
       });
 
       var rows = cart.map(function (item) {
@@ -123,10 +123,12 @@
         var stockNote = p.soldOut
           ? '<p class="cart-item-material cart-stock-warn">Sold out — remove this item to check out</p>'
           : (item.qty >= p.stock ? '<p class="cart-item-material cart-stock-warn">Only ' + p.stock + ' in stock</p>' : "");
-        return '<div class="cart-row' + (p.soldOut ? " sold-out" : "") + '" data-id="' + ibEscape(p.id) + '">' +
+        var opts = item.options ? Object.keys(item.options).map(function (k) { return ibEscape(k) + ': ' + ibEscape(item.options[k]); }).join(' · ') : '';
+        return '<div class="cart-row' + (p.soldOut ? " sold-out" : "") + '" data-key="' + ibEscape(IB.lineKey(item)) + '" data-id="' + ibEscape(p.id) + '">' +
           '<div class="cart-thumb">' + productThumbHTML(p) + '</div>' +
           '<div>' +
             '<p class="cart-item-name">' + ibEscape(p.name) + '</p>' +
+            (opts ? '<p class="cart-item-options">' + opts + '</p>' : '') +
             '<p class="cart-item-material">' + ibEscape(p.material) + ' · ' + formatPrice(p.price) + '</p>' + stockNote +
           '</div>' +
           '<div class="cart-item-actions">' +
@@ -160,20 +162,21 @@
         '</div>';
 
       container.querySelectorAll(".cart-row").forEach(function (row) {
-        var id = row.dataset.id;
+        var id = row.dataset.id, key = row.dataset.key;
+        var findLine = function () { return IB.getCart().find(function (i) { return IB.lineKey(i) === key; }); };
         row.querySelector("[data-qty-up]").addEventListener("click", function () {
-          var item = IB.getCart().find(function (i) { return i.id === id; });
+          var item = findLine();
           var p = getProduct(id);
-          IB.setQty(id, Math.min(p ? p.stock : item.qty + 1, item.qty + 1));
+          IB.setQty(key, Math.min(p ? p.stock : item.qty + 1, item.qty + 1));
           render();
         });
         row.querySelector("[data-qty-down]").addEventListener("click", function () {
-          var item = IB.getCart().find(function (i) { return i.id === id; });
-          IB.setQty(id, item.qty - 1);
+          var item = findLine();
+          IB.setQty(key, item.qty - 1);
           render();
         });
         row.querySelector("[data-remove]").addEventListener("click", function () {
-          IB.removeFromCart(id);
+          IB.removeFromCart(key);
           render();
         });
       });

@@ -40,6 +40,11 @@
 <script src="assets/js/partials.js"></script>
 <script>
   (function () {
+    function optionsHTML(it) {
+      var o = it.options || {};
+      var keys = Object.keys(o);
+      return keys.length ? '<span class="order-line-options">' + keys.map(function (k) { return ibEscape(k) + ': ' + ibEscape(o[k]); }).join(' · ') + '</span>' : '';
+    }
     function money(cents) { return "฿" + ((cents || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
 
     function addressHTML(a) {
@@ -59,7 +64,7 @@
         cancelled: "This order was cancelled."
       }[status] || "";
       var items = (o.order_items || []).map(function (it) {
-        return '<div class="order-line"><span>' + ibEscape(it.name) + " × " + it.qty + "</span><span>" + money(it.unit_price_cents * it.qty) + "</span></div>";
+        return '<div class="order-line"><span>' + ibEscape(it.name) + " × " + it.qty + optionsHTML(it) + "</span><span>" + money(it.unit_price_cents * it.qty) + "</span></div>";
       }).join("");
 
       document.getElementById("order-heading").textContent = "Order " + String(o.id).slice(0, 8);

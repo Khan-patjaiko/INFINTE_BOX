@@ -79,12 +79,18 @@
       if (btn) btn.addEventListener("click", function () { IBAuth.signOut(); });
     });
 
+    // "Color: Black · Slot type: 4 slot" under an order line, when the customer chose options.
+    function optionsHTML(it) {
+      var o = it.options || {};
+      var keys = Object.keys(o);
+      return keys.length ? '<span class="order-line-options">' + keys.map(function (k) { return ibEscape(k) + ': ' + ibEscape(o[k]); }).join(' · ') + '</span>' : '';
+    }
     function money(cents) { return "฿" + ((cents || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
 
     function orderCardHTML(o) {
       var date = new Date(o.created_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
       var items = (o.order_items || []).map(function (it) {
-        return '<div class="order-line"><span>' + ibEscape(it.name) + ' × ' + it.qty + '</span><span>' + money(it.unit_price_cents * it.qty) + '</span></div>';
+        return '<div class="order-line"><span>' + ibEscape(it.name) + ' × ' + it.qty + optionsHTML(it) + '</span><span>' + money(it.unit_price_cents * it.qty) + '</span></div>';
       }).join("");
       var status = (o.status || "pending").toLowerCase();
       return '<a class="order-card" href="order.html?id=' + encodeURIComponent(o.id) + '" style="display:block;text-decoration:none;color:inherit;">' +

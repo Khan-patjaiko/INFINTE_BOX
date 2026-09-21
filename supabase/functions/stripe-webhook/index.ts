@@ -92,12 +92,16 @@ async function sendOrderEmails(
   order: Record<string, unknown>,
 ) {
   const { data: items } = await admin.from("order_items")
-    .select("name, qty, unit_price_cents").eq("order_id", order.id as string);
+    .select("name, qty, unit_price_cents, options").eq("order_id", order.id as string);
   const id8 = String(order.id).slice(0, 8);
   const total = money(order.total_cents as number);
 
+  const optionText = (o: unknown) => {
+    const rec = (o && typeof o === "object") ? o as Record<string, unknown> : {};
+    return Object.keys(rec).map((k) => `${esc(k)}: ${esc(rec[k])}`).join(" · ");
+  };
   const itemRows = (items ?? []).map((it) =>
-    `<tr><td style="padding:6px 0;">${esc(it.name)} × ${it.qty}</td>` +
+    `<tr><td style="padding:6px 0;">${esc(it.name)} × ${it.qty}${optionText(it.options) ? `<br><span style="color:#78716c;font-size:12px;">${optionText(it.options)}</span>` : ""}</td>` +
     `<td style="padding:6px 0;text-align:right;">${money(it.unit_price_cents * it.qty)}</td></tr>`
   ).join("");
   const summary = `<table role="presentation" cellspacing="0" cellpadding="0" style="width:100%;font-size:14px;border-top:1px solid #e7e5e4;margin-top:12px;">

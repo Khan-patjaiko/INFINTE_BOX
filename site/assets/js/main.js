@@ -14,22 +14,38 @@
     updateCartBadge();
   }
 
-  function addToCart(id, qty) {
+  // Cart lines are {id, qty, options?}. A product with a different set of chosen
+  // options is a separate line; lineKey() is the identity used by the cart page.
+  function normOptions(options) {
+    var out = {};
+    Object.keys(options || {}).sort().forEach(function (k) { if (options[k] != null && options[k] !== "") out[k] = String(options[k]); });
+    return out;
+  }
+  function lineKey(item) {
+    return item.id + "|" + JSON.stringify(normOptions(item.options));
+  }
+  function findLine(cart, key) {
+    return cart.find(function (i) { return lineKey(i) === key; });
+  }
+
+  function addToCart(id, qty, options) {
     qty = qty || 1;
     var cart = getCart();
-    var existing = cart.find(function (i) { return i.id === id; });
-    if (existing) { existing.qty += qty; } else { cart.push({ id: id, qty: qty }); }
+    var line = { id: id, qty: qty, options: normOptions(options) };
+    if (!Object.keys(line.options).length) delete line.options;
+    var existing = findLine(cart, lineKey(line));
+    if (existing) { existing.qty += qty; } else { cart.push(line); }
     saveCart(cart);
   }
 
-  function removeFromCart(id) {
-    var cart = getCart().filter(function (i) { return i.id !== id; });
+  function removeFromCart(key) {
+    var cart = getCart().filter(function (i) { return lineKey(i) !== key; });
     saveCart(cart);
   }
 
-  function setQty(id, qty) {
+  function setQty(key, qty) {
     var cart = getCart();
-    var item = cart.find(function (i) { return i.id === id; });
+    var item = findLine(cart, key);
     if (item) { item.qty = Math.max(1, qty); }
     saveCart(cart);
   }
@@ -78,6 +94,8 @@
     saveCart: saveCart,
     addToCart: addToCart,
     removeFromCart: removeFromCart,
+    lineKey: lineKey,
+    normOptions: normOptions,
     setQty: setQty,
     cartCount: cartCount,
     updateCartBadge: updateCartBadge
