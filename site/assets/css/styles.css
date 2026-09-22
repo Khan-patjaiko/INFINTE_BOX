@@ -650,20 +650,34 @@ button { font-family: inherit; cursor: pointer; }
 .pd-meta-row li::before, .pd-desc-list li::before { content: "•"; color: hsl(var(--primary)); margin-right: 8px; }
 .pd-desc-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 0; }
 /* Product options (variants) */
-.pd-options { display: flex; flex-direction: column; gap: 20px; margin-bottom: 28px; }
-.pd-option-name { font-size: 13px; font-weight: 500; margin-bottom: 10px; }
-.pd-option-pick { color: hsl(var(--muted-foreground)); font-weight: 400; }
-.pd-option.is-missing .pd-option-pick { color: hsl(var(--destructive)); }
-.pd-option-values { display: flex; flex-wrap: wrap; gap: 8px; }
+.pd-options { display: flex; flex-direction: column; gap: 24px; margin-bottom: 32px; }
+.pd-option-name {
+  font-family: var(--font-heading); font-size: 16px; font-weight: 600;
+  margin-bottom: 12px; display: flex; align-items: baseline; gap: 10px;
+}
+.pd-option-pick { font-family: var(--font-sans); font-size: 13px; font-weight: 400; color: hsl(var(--muted-foreground)); }
+.pd-option.is-missing .pd-option-pick::before { content: "Choose one"; color: hsl(var(--destructive)); }
+.pd-option-values { display: flex; flex-wrap: wrap; gap: 10px; }
 .pd-chip {
-  padding: 8px 14px; font-size: 13px; font-family: inherit;
-  border: 1px solid hsl(var(--border)); border-radius: var(--radius-button);
-  background: hsl(var(--muted)); color: hsl(var(--foreground) / 0.85);
+  min-width: 96px; padding: 13px 20px; font-size: 14px; font-family: inherit; text-align: center;
+  border: 1.5px solid hsl(var(--border)); border-radius: var(--radius-button);
+  background: transparent; color: hsl(var(--foreground) / 0.85);
   transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
-.pd-chip:hover { border-color: hsl(var(--primary)); }
-.pd-chip.is-selected { border-color: hsl(var(--primary)); background: hsl(var(--primary) / 0.12); color: hsl(var(--primary)); }
-.pd-option.is-missing .pd-chip { border-color: hsl(var(--destructive) / 0.6); }
+.pd-chip:hover { border-color: hsl(var(--primary) / 0.7); }
+.pd-chip.is-selected { border-color: hsl(var(--primary)); background: hsl(var(--primary) / 0.1); color: hsl(var(--primary)); font-weight: 600; }
+.pd-option.is-missing .pd-chip, .pd-option.is-missing .pd-swatch { border-color: hsl(var(--destructive) / 0.6); }
+/* Colour groups: circular swatches */
+.pd-option.is-swatch .pd-option-values { gap: 12px; }
+.pd-swatch {
+  width: 40px; height: 40px; padding: 3px; border-radius: 50%;
+  border: 1.5px solid hsl(var(--border)); background: transparent;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.pd-swatch span { width: 100%; height: 100%; border-radius: 50%; display: block; box-shadow: inset 0 0 0 1px hsl(0 0% 0% / 0.25); }
+.pd-swatch:hover { border-color: hsl(var(--primary) / 0.7); transform: scale(1.06); }
+.pd-swatch.is-selected { border-color: hsl(var(--primary)); border-width: 2px; }
 .cart-item-options { font-size: 12px; color: hsl(var(--muted-foreground)); margin-top: 2px; }
 .order-line-options { display: block; font-size: 12px; color: hsl(var(--muted-foreground)); }
 .pd-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }

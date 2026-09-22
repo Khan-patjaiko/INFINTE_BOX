@@ -87,11 +87,33 @@
 
         // Option groups (Color, Slot type, …): one row of chips per group; the customer
         // must pick a value in every group before Add to Cart works.
+        // A colour group is drawn as swatches instead of text buttons. A value may carry its
+        // own hex ("Sky blue #6ec6ff"); otherwise common colour names are recognised.
+        var NAMED_COLORS = {
+          black: "#111111", white: "#ffffff", grey: "#9ca3af", gray: "#9ca3af", silver: "#c0c4cc",
+          red: "#e11d48", orange: "#f97316", yellow: "#facc15", green: "#22c55e", blue: "#2563eb",
+          navy: "#1e3a5f", purple: "#8b5cf6", pink: "#f472b6", brown: "#78503c", beige: "#e3d5c0",
+          gold: "#d4af37", bronze: "#a97142", transparent: "#e5e7eb", clear: "#e5e7eb"
+        };
+        function swatchOf(value) {
+          var hex = String(value).match(/#([0-9a-f]{3}|[0-9a-f]{6})\b/i);
+          if (hex) return hex[0];
+          return NAMED_COLORS[String(value).trim().toLowerCase()] || null;
+        }
+        function valueLabel(value) {
+          return String(value).replace(/\s*#([0-9a-f]{3}|[0-9a-f]{6})\b/i, "").trim();
+        }
         var optionsHtml = p.options.length ? '<div class="pd-options">' + p.options.map(function (g, gi) {
-          return '<div class="pd-option" data-group="' + gi + '">' +
-            '<p class="pd-option-name">' + ibEscape(g.name) + ' <span class="pd-option-pick">— choose one</span></p>' +
+          var swatches = g.values.every(function (v) { return swatchOf(v); });
+          return '<div class="pd-option' + (swatches ? ' is-swatch' : '') + '" data-group="' + gi + '">' +
+            '<p class="pd-option-name">' + ibEscape(g.name) + '<span class="pd-option-pick"></span></p>' +
             '<div class="pd-option-values" role="radiogroup" aria-label="' + ibEscape(g.name) + '">' + g.values.map(function (v) {
-              return '<button type="button" class="pd-chip" role="radio" aria-checked="false" data-value="' + ibEscape(v) + '">' + ibEscape(v) + '</button>';
+              var label = valueLabel(v);
+              return '<button type="button" class="' + (swatches ? 'pd-swatch' : 'pd-chip') + '" role="radio" aria-checked="false"' +
+                ' data-value="' + ibEscape(v) + '" data-label="' + ibEscape(label) + '"' +
+                (swatches ? ' title="' + ibEscape(label) + '" aria-label="' + ibEscape(label) + '"><span style="background:' + ibEscape(swatchOf(v)) + '"></span>'
+                          : '>' + ibEscape(label)) +
+                '</button>';
             }).join('') + '</div></div>';
         }).join('') + '</div>' : '';
 
@@ -187,14 +209,14 @@
         var chosen = {};
         document.querySelectorAll('.pd-option').forEach(function (groupEl) {
           var name = p.options[parseInt(groupEl.dataset.group, 10)].name;
-          var chips = groupEl.querySelectorAll('.pd-chip');
+          var chips = groupEl.querySelectorAll('.pd-chip, .pd-swatch');
           var pick = groupEl.querySelector('.pd-option-pick');
           chips.forEach(function (chip) {
             chip.addEventListener('click', function () {
               chips.forEach(function (c) { c.classList.remove('is-selected'); c.setAttribute('aria-checked', 'false'); });
               chip.classList.add('is-selected'); chip.setAttribute('aria-checked', 'true');
               chosen[name] = chip.dataset.value;
-              pick.textContent = '— ' + chip.dataset.value;
+              pick.textContent = chip.dataset.label;
               groupEl.classList.remove('is-missing');
             });
           });
