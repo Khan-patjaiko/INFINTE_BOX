@@ -18,7 +18,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 |---|---|
 | Static site design (14 pages, dark theme, design tokens) | ✅ Done |
 | Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 15 migrations | ✅ Done, advisor clean |
-| Product options / variants (admin-defined groups → picker on product page → cart/checkout/orders/emails) | ✅ Done 2026-09-21 (v1: same price, shared stock) |
+| Product options / variants (admin-defined groups → picker on product page → cart/checkout/orders/emails) | ✅ Done 2026-09-21 (v1: same price, shared stock; colour groups render as swatches) |
 | **Currency: THB** (switched 2026-09-21, Handover #8) — `*_cents` = satang, ฿ everywhere, Stripe `thb`; shipping ฿50 flat, **free from ฿800** (`store_settings`) | ✅ Done |
 | Live product catalogue from DB (index/shop/product/cart) | ✅ Done |
 | Cart (localStorage) | ✅ Done |
