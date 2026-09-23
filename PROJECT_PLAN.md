@@ -3,7 +3,7 @@
 Last updated: 2026-09-23 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
 [HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md),
-[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md). How the system is built (four-layer architecture review) lives in
+[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md), [HANDOVER_11.md](HANDOVER_11.md). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
@@ -19,7 +19,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Static site design (14 pages, dark theme, design tokens) | ✅ Done |
 | Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 16 migrations | ✅ Done, advisor clean |
 | Product options / variants (admin-defined groups → picker on product page → cart/checkout/orders/emails) | ✅ **v2 done 2026-09-23 (Handover #10)**: Shopee-style admin editor (up to 3 groups, a price/stock/SKU row per combination, Apply to all); `products.variants` (migration 0016); range price ฿279 – ฿299 on cards; per-variant stock enforced in cart, checkout (v12) and `decrement_order_stock`. Colour groups render as swatches. No per-variant photos |
-| **Currency: THB** (switched 2026-09-21, Handover #8) — `*_cents` = satang, ฿ everywhere, Stripe `thb`; shipping ฿50 flat, **free from ฿800** (`store_settings`) | ✅ Done |
+| **Currency: THB** (switched 2026-09-21, Handover #8) — `*_cents` = satang, ฿ everywhere, Stripe `thb`; shipping ฿50 flat, **free from ฿800** (`store_settings`, editable in Admin → Settings since Handover #11) | ✅ Done |
 | Live product catalogue from DB (index/shop/product/cart) | ✅ Done |
 | Cart (localStorage) | ✅ Done |
 | Custom quote form → `submit-quote` Edge Function + file upload | ✅ Live, verified |
@@ -32,10 +32,10 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
 | Hosting | ✅ **Coming-soon page live at `https://infinite-box.co`** (2026-09-21, Handover #9). Hostinger website `infinite-box.co` (Premium, Malaysia DC), DNS via GoDaddy **A record** `145.79.26.182` + `CNAME www`. Store `site/` **not yet uploaded** |
-| Git | ✅ `main` pushed to `origin/main` 2026-09-21 (in sync) |
+| Git | ✅ `main` in sync with `origin/main` through Handover #10; Handover #11 commits are local until "push main" |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
-| Real product catalogue | ✅ 4 real products live (2026-09-21): W201 190E cup holder ฿399, Mazda 7" phone mount ฿279, W124 cup holder ฿599, BMW E90 console insert ฿259 — with stock and a 2–6 photo gallery each (`products.images`, `site/assets/img/products/`). Placeholders and the test order deleted. |
-| Admin UI (`site/admin/` — overview, orders, quotes, messages, products) | ✅ Done 2026-09-20, verified signed in as admin (`testuser@infinitebox.dev` is admin) |
+| Real product catalogue | ✅ 4 real products live (2026-09-21): W201 190E cup holder ฿399, Mazda 7" phone mount ฿279–฿359 (owner's real options since 2026-09-23: Color Black/Red × Style Clamp ฿329 / Magnet ฿359 / Mount Only ฿279, stock 2 each), W124 cup holder ฿599, BMW E90 console insert ฿259 — with stock and a 2–6 photo gallery each (`products.images`, `site/assets/img/products/`). Placeholders and the test order deleted. |
+| Admin UI (`site/admin/` — overview, orders, quotes, messages, products, **settings**) | ✅ Done 2026-09-20; Settings page added 2026-09-23 (Handover #11). Sole admin: owner `chaopraya.khan@gmail.com` |
 | Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20; real stock entered with the catalogue 2026-09-21 (2 / 5 / 3 / 3) |
 | Footer social links (Facebook / Instagram / Line) | ⚠️ Added 2026-09-21 with **placeholder URLs** in `partials.js` `SOCIAL_LINKS` |
 | Legal pages (`privacy.html`, `terms.html`) + footer/signup links | ⚠️ Done 2026-09-21 — **orange bracketed placeholders** (legal name, address, jurisdiction, retention periods) need filling |
@@ -75,7 +75,8 @@ E-Commerce Web/
 │   │   ├── orders.html            Filter/search, drawer with items + address, change status
 │   │   ├── quotes.html            Filter/search, drawer with details, signed-URL file download, status/quoted price/note
 │   │   ├── messages.html          Contact inbox, read/unread, mailto reply
-│   │   └── products.html          CRUD on products incl. photo upload to product-images, specs editor, stock, active toggle
+│   │   ├── products.html          CRUD on products incl. photo gallery, specs, options/variant table, stock, active toggle
+│   │   └── settings.html          store_settings editor: shipping fee, free-shipping threshold, category list (rename carries to products)
 │   └── assets/
 │       ├── css/styles.css         Single stylesheet, HSL tokens, --space-* scale
 │       ├── js/config.js           Supabase URL + anon key (public)
@@ -166,6 +167,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] **Variant table** (2026-09-23, migration 0016): options as up to 3 groups (one input per value); one row per combination with Price / Stock / SKU and an Apply-to-all bar; base Price/Stock fields hide and become min price / total stock.
 - [x] **Stock enforcement** (2026-09-20): shop cards show a "Sold out" pill + dimmed thumb; product page swaps Add-to-cart for a disabled "Sold out" button and clamps qty to stock ("Only N left" at ≤5); cart clamps quantities, flags sold-out rows, excludes them from the subtotal and disables Checkout; `create-checkout-session` v6 returns 409 with a readable message if any line exceeds stock (cart shows that message and refreshes); `stripe-webhook` v5 calls `decrement_order_stock` (migration 0011: SECURITY DEFINER, service_role only, idempotent via `orders.stock_applied_at`, floors at 0). Verified end-to-end in the preview + SQL.
 - [x] Real stock values — entered with the real catalogue 2026-09-21 (migration 0013). Adjust in Admin → Products as units sell/print.
+- [x] `site/admin/settings.html` (2026-09-23, Handover #11) — shipping fee, free-shipping threshold (0 = never free) and the ordered category list; renaming a category updates its products, removing an in-use one asks first. No migration: `store_settings_admin_write` RLS already allowed it.
 - [x] `site/admin/orders.html` — filter/search, drawer with items + shipping address + Stripe ids, status change (`paid → fulfilled` etc.).
 - [x] `site/admin/quotes.html` — filter/search, drawer with details, design-file download via signed URL, set status / quoted price / internal note.
 - [x] `site/admin/messages.html` — `contact_messages` inbox with read/unread and mailto reply.
@@ -192,12 +194,12 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] Lighthouse pass — done 2026-09-21: home desktop 98/95/100/100. Fixed footer contrast, qty `aria-label`, sized logos, CLS min-heights. Open: white-on-orange buttons are 3.06:1 (brand decision).
 - [x] Error/empty states for every DB read — done 2026-09-21: Retry button on index/shop/product/cart, empty-catalogue message, product not-found state, admin overview failure rows, admin-check network error distinguished from "not admin".
 - [ ] Stripe → **live mode** keys; swap secrets; final live purchase test with a real card + refund.
-- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_8.md`).
+- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_11.md`).
 
 ### Backlog / ideas (not scheduled)
 - Product search.
 - Product variants — v1 2026-09-21, **v2 done 2026-09-23** (per-variant price, stock, SKU). Remaining idea: variant photos.
-- Admin UI for editing `store_settings` (shipping fee, category list) instead of SQL.
+- ~~Admin UI for editing `store_settings`~~ — done 2026-09-23 (Handover #11): Admin → Settings.
 - Admin drag-to-reorder for products (the Sort field was removed from the product form 2026-09-21; `products.sort` is now auto-assigned).
 - Discount codes (Stripe Coupons).
 - Multi-currency — store is **THB** since 2026-09-21 (was USD). Stripe presents THB; confirm the Stripe account's settlement currency before live mode (Phase 13).
