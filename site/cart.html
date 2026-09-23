@@ -91,9 +91,9 @@
     function render() {
       var cart = IB.getCart();
 
-      // Drop entries for products that no longer exist (deleted or deactivated in admin);
-      // otherwise the header badge keeps counting items the cart can't show.
-      var known = cart.filter(function (item) { return !!getProduct(item.id); });
+      // Drop entries for products (or variants) that no longer exist (deleted or deactivated
+      // in admin); otherwise the header badge keeps counting items the cart can't show.
+      var known = cart.filter(function (item) { var p = getProduct(item.id); return !!p && lineInfo(p, item.options).exists; });
       if (known.length !== cart.length) {
         cart = known;
         IB.saveCart(cart);
@@ -113,27 +113,30 @@
       cart.forEach(function (item) {
         var p = getProduct(item.id);
         if (!p) return;
-        if (p.soldOut) { blocked = true; }
-        else if (item.qty > p.stock) { IB.setQty(IB.lineKey(item), p.stock); item.qty = p.stock; }
+        // Price and stock are per variant for products with variants (lineInfo in products.js).
+        var info = lineInfo(p, item.options);
+        if (info.stock <= 0) { blocked = true; }
+        else if (item.qty > info.stock) { IB.setQty(IB.lineKey(item), info.stock); item.qty = info.stock; }
       });
 
       var rows = cart.map(function (item) {
         var p = getProduct(item.id);
         if (!p) return "";
-        var stockNote = p.soldOut
+        var info = lineInfo(p, item.options), soldOut = info.stock <= 0;
+        var stockNote = soldOut
           ? '<p class="cart-item-material cart-stock-warn">Sold out — remove this item to check out</p>'
-          : (item.qty >= p.stock ? '<p class="cart-item-material cart-stock-warn">Only ' + p.stock + ' in stock</p>' : "");
+          : (item.qty >= info.stock ? '<p class="cart-item-material cart-stock-warn">Only ' + info.stock + ' in stock</p>' : "");
         var opts = item.options ? Object.keys(item.options).map(function (k) { return ibEscape(k) + ': ' + ibEscape(item.options[k]); }).join(' · ') : '';
-        return '<div class="cart-row' + (p.soldOut ? " sold-out" : "") + '" data-key="' + ibEscape(IB.lineKey(item)) + '" data-id="' + ibEscape(p.id) + '">' +
+        return '<div class="cart-row' + (soldOut ? " sold-out" : "") + '" data-key="' + ibEscape(IB.lineKey(item)) + '" data-id="' + ibEscape(p.id) + '">' +
           '<div class="cart-thumb">' + productThumbHTML(p) + '</div>' +
           '<div>' +
             '<p class="cart-item-name">' + ibEscape(p.name) + '</p>' +
             (opts ? '<p class="cart-item-options">' + opts + '</p>' : '') +
-            '<p class="cart-item-material">' + ibEscape(p.material) + ' · ' + formatPrice(p.price) + '</p>' + stockNote +
+            '<p class="cart-item-material">' + ibEscape(p.material) + ' · ' + formatPrice(info.price) + '</p>' + stockNote +
           '</div>' +
           '<div class="cart-item-actions">' +
             '<div class="qty-input"><button type="button" data-qty-down>−</button><input type="text" value="' + item.qty + '" readonly aria-label="Quantity"><button type="button" data-qty-up>+</button></div>' +
-            '<p class="product-price">' + formatPrice(p.price * item.qty) + '</p>' +
+            '<p class="product-price">' + formatPrice(info.price * item.qty) + '</p>' +
             '<button class="cart-remove" data-remove>Remove</button>' +
           '</div>' +
         '</div>';
@@ -141,7 +144,8 @@
 
       var subtotal = cart.reduce(function (sum, item) {
         var p = getProduct(item.id);
-        return sum + (p && !p.soldOut ? p.price * item.qty : 0);
+        var info = p ? lineInfo(p, item.options) : null;
+        return sum + (info && info.stock > 0 ? info.price * item.qty : 0);
       }, 0);
       var freeShipping = freeShippingFrom > 0 && subtotal >= freeShippingFrom;
       var shipping = subtotal > 0 && !freeShipping ? shippingBaht : 0;
@@ -167,7 +171,7 @@
         row.querySelector("[data-qty-up]").addEventListener("click", function () {
           var item = findLine();
           var p = getProduct(id);
-          IB.setQty(key, Math.min(p ? p.stock : item.qty + 1, item.qty + 1));
+          IB.setQty(key, Math.min(p ? lineInfo(p, item.options).stock : item.qty + 1, item.qty + 1));
           render();
         });
         row.querySelector("[data-qty-down]").addEventListener("click", function () {

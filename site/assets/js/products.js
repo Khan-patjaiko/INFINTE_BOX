@@ -3,7 +3,19 @@
 var PRODUCTS = [];
 var _productsPromise = null;
 
+// Identity of an option combination, independent of key order: {"Color":"Blue","Style":"Clip"}.
+// Same shape as optKey() in create-checkout-session.
+function variantKey(options) {
+  var o = options || {};
+  return JSON.stringify(Object.keys(o).sort().map(function (k) { return [k, String(o[k])]; }));
+}
+
 function _mapProductRow(row) {
+  // Per-combination price/stock/SKU (migration 0016); [] for products without options.
+  var variants = (Array.isArray(row.variants) ? row.variants : []).filter(function (v) { return v && v.options; }).map(function (v) {
+    return { options: v.options, price: (v.price_cents || 0) / 100, price_cents: v.price_cents || 0, stock: v.stock > 0 ? v.stock : 0, sku: v.sku || null };
+  });
+  var prices = variants.length ? variants.map(function (v) { return v.price; }) : [(row.price_cents || 0) / 100];
   return {
     id: row.slug,          // public identifier used in URLs and the cart
     slug: row.slug,
@@ -20,9 +32,29 @@ function _mapProductRow(row) {
     image: row.image_url || null,
     // Gallery for product.html: image_url first, then the rest of products.images (no dupes).
     images: [row.image_url].concat(Array.isArray(row.images) ? row.images : []).filter(function (u, i, a) { return u && a.indexOf(u) === i; }),
+    variants: variants,
+    priceMin: Math.min.apply(null, prices),
+    priceMax: Math.max.apply(null, prices),
+    // For products with variants, products.stock is the sum of variant stock (kept in sync).
     stock: typeof row.stock === "number" ? row.stock : 0,
     soldOut: !(row.stock > 0)
   };
+}
+
+// The variant matching a full set of chosen options, or null (also null for products without variants).
+function findVariant(p, options) {
+  if (!p || !p.variants || !p.variants.length) return null;
+  var key = variantKey(options);
+  return p.variants.find(function (v) { return variantKey(v.options) === key; }) || null;
+}
+
+// Unit price and stock for a cart line / selection: the variant's when the product has variants.
+function lineInfo(p, options) {
+  if (p.variants && p.variants.length) {
+    var v = findVariant(p, options);
+    return v ? { price: v.price, stock: v.stock, exists: true } : { price: p.priceMin, stock: 0, exists: false };
+  }
+  return { price: p.price, stock: p.stock, exists: true };
 }
 
 function loadProducts() {
@@ -86,6 +118,11 @@ function formatPrice(baht) {
   return "฿" + Number(baht || 0).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
+// "฿259" or "฿259 – ฿299" when variants are priced differently.
+function formatPriceRange(p) {
+  return p.priceMin === p.priceMax ? formatPrice(p.priceMin) : formatPrice(p.priceMin) + " – " + formatPrice(p.priceMax);
+}
+
 function productThumbHTML(p) {
   if (p.image) {
     return '<img src="' + ibEscape(p.image) + '" alt="' + ibEscape(p.name) + '" loading="lazy">';
@@ -99,7 +136,7 @@ function productCardHTML(p) {
     '<div class="product-body"><div class="product-row">' +
       '<div><p class="product-name">' + ibEscape(p.name) + '</p>' +
       '<span class="product-material">' + ibEscape(p.material) + '</span></div>' +
-      '<p class="product-price">' + formatPrice(p.price) + '</p>' +
+      '<p class="product-price">' + formatPriceRange(p) + '</p>' +
     '</div></div>' +
     '<div class="product-underline"></div>' +
   '</a>';

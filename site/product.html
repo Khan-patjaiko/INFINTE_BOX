@@ -146,7 +146,7 @@
           '<div class="pd-info">' +
             '<p class="eyebrow">' + ibEscape(p.category) + '</p>' +
             '<h1>' + ibEscape(p.name) + '</h1>' +
-            '<p class="pd-price">' + formatPrice(p.price) + '</p>' +
+            '<p class="pd-price" id="pd-price">' + formatPriceRange(p) + '</p>' +
             '<div class="pd-desc">' + descHtml + '</div>' +
             '<div class="pd-meta">' + specsHtml + '</div>' +
             optionsHtml +
@@ -157,7 +157,7 @@
                   '<div class="qty-input"><button type="button" data-qty="-1">−</button><input type="text" id="qty" value="1" readonly aria-label="Quantity"><button type="button" data-qty="1">+</button></div>' +
                   '<button class="btn btn-primary" id="add-to-cart-btn">Add to Cart</button>' +
                 '</div>' +
-                (p.stock <= 5 ? '<p class="form-note pd-low-stock">Only ' + p.stock + ' left in stock.</p>' : "") +
+                '<p class="form-note pd-low-stock" id="pd-stock"' + (p.stock <= 5 && !p.variants.length ? '>Only ' + p.stock + ' left in stock.' : ' hidden>') + '</p>' +
                 '<p class="add-msg" id="add-msg">Added to cart.</p>') +
           '</div>';
 
@@ -197,16 +197,50 @@
           });
         }
 
+        var chosen = {};
+        var hasVariants = p.variants.length > 0;
+        // Stock for the current selection: the chosen variant's, or the product's (for a
+        // product with variants and an incomplete choice, the total until a variant is picked).
+        var currentVariant = function () {
+          return hasVariants && p.options.every(function (g) { return chosen[g.name]; }) ? findVariant(p, chosen) : null;
+        };
+        var currentStock = function () { var v = currentVariant(); return v ? v.stock : p.stock; };
+
         var qtyInput = document.getElementById("qty");
         document.querySelectorAll("[data-qty]").forEach(function (btn) {
           btn.addEventListener("click", function () {
             // Clamp to what is actually in stock (the cart and server enforce this too).
-            var val = Math.min(p.stock, Math.max(1, parseInt(qtyInput.value, 10) + parseInt(btn.dataset.qty, 10)));
+            var val = Math.min(Math.max(1, currentStock()), Math.max(1, parseInt(qtyInput.value, 10) + parseInt(btn.dataset.qty, 10)));
             qtyInput.value = val;
           });
         });
 
-        var chosen = {};
+        // Variants: price, stock note, Add-to-cart state and unavailable chips follow the choice.
+        var refreshSelection = function () {
+          if (!hasVariants) return;
+          var v = currentVariant();
+          document.getElementById("pd-price").textContent = v ? formatPrice(v.price) : formatPriceRange(p);
+          var stockEl = document.getElementById("pd-stock");
+          var btn = document.getElementById("add-to-cart-btn");
+          if (stockEl) {
+            if (v && v.stock === 0) { stockEl.textContent = "This option is sold out."; stockEl.hidden = false; }
+            else if (v && v.stock <= 5) { stockEl.textContent = "Only " + v.stock + " left in stock."; stockEl.hidden = false; }
+            else stockEl.hidden = true;
+          }
+          if (btn) { btn.disabled = !!(v && v.stock === 0); btn.textContent = v && v.stock === 0 ? "Sold out" : "Add to Cart"; }
+          if (qtyInput && v && v.stock > 0 && parseInt(qtyInput.value, 10) > v.stock) qtyInput.value = v.stock;
+          // A value is unavailable when every variant matching it plus the other choices has no stock.
+          document.querySelectorAll('.pd-option').forEach(function (groupEl) {
+            var gname = p.options[parseInt(groupEl.dataset.group, 10)].name;
+            groupEl.querySelectorAll('.pd-chip, .pd-swatch').forEach(function (chip) {
+              var want = Object.assign({}, chosen); want[gname] = chip.dataset.value;
+              var ok = p.variants.some(function (x) {
+                return x.stock > 0 && Object.keys(want).every(function (k) { return String(x.options[k]) === String(want[k]); });
+              });
+              chip.classList.toggle('is-unavailable', !ok);
+            });
+          });
+        };
         document.querySelectorAll('.pd-option').forEach(function (groupEl) {
           var name = p.options[parseInt(groupEl.dataset.group, 10)].name;
           var chips = groupEl.querySelectorAll('.pd-chip, .pd-swatch');
@@ -218,10 +252,12 @@
               chosen[name] = chip.dataset.value;
               pick.textContent = chip.dataset.label;
               groupEl.classList.remove('is-missing');
+              refreshSelection();
             });
           });
           if (chips.length === 1) chips[0].click(); // only one value → preselect it
         });
+        refreshSelection();
         var missingOptions = function () {
           var missing = [];
           document.querySelectorAll('.pd-option').forEach(function (groupEl) {
