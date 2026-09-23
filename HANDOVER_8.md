@@ -1,8 +1,14 @@
 # Infinite Box — Handover #8 (2026-09-21)
 
-Session #8. Started from Handover #7 with `main` = `origin/main` and a clean tree. The user
-chose **pre-launch chores** over deploying, so this session is small and mostly account-level.
-Phase 9 (deploy to Hostinger) is now the only engineering phase left.
+Session #8 (2026-09-21 → 22). Started from Handover #7 with `main` = `origin/main` and a clean
+tree. The user picked **pre-launch chores** over deploying, but the session grew well past that:
+it also switched the store to **THB**, replaced the placeholder catalogue with the **first four
+real products** (photos, galleries, stock), and added **product options / variants**.
+
+Phase 9 (deploy the store to Hostinger) is still the only engineering phase left. Note the
+**coming-soon page is already live at `https://infinite-box.co`** — done in a parallel session
+(see [HANDOVER_9.md](HANDOVER_9.md)), verified here as 200 + HTTPS on 2026-09-22. Deploying the
+store means replacing or re-pathing that page, which is the user's call.
 
 ## What this session did
 
@@ -15,6 +21,7 @@ Phase 9 (deploy to Hostinger) is now the only engineering phase left.
 | 5 | Verify SMTP | Claude + user | Triggered `forgot-password.html` for the owner's address from the preview; `auth_logs` show `user_recovery_requested` with no SMTP error; **user confirmed the email arrived from `hello@infinite-box.co`**. |
 | 6 | Leaked Password Protection | — | **Pro-plan only** — Supabase refused the toggle on the free plan. Skipped; documented in the plan. |
 | 7 | Password minimum → 8 | User (dashboard) + Claude | Dashboard min length set to 8; `signup.html` raised from `minlength="6"` to `8` to match `reset-password.html`; hint added under the field. |
+| 8 | Password conditions checklist | Claude (user request) | Replaced the hint sentence with a live "Password conditions" checklist on `signup.html` and `reset-password.html` (shared `IBAuth.attachPasswordRules` in `auth.js`, `.pw-rules` CSS): 8–50 chars, ≥1 uppercase, ≥1 lowercase, ≥1 number, ≥1 symbol, plus a Confirm-password field (new on signup) with a live "Passwords do not match" error. Submit stays disabled until all pass; handlers re-check before calling Supabase. Verified in the pane (weak / mismatch / match / too-long states). **Client-side only** — server-side enforcement is Supabase → Auth → Email → *Password Requirements* (free plan, not turned on). |
 | 9 | Admin header bug | Claude | The admin "View store" link used class `account-link`, so `IBAuth.refreshHeader()` rewrote it to `account.html` after sign-in → `admin/account.html` 404 (found by the user on first admin login with the Google account). Renamed to `store-link` (`admin.js`, CSS selector widened). Commit `6f6916b`, pushed. |
 | 10 | Admin product form simplified | Claude (user request) | Removed *Placeholder icon* and *Sort order* from the product drawer + the Sort column. New products: `sort = max+1`, `icon_key = "enclosure"`; edits keep existing values. Commit `098ab8b`, pushed. Reordering now = SQL on `products.sort` (backlog: drag-to-reorder). |
 | 11 | **Store currency → THB** | Claude (user decision) | Prices supplied in THB, store was USD. `price_cents`/`*_cents` now hold satang (Stripe treats THB as 2-decimal, so no arithmetic changed). `฿` formatting in `products.js formatPrice`, `money()` in account/order/admin.js and `_shared/email.ts` (whole amounts without decimals: ฿399, ฿1,299). Admin labels "Price (THB)", terms.html copy updated. `create-checkout-session` **v10**: `currency: "thb"` + shipping rule; `stripe-webhook` **v9** redeployed for the email formatter. **Note:** the kept test order `4ea2920d` (3050) now displays as ฿30.50 — it was a USD test. |
@@ -28,8 +35,7 @@ Phase 9 (deploy to Hostinger) is now the only engineering phase left.
 | 19 | Cart stale lines | Claude (user report) | Badge showed 2 with an empty cart: localStorage still held deleted placeholder slugs. `cart.html` now prunes lines whose product no longer exists and re-saves. |
 | 20 | Admin link in header | Claude | `IBAuth.refreshHeader()` reads the user's own `profiles.is_admin` and inserts an orange **Admin** link (desktop header + mobile nav) → `admin/index.html`. Root cause of "can't reach admin": the user signed in via the storefront Log in button, which lands on account.html by design. |
 | 21 | **Product options (variants)** | Claude (user request) | Migration **0015**: `products.options jsonb` (`[{name, values[]}]`), `order_items.options jsonb`. Admin drawer: **Options** editor (+ Add option; name + comma-separated values). `product.html`: chip picker per group, must choose before Add to Cart, single-value groups preselect. Cart lines keyed by product+options (`IB.lineKey`), choice shown under the name. `create-checkout-session` **v11** validates values against the product, sums stock across variant lines, stores options per order line, adds them as the Stripe line-item description. `stripe-webhook` **v10** prints them in receipts; account/order/admin-orders show them. **v1 limits:** same price and shared stock across variants. Test data: BMW insert has `Slot type: 3 slot / 4 slot` + `Color: Black, Grey, Red, Blue` — **edit/remove in Admin → Products** if that's not real. Verified in the pane (picker, cart lines, qty/remove per line); the admin editor and a paid checkout with options are untested — user to try. |
-| 22 | Options UI restyle | Claude (user reference: Bambu Lab product page) | Bold heading per group with the chosen value beside it, 96px-min outlined buttons with an accent selected state, and **circular colour swatches** when every value in a group resolves to a colour — named colours (black/white/grey/red/orange/yellow/green/blue/navy/purple/pink/brown/beige/gold/bronze/silver/transparent) or an inline hex, e.g. . The hex is stripped from the visible label but kept in the stored value. Verified in the pane. |
-| 8 | Password conditions checklist | Claude (user request) | Replaced the hint sentence with a live "Password conditions" checklist on `signup.html` and `reset-password.html` (shared `IBAuth.attachPasswordRules` in `auth.js`, `.pw-rules` CSS): 8–50 chars, ≥1 uppercase, ≥1 lowercase, ≥1 number, ≥1 symbol, plus a Confirm-password field (new on signup) with a live "Passwords do not match" error. Submit stays disabled until all pass; handlers re-check before calling Supabase. Verified in the pane (weak / mismatch / match / too-long states). **Client-side only** — server-side enforcement is Supabase → Auth → Email → *Password Requirements* (free plan, not turned on). |
+| 22 | Options UI restyle | Claude (user reference: Bambu Lab product page) | Bold heading per group with the chosen value beside it, 96px-min outlined buttons with an accent selected state, and **circular colour swatches** when every value in a group resolves to a colour — named colours (black/white/grey/red/orange/yellow/green/blue/navy/purple/pink/brown/beige/gold/bronze/silver/transparent) or an inline hex, e.g. `Sky blue #6ec6ff`. The hex is stripped from the visible label but kept in the stored value. Verified in the pane. |
 
 ## Commits (18, on top of `d4038ab`)
 
@@ -62,7 +68,10 @@ plus the docs commits for this handover. **Pushed to `origin/main`** at the end 
 - `store_settings`: `shipping_cents = 5000`, `free_shipping_threshold_cents = 80000`, 9 categories
 - Supabase Auth: Site URL `http://localhost:8790`, Redirect URLs `http://localhost:8790/**`, `https://infinite-box.co/**`
 - Edge Functions: create-checkout-session v11 · stripe-webhook v10 · submit-quote v3 · submit-contact v1 · get-order v1
-- Hostinger: nothing uploaded; GoDaddy DNS not pointed
+- Domain: **`https://infinite-box.co` serves the coming-soon page** (GoDaddy A record → Hostinger, Handover #9; verified 200/HTTPS here on 2026-09-22). The **store** (`site/`) is still not uploaded.
+
+**Parallel session note:** Handover #9 ran alongside this one on the same branch (coming-soon
+deploy + DNS) and also edited `PROJECT_PLAN.md`; this handover only covers the work above.
 
 ## Gotchas noted this session
 
@@ -73,15 +82,32 @@ plus the docs commits for this handover. **Pushed to `origin/main`** at the end 
   assume it in SQL.
 - Resend API keys are shown once; the `supabase-auth` key lives only in the Supabase SMTP
   config now. Rotating it means creating a new key in Resend and pasting it into the dashboard.
+- **Windows shell quoting bit repeatedly**: `$("id")`, regex escapes (`\r?\n`, `\s`) and `|`
+  inside `node -e` / `sed` get eaten. Use the `Write`/`Edit` tools for any JS or HTML edit
+  containing those, and syntax-check inline scripts afterwards with
+  `node -e "...new Function(match[1])"`.
+- Pane screenshots sometimes return a blank/black frame right after a navigation; the DOM
+  reads via `javascript_tool` were reliable — re-take the screenshot rather than trusting it.
+
+## Untested / to verify next session
+
+- **Admin Options editor** (add/remove option rows, save) — only the SQL path was exercised.
+- **A paid checkout with options**: test card → confirm `order_items.options`, the Stripe
+  line-item description, the receipt email and the admin drawer all show the choice.
+- Free-shipping threshold through a real Stripe session (cart maths verified; Stripe line not).
+- `coming-soon/coming-soon.zip` is untracked in the repo (the user's deploy bundle) — left alone.
 
 ## Suggested next steps
 
-1. **Phase 9 — deploy** (nothing blocks it): upload `site/` to Hostinger `public_html`, point
-   GoDaddy DNS, HTTPS on, then Supabase → Auth → URL Configuration (Site URL +
-   `https://infinite-box.co/**`), **publish the Google OAuth app**, re-test email + Google
-   login and a test checkout on the live domain, then Search Console + brand verification.
-2. **User content:** legal placeholders in `privacy.html` / `terms.html`. Stock/photos are done for the first 4 products; more products go in via Admin → Products.
-   Before Stripe live mode, confirm the Stripe account settles in THB (Phase 13).
+1. **Phase 9 — deploy the store**: upload `site/` to Hostinger `public_html` (the domain
+   currently serves `coming-soon/` per Handover #9 — decide whether to replace or re-path it), then
+   Supabase → Auth → URL Configuration **Site URL → `https://infinite-box.co`**, **publish the
+   Google OAuth app**, re-test email + Google login and a test checkout on the live domain,
+   then Search Console + brand verification.
+2. **User content:** legal placeholders in `privacy.html` / `terms.html`; real option values on
+   the BMW insert (currently test data); more products via Admin → Products.
 3. Optional: Supabase → Auth → Email → Password Requirements → letters+digits+symbols.
-4. Phase 13: Stripe live keys + real purchase/refund test.
-5. Session-end: `main` was pushed (`d4038ab..6f6916b` + docs).
+4. Phase 13: Stripe live keys + real purchase/refund test. **Confirm the Stripe account settles
+   in THB first.**
+5. Session-end: `main` pushed to `origin/main` (`d4038ab..` + docs); working tree clean apart
+   from the user's untracked `Product/`, `Service Providers.txt`, `coming-soon/coming-soon.zip`.
