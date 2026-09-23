@@ -42,28 +42,35 @@
   <form id="d-form" class="form-grid two" novalidate>
     <div class="field span-2"><label for="f-name">Name</label><input type="text" id="f-name" required></div>
     <div class="field"><label for="f-slug">Slug <span class="muted">(URL id)</span></label><input type="text" id="f-slug" required pattern="[a-z0-9-]+" placeholder="e.g. phone-stand"></div>
-    <div class="field"><label for="f-price">Price (THB)</label><input type="number" id="f-price" min="0" step="0.01" required placeholder="e.g. 399"></div>
+    <div class="field" id="fld-price"><label for="f-price">Price (THB)</label><input type="number" id="f-price" min="0" step="0.01" required placeholder="e.g. 399"></div>
     <div class="field"><label for="f-category">Category</label><input type="text" id="f-category" list="category-list"><datalist id="category-list"></datalist></div>
     <div class="field"><label for="f-material">Material</label><input type="text" id="f-material" placeholder="e.g. PETG"></div>
     <div class="field span-2"><label for="f-description">Description</label><textarea id="f-description" rows="4" style="min-height:96px;"></textarea></div>
     <div class="field span-2"><label for="f-specs">Specs <span class="muted">(one per line, <code>Label: value</code>; separate list items with <code> | </code>)</span></label><textarea id="f-specs" rows="5" style="min-height:110px;font-size:13px;" placeholder="Material: PETG&#10;Layer height: 0.2mm&#10;Lead time: 3-5 days"></textarea></div>
     <div class="field span-2">
-      <label>Options <span class="muted">(customer picks one value per option, e.g. Color: Black, White)</span></label>
-      <div id="f-options" class="opt-rows"></div>
+      <label>Options <span class="muted">(up to 3, e.g. Color, Style — the customer picks one value of each)</span></label>
+      <div id="f-options" class="opt-groups"></div>
       <button type="button" class="btn btn-outline btn-sm" id="f-option-add" style="align-self:flex-start;">+ Add option</button>
-      <p class="form-note">Same price and shared stock for every choice. Leave empty for products without options.</p>
-    </div>
-    <div class="field"><label for="f-stock">Stock on hand</label><input type="number" id="f-stock" min="0" step="1" value="0"></div>
-    <div class="field span-2">
-      <label>Photo</label>
-      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;">
-        <div class="thumb" id="f-preview" style="width:88px;height:88px;border-radius:var(--radius);background:hsl(var(--product-img-bg));display:flex;align-items:center;justify-content:center;overflow:hidden;"></div>
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <input type="file" id="f-image" accept="image/png,image/jpeg,image/webp">
-          <button type="button" class="btn btn-outline btn-sm" id="f-image-clear" style="align-self:flex-start;">Remove photo</button>
+      <p class="form-note">Leave empty for products without options. With options, every combination gets its own price, stock and SKU below.</p>
+      <div id="f-variants" class="variant-block" hidden>
+        <p class="variant-title">Variant list</p>
+        <div class="variant-bulk">
+          <input type="number" id="vb-price" min="0" step="0.01" placeholder="฿ Price" aria-label="Price for all variants">
+          <input type="number" id="vb-stock" min="0" step="1" placeholder="Stock" aria-label="Stock for all variants">
+          <input type="text" id="vb-sku" placeholder="SKU" aria-label="SKU for all variants">
+          <button type="button" class="btn btn-primary btn-sm" id="vb-apply">Apply to all</button>
         </div>
+        <div class="variant-scroll"><table class="variant-table" id="v-table"></table></div>
       </div>
-      <p class="form-note">JPG/PNG/WebP, up to 5 MB. Uploaded to the <code>product-images</code> bucket; a generic placeholder icon shows when there is no photo.</p>
+    </div>
+    <div class="field" id="fld-stock"><label for="f-stock">Stock on hand</label><input type="number" id="f-stock" min="0" step="1" value="0"></div>
+    <div class="field span-2">
+      <label>Photos</label>
+      <div class="gallery-edit" id="f-gallery"></div>
+      <label class="btn btn-outline btn-sm" style="align-self:flex-start;cursor:pointer;">+ Add photos
+        <input type="file" id="f-image" accept="image/png,image/jpeg,image/webp" multiple hidden>
+      </label>
+      <p class="form-note">The first photo is the main image on the shop and product page; use ← → to reorder. JPG/PNG/WebP, up to 5 MB each. New photos upload to the <code>product-images</code> bucket when you save.</p>
     </div>
     <div class="field span-2"><label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="f-active" checked> Active (visible in the store)</label></div>
     <div class="drawer-actions span-2">
@@ -87,8 +94,7 @@
     var all = [];
     var configuredCategories = [];
     var current = null;       // row being edited (null = new)
-    var pendingImage = null;  // File chosen but not yet uploaded
-    var clearImage = false;   // "Remove photo" pressed
+    var gallery = [];         // ordered photos: {url} saved, or {file, preview} not uploaded yet; [0] = main
     var search = "";
     var showInactive = false;
 
@@ -121,7 +127,7 @@
           '<td>' + ibEscape(p.name) + '<br><span class="muted">' + ibEscape(p.slug) + '</span></td>' +
           '<td>' + ibEscape(p.category || "—") + '</td>' +
           '<td>' + ibEscape(p.material || "—") + '</td>' +
-          '<td class="num">' + A.money(p.price_cents) + '</td>' +
+          '<td class="num">' + priceRangeHTML(p) + '</td>' +
           '<td class="num">' + stockHTML(p.stock) + '</td>' +
           '<td>' + (p.active ? '<span class="order-status paid">active</span>' : '<span class="order-status">inactive</span>') + '</td></tr>';
       }).join("") : '<tr><td colspan="7" class="muted">No products match.</td></tr>';
@@ -132,26 +138,87 @@
     }
 
     // Multi-line spec values (rendered as bullets on the product page) are edited as "A | B | C".
-    // ---- Options editor: rows of {name, values[]} → products.options ----
-    function optionRowHTML(o) {
-      return '<div class="opt-row">' +
-        '<input type="text" class="opt-name" placeholder="Option name (e.g. Color)" value="' + ibEscape(o && o.name || '') + '">' +
-        '<input type="text" class="opt-values" placeholder="Values, comma-separated (e.g. Black, White)" value="' + ibEscape(o && o.values ? o.values.join(', ') : '') + '">' +
-        '<button type="button" class="btn btn-outline btn-sm opt-remove" aria-label="Remove option">×</button>' +
+    // ---- Options editor (Shopee-style): up to 3 groups, one input per value, with an empty
+    //      "add value" input always last → products.options = [{name, values[]}] ----
+    var MAX_GROUPS = 3;
+    function valueRowHTML(v) {
+      return '<div class="og-value-row"><input type="text" class="og-value" placeholder="Add value" value="' + ibEscape(v || '') + '">' +
+        (v ? '<button type="button" class="og-value-remove" aria-label="Remove value">×</button>' : '') + '</div>';
+    }
+    function groupHTML(g, gi) {
+      return '<div class="opt-group">' +
+        '<div class="opt-group-head"><span class="muted">Option ' + (gi + 1) + '</span>' +
+          '<button type="button" class="og-remove" aria-label="Remove option">×</button></div>' +
+        '<input type="text" class="og-name" placeholder="Option name (e.g. Color)" value="' + ibEscape(g && g.name || '') + '">' +
+        '<div class="og-values">' + (g && g.values ? g.values : []).map(valueRowHTML).join('') + valueRowHTML('') + '</div>' +
       '</div>';
     }
     function setOptions(options) {
-      $("f-options").innerHTML = (options || []).map(optionRowHTML).join('');
+      $("f-options").innerHTML = (options || []).slice(0, MAX_GROUPS).map(groupHTML).join('');
+      updateAddOption();
+    }
+    function updateAddOption() {
+      $("f-option-add").style.display = $("f-options").querySelectorAll('.opt-group').length >= MAX_GROUPS ? "none" : "";
+    }
+    // Raw groups as typed (for validation); getOptions() keeps the usable ones.
+    function readGroups() {
+      return Array.prototype.map.call($("f-options").querySelectorAll('.opt-group'), function (el) {
+        var values = Array.prototype.map.call(el.querySelectorAll('.og-value'), function (i) { return i.value.trim(); }).filter(Boolean);
+        return { name: el.querySelector('.og-name').value.trim(), values: values.filter(function (v, i) { return values.indexOf(v) === i; }) };
+      });
     }
     function getOptions() {
-      var out = [];
-      $("f-options").querySelectorAll('.opt-row').forEach(function (row) {
-        var name = row.querySelector('.opt-name').value.trim();
-        var values = row.querySelector('.opt-values').value.split(',').map(function (v) { return v.trim(); }).filter(Boolean);
-        values = values.filter(function (v, i) { return values.indexOf(v) === i; });
-        if (name && values.length) out.push({ name: name, values: values });
+      return readGroups().filter(function (g) { return g.name && g.values.length; });
+    }
+
+    // ---- Variant table: one row per combination → products.variants ----
+    // vcache keeps what was typed per combination (variantKey), so editing options keeps prices.
+    var vcache = {};
+    function combos(groups) {
+      return groups.reduce(function (acc, g) {
+        var out = [];
+        acc.forEach(function (o) { g.values.forEach(function (v) { var n = Object.assign({}, o); n[g.name] = v; out.push(n); }); });
+        return out;
+      }, [{}]);
+    }
+    function renderVariants() {
+      var groups = getOptions();
+      var has = groups.length > 0;
+      $("f-variants").hidden = !has;
+      $("fld-price").style.display = has ? "none" : "";
+      $("fld-stock").style.display = has ? "none" : "";
+      if (!has) { $("v-table").innerHTML = ""; return; }
+      var rows = combos(groups);
+      var span = rows.length / groups[0].values.length; // rows per first-group value
+      $("v-table").innerHTML =
+        '<thead><tr>' + groups.map(function (g) { return '<th>' + ibEscape(g.name) + '</th>'; }).join('') +
+        '<th><span class="req">*</span> Price (฿)</th><th><span class="req">*</span> Stock</th><th>SKU</th></tr></thead><tbody>' +
+        rows.map(function (o, ri) {
+          var key = variantKey(o);
+          var c = vcache[key] || (vcache[key] = { price: $("f-price").value, stock: "", sku: "" });
+          return '<tr data-key="' + ibEscape(key) + '">' +
+            groups.map(function (g, gi) {
+              if (gi === 0 && groups.length > 1) return ri % span === 0 ? '<td class="v-group" rowspan="' + span + '">' + ibEscape(o[g.name]) + '</td>' : '';
+              return '<td class="v-label">' + ibEscape(o[g.name]) + '</td>';
+            }).join('') +
+            '<td><input type="number" class="v-price" min="0" step="0.01" placeholder="฿" value="' + ibEscape(c.price) + '" aria-label="Price"></td>' +
+            '<td><input type="number" class="v-stock" min="0" step="1" value="' + ibEscape(c.stock) + '" aria-label="Stock"></td>' +
+            '<td><input type="text" class="v-sku" value="' + ibEscape(c.sku) + '" aria-label="SKU"></td>' +
+          '</tr>';
+        }).join('') + '</tbody>';
+    }
+    function loadVariantCache(p) {
+      vcache = {};
+      (p && Array.isArray(p.variants) ? p.variants : []).forEach(function (v) {
+        vcache[variantKey(v.options)] = { price: ((v.price_cents || 0) / 100).toString(), stock: String(v.stock == null ? "" : v.stock), sku: v.sku || "" };
       });
-      return out;
+    }
+    function priceRangeHTML(p) {
+      var vs = Array.isArray(p.variants) ? p.variants : [];
+      if (!vs.length) return A.money(p.price_cents);
+      var ps = vs.map(function (v) { return v.price_cents; });
+      var lo = Math.min.apply(null, ps), hi = Math.max.apply(null, ps);
+      return lo === hi ? A.money(lo) : A.money(lo) + " – " + A.money(hi);
     }
 
     function specsToText(specs) {
@@ -172,22 +239,32 @@
       return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     }
 
-    function updatePreview() {
-      var box = $("f-preview");
-      if (pendingImage) {
-        box.innerHTML = '<img src="' + URL.createObjectURL(pendingImage) + '" alt="" style="width:100%;height:100%;object-fit:cover;">';
-      } else if (current && current.image_url && !clearImage) {
-        box.innerHTML = '<img src="' + ibEscape(imgSrc(current.image_url)) + '" alt="" style="width:100%;height:100%;object-fit:cover;">';
-      } else {
-        box.innerHTML = typeof productIconSVG === "function" ? productIconSVG(current && current.icon_key ? current.icon_key : DEFAULT_ICON) : "";
+    // ---- Gallery editor: gallery[] → products.image_url (first) + products.images (all, in order) ----
+    function renderGallery() {
+      var box = $("f-gallery");
+      if (!gallery.length) {
+        box.innerHTML = '<div class="gallery-item empty">' + (typeof productIconSVG === "function" ? productIconSVG(current && current.icon_key ? current.icon_key : DEFAULT_ICON) : "") + '</div>';
+        return;
       }
-      $("f-image-clear").style.display = (pendingImage || (current && current.image_url && !clearImage)) ? "" : "none";
+      box.innerHTML = gallery.map(function (g, i) {
+        var src = g.file ? g.preview : imgSrc(g.url);
+        return '<div class="gallery-item" data-i="' + i + '">' +
+          '<img src="' + ibEscape(src) + '" alt="">' +
+          (i === 0 ? '<span class="gallery-main">Main</span>' : '') +
+          (g.file ? '<span class="gallery-new">New</span>' : '') +
+          '<div class="gallery-actions">' +
+            '<button type="button" data-act="left" aria-label="Move photo ' + (i + 1) + ' earlier"' + (i === 0 ? ' disabled' : '') + '>←</button>' +
+            '<button type="button" data-act="remove" aria-label="Remove photo ' + (i + 1) + '">×</button>' +
+            '<button type="button" data-act="right" aria-label="Move photo ' + (i + 1) + ' later"' + (i === gallery.length - 1 ? ' disabled' : '') + '>→</button>' +
+          '</div></div>';
+      }).join('');
     }
 
     function openDrawer(p) {
       current = p || null;
-      pendingImage = null;
-      clearImage = false;
+      gallery = p ? [p.image_url].concat(Array.isArray(p.images) ? p.images : [])
+        .filter(function (u, i, a) { return u && a.indexOf(u) === i; })
+        .map(function (u) { return { url: u }; }) : [];
       $("d-title").textContent = p ? "Edit product" : "New product";
       $("f-name").value = p ? p.name : "";
       $("f-slug").value = p ? p.slug : "";
@@ -197,14 +274,17 @@
       $("f-description").value = p ? (p.description || "") : "";
       $("f-specs").value = p ? specsToText(p.specs) : "";
       setOptions(p ? p.options : []);
+      loadVariantCache(p);
+      $("vb-price").value = $("vb-stock").value = $("vb-sku").value = "";
       $("f-stock").value = p ? p.stock : 0;
+      renderVariants();
       $("f-active").checked = p ? !!p.active : true;
       $("f-image").value = "";
       $("d-error").style.display = "none";
       var view = $("d-view");
       view.style.display = p ? "" : "none";
       if (p) view.href = "../product.html?id=" + encodeURIComponent(p.slug);
-      updatePreview();
+      renderGallery();
       $("drawer").classList.add("open");
       $("drawer").setAttribute("aria-hidden", "false");
       $("backdrop").classList.add("open");
@@ -238,10 +318,38 @@
       var price = parseFloat($("f-price").value);
       if (!name) return showError("Name is required.");
       if (!/^[a-z0-9-]+$/.test(slug)) return showError("Slug may only contain lowercase letters, numbers and dashes.");
-      if (!(price >= 0)) return showError("Enter a valid price.");
       var stock = parseInt($("f-stock").value, 10);
-      if (!(stock >= 0)) return showError("Stock must be 0 or more.");
-      if (pendingImage && pendingImage.size > 5 * 1024 * 1024) return showError("Photo must be 5 MB or smaller.");
+
+      // Options + variants: every group needs a name and a value; names must differ; every
+      // combination needs a price and a stock count. Price/stock columns become min/sum.
+      var raw = readGroups().filter(function (g) { return g.name || g.values.length; });
+      var bad = raw.find(function (g) { return !g.name || !g.values.length; });
+      if (bad) return showError(bad.name ? 'Option "' + bad.name + '" needs at least one value.' : "Every option needs a name.");
+      var names = raw.map(function (g) { return g.name.toLowerCase(); });
+      if (names.some(function (n, i) { return names.indexOf(n) !== i; })) return showError("Option names must be different.");
+      var options = getOptions();
+      var variants = [];
+      if (options.length) {
+        var rows = $("v-table").querySelectorAll("tbody tr");
+        for (var r = 0; r < rows.length; r++) {
+          var vp = parseFloat(rows[r].querySelector(".v-price").value);
+          var vsRaw = rows[r].querySelector(".v-stock").value.trim();
+          var vs = /^\d+$/.test(vsRaw) ? parseInt(vsRaw, 10) : NaN;
+          rows[r].classList.toggle("is-invalid", !(vp >= 0) || !(vs >= 0));
+          if (!(vp >= 0) || !(vs >= 0)) return showError("Enter a price and a stock count (0 or more) for every variant.");
+          var vsku = rows[r].querySelector(".v-sku").value.trim();
+          variants.push({ options: JSON.parse(rows[r].dataset.key).reduce(function (o, kv) { o[kv[0]] = kv[1]; return o; }, {}),
+            price_cents: Math.round(vp * 100), stock: vs, sku: vsku || null });
+        }
+        // Keep the option order of the groups in each variant (display order in the admin).
+        variants.forEach(function (v) { var o = {}; options.forEach(function (g) { o[g.name] = v.options[g.name]; }); v.options = o; });
+        price = Math.min.apply(null, variants.map(function (v) { return v.price_cents; })) / 100;
+        stock = variants.reduce(function (s, v) { return s + v.stock; }, 0);
+      } else {
+        if (!(price >= 0)) return showError("Enter a valid price.");
+        if (!(stock >= 0)) return showError("Stock must be 0 or more.");
+      }
+      if (gallery.some(function (g) { return g.file && g.file.size > 5 * 1024 * 1024; })) return showError("Each photo must be 5 MB or smaller.");
 
       var btn = $("d-save");
       btn.disabled = true;
@@ -255,15 +363,21 @@
           material: $("f-material").value.trim() || null,
           description: $("f-description").value.trim() || null,
           specs: textToSpecs($("f-specs").value),
-          options: getOptions(),
+          options: options,
+          variants: variants,
           // Icon and sort order are not editable in the UI: keep them on edit, default on create.
           icon_key: current && current.icon_key ? current.icon_key : DEFAULT_ICON,
           stock: stock,
           sort: current ? current.sort : nextSort(),
           active: $("f-active").checked
         };
-        if (pendingImage) patch.image_url = await uploadImage(pendingImage, slug);
-        else if (clearImage) patch.image_url = null;
+        // Upload new photos first (in order); the row is only written once all uploads succeed.
+        for (var i = 0; i < gallery.length; i++) {
+          if (gallery[i].file) gallery[i] = { url: await uploadImage(gallery[i].file, slug) };
+        }
+        var urls = gallery.map(function (g) { return g.url; });
+        patch.images = urls;
+        patch.image_url = urls[0] || null;
 
         var res = current
           ? await window.IBDB.from("products").update(patch).eq("id", current.id).select().single()
@@ -297,8 +411,54 @@
     function nextSort() { return all.length ? Math.max.apply(null, all.map(function (x) { return x.sort; })) + 1 : 1; }
 
     $("new-btn").addEventListener("click", function () { openDrawer(null); });
-    $("f-option-add").addEventListener("click", function () { $("f-options").insertAdjacentHTML('beforeend', optionRowHTML(null)); $("f-options").lastElementChild.querySelector('.opt-name').focus(); });
-    $("f-options").addEventListener("click", function (e) { var b = e.target.closest('.opt-remove'); if (b) b.closest('.opt-row').remove(); });
+    $("f-option-add").addEventListener("click", function () {
+      if ($("f-options").querySelectorAll('.opt-group').length >= MAX_GROUPS) return;
+      $("f-options").insertAdjacentHTML('beforeend', groupHTML(null, $("f-options").querySelectorAll('.opt-group').length));
+      $("f-options").lastElementChild.querySelector('.og-name').focus();
+      updateAddOption();
+    });
+    $("f-options").addEventListener("click", function (e) {
+      var g = e.target.closest('.og-remove'), v = e.target.closest('.og-value-remove');
+      if (g) {
+        g.closest('.opt-group').remove();
+        $("f-options").querySelectorAll('.opt-group-head .muted').forEach(function (el, i) { el.textContent = "Option " + (i + 1); });
+        updateAddOption();
+      } else if (v) v.closest('.og-value-row').remove();
+      else return;
+      renderVariants();
+    });
+    $("f-options").addEventListener("input", function (e) {
+      var inp = e.target;
+      // Typing into the trailing empty value input turns it into a value and adds a new empty one.
+      if (inp.classList.contains('og-value')) {
+        var row = inp.closest('.og-value-row'), list = row.parentNode;
+        if (row === list.lastElementChild && inp.value.trim()) {
+          row.insertAdjacentHTML('beforeend', '<button type="button" class="og-value-remove" aria-label="Remove value">×</button>');
+          list.insertAdjacentHTML('beforeend', valueRowHTML(''));
+        }
+      }
+      renderVariants();
+    });
+    // Variant table edits go to the cache so they survive re-renders when options change.
+    $("v-table").addEventListener("input", function (e) {
+      var tr = e.target.closest("tr[data-key]");
+      if (!tr) return;
+      var c = vcache[tr.dataset.key] || (vcache[tr.dataset.key] = { price: "", stock: "", sku: "" });
+      if (e.target.classList.contains("v-price")) c.price = e.target.value;
+      if (e.target.classList.contains("v-stock")) c.stock = e.target.value;
+      if (e.target.classList.contains("v-sku")) c.sku = e.target.value;
+      tr.classList.remove("is-invalid");
+    });
+    $("vb-apply").addEventListener("click", function () {
+      var bp = $("vb-price").value, bs = $("vb-stock").value, bk = $("vb-sku").value.trim();
+      $("v-table").querySelectorAll("tbody tr[data-key]").forEach(function (tr) {
+        var c = vcache[tr.dataset.key];
+        if (bp !== "") c.price = bp;
+        if (bs !== "") c.stock = bs;
+        if (bk !== "") c.sku = bk;
+      });
+      renderVariants();
+    });
     $("search").addEventListener("input", function (e) { search = e.target.value.trim().toLowerCase(); render(); });
     $("show-inactive").addEventListener("change", function (e) { showInactive = e.target.checked; render(); });
     $("rows").addEventListener("click", function (e) {
@@ -308,8 +468,23 @@
       if (p) openDrawer(p);
     });
     $("f-name").addEventListener("input", function () { if (!current) $("f-slug").value = slugify($("f-name").value); });
-    $("f-image").addEventListener("change", function (e) { pendingImage = e.target.files[0] || null; clearImage = false; updatePreview(); });
-    $("f-image-clear").addEventListener("click", function () { pendingImage = null; clearImage = true; $("f-image").value = ""; updatePreview(); });
+    $("f-image").addEventListener("change", function (e) {
+      Array.prototype.forEach.call(e.target.files, function (f) { gallery.push({ file: f, preview: URL.createObjectURL(f) }); });
+      e.target.value = "";
+      renderGallery();
+    });
+    $("f-gallery").addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-act]");
+      if (!b) return;
+      var i = parseInt(b.closest(".gallery-item").dataset.i, 10), act = b.dataset.act;
+      if (act === "remove") gallery.splice(i, 1);
+      else {
+        var j = act === "left" ? i - 1 : i + 1;
+        if (j < 0 || j >= gallery.length) return;
+        var t = gallery[i]; gallery[i] = gallery[j]; gallery[j] = t;
+      }
+      renderGallery();
+    });
     $("d-form").addEventListener("submit", save);
     $("d-close").addEventListener("click", closeDrawer);
     $("backdrop").addEventListener("click", closeDrawer);

@@ -56,8 +56,9 @@
     var A = window.IBAdmin;
     function optionsHTML(it) {
       var o = it.options || {};
-      var keys = Object.keys(o);
-      return keys.length ? '<span class="order-line-options">' + keys.map(function (k) { return ibEscape(k) + ': ' + ibEscape(o[k]); }).join(' · ') + '</span>' : '';
+      var parts = Object.keys(o).map(function (k) { return ibEscape(k) + ': ' + ibEscape(o[k]); });
+      if (it.sku) parts.push('SKU: ' + ibEscape(it.sku));
+      return parts.length ? '<span class="order-line-options">' + parts.join(' · ') + '</span>' : '';
     }
     var STATUSES = ["pending", "paid", "fulfilled", "cancelled"];
     var all = [];
