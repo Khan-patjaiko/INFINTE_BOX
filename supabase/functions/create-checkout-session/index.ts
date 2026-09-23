@@ -81,32 +81,25 @@ Deno.serve(async (req) => {
 
     const bySlug = new Map((products ?? []).map((p: { slug: string }) => [p.slug, p]));
     const lineItems: unknown[] = [];
-    const orderItems: { product_id: string; name: string; unit_price_cents: number; qty: number; options: Record<string, string> }[] = [];
+    const orderItems: { product_id: string; name: string; unit_price_cents: number; qty: number; options: Record<string, string>; sku: string | null }[] = [];
     const soldOut: string[] = [];
     let subtotal = 0;
 
     type OptionGroup = { name: string; values: string[] };
-    type ProductRow = { id: string; slug: string; name: string; price_cents: number; stock: number; options?: OptionGroup[] };
-    // Several cart lines may point at one product (different options): stock is checked on the sum.
-    const qtyByProduct = new Map<string, number>();
+    type Variant = { options: Record<string, string>; price_cents: number; stock: number; sku?: string | null };
+    type ProductRow = { id: string; slug: string; name: string; price_cents: number; stock: number; options?: OptionGroup[]; variants?: Variant[] };
+    // Same key shape as IB.normOptions in main.js: sorted keys, string values.
+    const optKey = (o: Record<string, string>) => JSON.stringify(Object.keys(o).sort().map((k) => [k, String(o[k])]));
+
+    // 1) Resolve every cart line: options must be valid values for each group the product
+    //    defines (anything else the client sent is dropped); products with variants
+    //    (migration 0016) take price, stock and SKU from the matching variant.
+    type Line = { p: ProductRow; qty: number; options: Record<string, string>; variant: Variant | null; stockKey: string };
+    const lines: Line[] = [];
     for (const i of items) {
       const p = bySlug.get(i.id) as ProductRow | undefined;
       if (!p) continue;
-      qtyByProduct.set(p.id, (qtyByProduct.get(p.id) ?? 0) + Math.max(1, parseInt(String(i.qty), 10) || 1));
-    }
-    const overStock = new Set<string>();
-    for (const [pid, total] of qtyByProduct) {
-      const p = [...bySlug.values()].find((x) => (x as ProductRow).id === pid) as ProductRow;
-      // Stock is authoritative here; the cart page only mirrors it for UX.
-      if (total > (p.stock ?? 0)) { overStock.add(pid); soldOut.push(p.stock > 0 ? `${p.name} (only ${p.stock} left)` : `${p.name} (sold out)`); }
-    }
-
-    for (const i of items) {
-      const p = bySlug.get(i.id) as ProductRow | undefined;
-      if (!p || overStock.has(p.id)) continue;
       const qty = Math.max(1, parseInt(String(i.qty), 10) || 1);
-      // Options: every group the product defines must have a value from its list; anything
-      // else the client sent is dropped.
       const groups = Array.isArray(p.options) ? p.options : [];
       const sent = (i.options && typeof i.options === "object") ? i.options as Record<string, unknown> : {};
       const options: Record<string, string> = {};
@@ -115,17 +108,46 @@ Deno.serve(async (req) => {
         if (!g.values.includes(v)) return json({ error: `Please choose ${g.name} for ${p.name}.` }, 400);
         options[g.name] = v;
       }
+      const variants = Array.isArray(p.variants) ? p.variants : [];
+      let variant: Variant | null = null;
+      if (variants.length) {
+        variant = variants.find((v) => optKey(v.options || {}) === optKey(options)) ?? null;
+        if (!variant) return json({ error: `That option of ${p.name} is no longer available. Please update your cart.` }, 400);
+      }
+      lines.push({ p, qty, options, variant, stockKey: variant ? p.id + "|" + optKey(options) : p.id });
+    }
+
+    // 2) Stock is authoritative here (the cart only mirrors it). Several cart lines may share
+    //    one stock pool (a plain product, or the same variant twice), so check the sum.
+    const qtyByKey = new Map<string, number>();
+    for (const l of lines) qtyByKey.set(l.stockKey, (qtyByKey.get(l.stockKey) ?? 0) + l.qty);
+    const overStock = new Set<string>();
+    for (const l of lines) {
+      if (overStock.has(l.stockKey)) continue;
+      const stock = l.variant ? (l.variant.stock ?? 0) : (l.p.stock ?? 0);
+      if ((qtyByKey.get(l.stockKey) ?? 0) > stock) {
+        overStock.add(l.stockKey);
+        const label = l.variant ? `${l.p.name} (${Object.values(l.options).join(" / ")})` : l.p.name;
+        soldOut.push(stock > 0 ? `${label} (only ${stock} left)` : `${label} (sold out)`);
+      }
+    }
+
+    // 3) Build Stripe lines and order lines.
+    for (const l of lines) {
+      if (overStock.has(l.stockKey)) continue;
+      const { p, qty, options } = l;
+      const unit = l.variant ? l.variant.price_cents : p.price_cents;
       const optionText = Object.keys(options).map((k) => `${k}: ${options[k]}`).join(" · ");
-      subtotal += p.price_cents * qty;
+      subtotal += unit * qty;
       lineItems.push({
         quantity: qty,
         price_data: {
           currency: CURRENCY,
-          unit_amount: p.price_cents,
+          unit_amount: unit,
           product_data: { name: p.name, ...(optionText ? { description: optionText } : {}), metadata: { slug: p.slug, ...options } },
         },
       });
-      orderItems.push({ product_id: p.id, name: p.name, unit_price_cents: p.price_cents, qty, options });
+      orderItems.push({ product_id: p.id, name: p.name, unit_price_cents: unit, qty, options, sku: l.variant?.sku || null });
     }
     if (soldOut.length) return json({ error: "Not enough stock: " + soldOut.join(", ") + ". Please update your cart.", sold_out: soldOut }, 409);
     if (lineItems.length === 0) return json({ error: "No valid items in cart" }, 400);
