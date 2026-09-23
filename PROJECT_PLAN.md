@@ -1,13 +1,13 @@
 # Infinite Box — Project Plan (living roadmap)
 
-Last updated: 2026-09-21 · Source of truth for phases and tasks. Session history lives in
+Last updated: 2026-09-23 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
 [HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md),
-[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md). How the system is built (four-layer architecture review) lives in
+[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
-## Where we are now (as of 2026-09-21)
+## Where we are now (as of 2026-09-23)
 
 **Overall: ~97% to a launchable v1.** The store works end-to-end locally including test-mode
 payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages,
@@ -17,8 +17,8 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Area | Status |
 |---|---|
 | Static site design (14 pages, dark theme, design tokens) | ✅ Done |
-| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 15 migrations | ✅ Done, advisor clean |
-| Product options / variants (admin-defined groups → picker on product page → cart/checkout/orders/emails) | ✅ Done 2026-09-21 (v1: same price, shared stock; colour groups render as swatches) |
+| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 16 migrations | ✅ Done, advisor clean |
+| Product options / variants (admin-defined groups → picker on product page → cart/checkout/orders/emails) | ✅ **v2 done 2026-09-23 (Handover #10)**: Shopee-style admin editor (up to 3 groups, a price/stock/SKU row per combination, Apply to all); `products.variants` (migration 0016); range price ฿279 – ฿299 on cards; per-variant stock enforced in cart, checkout (v12) and `decrement_order_stock`. Colour groups render as swatches. No per-variant photos |
 | **Currency: THB** (switched 2026-09-21, Handover #8) — `*_cents` = satang, ฿ everywhere, Stripe `thb`; shipping ฿50 flat, **free from ฿800** (`store_settings`) | ✅ Done |
 | Live product catalogue from DB (index/shop/product/cart) | ✅ Done |
 | Cart (localStorage) | ✅ Done |
@@ -89,7 +89,7 @@ E-Commerce Web/
 │       └── img/                   icon-/logo- dark/light PNGs
 ├── supabase/                      ← backend source of truth (mirrors hosted project)
 │   ├── config.toml                project id, verify_jwt=false per function
-│   ├── migrations/*.sql           12 migrations (same versions as production)
+│   ├── migrations/*.sql           16 migrations (local filenames; production versions differ by timestamp)
 │   ├── functions/_shared/email.ts Resend helper (sendEmail/sendOwnerAlert + templates), bundled into each function on deploy
 │   └── functions/<name>/index.ts  submit-quote · submit-contact · create-checkout-session · stripe-webhook · get-order
 ├── docs/ARCHITECTURE.md           Four-layer architecture reference
@@ -103,7 +103,7 @@ Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
 ├── Auth: email/password (confirmation on, min length 8, SMTP via Resend from hello@infinite-box.co), Google OAuth · 2 users (owner chaopraya.khan@gmail.com = admin; khanleenine@gmail.com = customer)
-├── Edge Functions: submit-quote ✅ (v3, + emails) · submit-contact ✅ (v1) · create-checkout-session ✅ (v11: options validated per line, **401 unless signed in**, THB, ฿50 shipping / free from ฿800 via `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v10: ฿ emails with options, pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
+├── Edge Functions: submit-quote ✅ (v3, + emails) · submit-contact ✅ (v1) · create-checkout-session ✅ (v12: options validated per line, **price/stock/SKU per variant**, **401 unless signed in**, THB, ฿50 shipping / free from ฿800 via `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v10: ฿ emails with options, pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
 └── Email: Resend, domain infinite-box.co verified; secrets RESEND_API_KEY / OWNER_EMAIL / EMAIL_FROM
 
 Nav: Shop · Custom Orders · About · Account/Log in · Cart · Shop Now
@@ -162,6 +162,8 @@ Goal: clean state, everything known-good.
 Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces it server-side).
 - [x] `site/admin/index.html` — overview: to-fulfil / new-quote / unread counts, 30-day revenue, recent orders + quotes.
 - [x] `site/admin/products.html` — CRUD on `products` (name, slug, price, category, material, description, specs, icon, stock, sort, active, photo upload to `product-images`). Stock column added 2026-09-20 (migration 0010, `products.stock`, default 0; red badge at 0, amber at ≤5).
+- [x] **Gallery editor** (2026-09-23): Photos strip — add several at once, ← → reorder, × remove; first photo = `image_url`, all in order = `images`. Removed photos stay in the `product-images` bucket (the 4 original products use bundled files, not storage).
+- [x] **Variant table** (2026-09-23, migration 0016): options as up to 3 groups (one input per value); one row per combination with Price / Stock / SKU and an Apply-to-all bar; base Price/Stock fields hide and become min price / total stock.
 - [x] **Stock enforcement** (2026-09-20): shop cards show a "Sold out" pill + dimmed thumb; product page swaps Add-to-cart for a disabled "Sold out" button and clamps qty to stock ("Only N left" at ≤5); cart clamps quantities, flags sold-out rows, excludes them from the subtotal and disables Checkout; `create-checkout-session` v6 returns 409 with a readable message if any line exceeds stock (cart shows that message and refreshes); `stripe-webhook` v5 calls `decrement_order_stock` (migration 0011: SECURITY DEFINER, service_role only, idempotent via `orders.stock_applied_at`, floors at 0). Verified end-to-end in the preview + SQL.
 - [x] Real stock values — entered with the real catalogue 2026-09-21 (migration 0013). Adjust in Admin → Products as units sell/print.
 - [x] `site/admin/orders.html` — filter/search, drawer with items + shipping address + Stripe ids, status change (`paid → fulfilled` etc.).
@@ -194,12 +196,12 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 
 ### Backlog / ideas (not scheduled)
 - Product search.
-- Product variants — **v1 done 2026-09-21** (option groups, same price, shared stock). v2 ideas: per-variant price and stock, variant photos.
+- Product variants — v1 2026-09-21, **v2 done 2026-09-23** (per-variant price, stock, SKU). Remaining idea: variant photos.
 - Admin UI for editing `store_settings` (shipping fee, category list) instead of SQL.
 - Admin drag-to-reorder for products (the Sort field was removed from the product form 2026-09-21; `products.sort` is now auto-assigned).
 - Discount codes (Stripe Coupons).
 - Multi-currency — store is **THB** since 2026-09-21 (was USD). Stripe presents THB; confirm the Stripe account's settlement currency before live mode (Phase 13).
-- Admin UI for the product photo gallery (`products.images`, added 2026-09-21 — today only editable via SQL; the Photo upload sets the thumbnail `image_url`).
+- ~~Admin UI for the product photo gallery~~ — done 2026-09-23 (Handover #10): Photos strip in Admin → Products.
 - Fix the "BWM E90" typo in the BMW poster `1.png` (the store uses `2.png` instead).
 - PWA / offline cart, analytics (Plausible/GA4), reviews.
 
