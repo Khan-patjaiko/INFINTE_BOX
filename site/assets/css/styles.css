@@ -1012,3 +1012,31 @@ button { font-family: inherit; cursor: pointer; }
 .gallery-actions button:hover:not(:disabled), .gallery-actions button:focus-visible { background: hsl(0 0% 100% / 0.18); }
 .gallery-actions button:disabled { opacity: 0.3; cursor: default; }
 @media (max-width: 480px) { .gallery-item { width: 84px; height: 84px; } }
+
+/* Admin settings (store_settings editor) */
+.settings-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-4); max-width: 720px; }
+.settings-card { min-width: 0; background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: var(--radius); padding: var(--space-4); display: flex; flex-direction: column; gap: 16px; }
+.settings-card .field input { min-width: 0; width: 100%; }
+.settings-card h2 { font-size: 20px; font-weight: 700; margin: 0; }
+.settings-card .hint { font-size: 13px; color: hsl(var(--muted-foreground)); margin: 0; }
+.settings-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+.settings-preview { background: hsl(var(--muted)); border-radius: var(--radius-button); padding: 10px 12px; font-size: 14px; margin: 0; }
+.settings-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.settings-foot .hint { margin-right: auto; }
+.cat-list { display: flex; flex-direction: column; gap: 8px; }
+.cat-row { display: flex; align-items: center; gap: 6px; }
+.cat-row input, .cat-add input { flex: 1; min-width: 0; background: hsl(var(--background)); border: 1px solid hsl(var(--input)); border-radius: var(--radius-button); color: hsl(var(--foreground)); padding: 8px 12px; font-family: inherit; font-size: 14px; }
+.cat-row input:focus, .cat-add input:focus { outline: none; border-color: hsl(var(--ring)); }
+.cat-row input.is-invalid, .cat-add input.is-invalid { border-color: hsl(var(--destructive)); }
+.cat-count { font-size: 12px; color: hsl(var(--muted-foreground)); white-space: nowrap; min-width: 72px; text-align: right; }
+.cat-btn { background: none; border: 1px solid hsl(var(--border)); border-radius: var(--radius-button); color: hsl(var(--foreground)); width: 32px; height: 32px; cursor: pointer; font-size: 14px; flex-shrink: 0; }
+.cat-btn:hover:not(:disabled) { border-color: hsl(var(--primary)); }
+.cat-btn.remove:hover { color: hsl(var(--destructive)); border-color: hsl(var(--destructive)); }
+.cat-btn:disabled { opacity: 0.3; cursor: default; }
+.cat-add { display: flex; gap: 8px; }
+@media (max-width: 480px) {
+  .settings-row { grid-template-columns: minmax(0, 1fr); }
+  .cat-count { min-width: 0; }
+  .cat-count-word { display: none; }
+  .cat-btn { width: 28px; }
+}

@@ -8,7 +8,8 @@
     { href: "orders.html", label: "Orders" },
     { href: "quotes.html", label: "Quotes" },
     { href: "messages.html", label: "Messages" },
-    { href: "products.html", label: "Products" }
+    { href: "products.html", label: "Products" },
+    { href: "settings.html", label: "Settings" }
   ];
 
   function db() { return window.IBDB; }

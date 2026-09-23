@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Settings — Infinite Box Admin</title>
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="admin-page">
+    <div class="container">
+      <div class="admin-head">
+        <div><p class="eyebrow">Admin</p><h1>Settings</h1></div>
+      </div>
+
+      <div class="settings-grid">
+        <form class="settings-card" id="ship-form" novalidate>
+          <h2>Shipping</h2>
+          <p class="hint">One flat fee per order. Cart and checkout use these values straight away.</p>
+          <div class="settings-row">
+            <div class="field"><label for="s-fee">Shipping fee (฿)</label><input type="number" id="s-fee" min="0" step="1" inputmode="numeric" required></div>
+            <div class="field"><label for="s-free">Free shipping from (฿)</label><input type="number" id="s-free" min="0" step="1" inputmode="numeric" placeholder="0 = never free"></div>
+          </div>
+          <p class="settings-preview" id="s-preview">Loading…</p>
+          <div class="settings-foot">
+            <p class="hint" id="s-saved"></p>
+            <button type="submit" class="btn btn-primary btn-sm" id="s-save" disabled>Save shipping</button>
+          </div>
+        </form>
+
+        <form class="settings-card" id="cat-form" novalidate>
+          <h2>Product categories</h2>
+          <p class="hint">Shown as filter chips on the Shop page, in this order, and suggested when you edit a product. Renaming a category also renames it on its products.</p>
+          <div class="cat-list" id="cat-list"><p class="hint">Loading…</p></div>
+          <div class="cat-add">
+            <input type="text" id="cat-new" placeholder="New category" maxlength="40" aria-label="New category">
+            <button type="button" class="btn btn-outline btn-sm" id="cat-add">Add</button>
+          </div>
+          <div class="settings-foot">
+            <p class="hint" id="c-saved"></p>
+            <button type="submit" class="btn btn-primary btn-sm" id="c-save" disabled>Save categories</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/supabase-client.js"></script>
+<script src="../assets/js/products.js"></script>
+<script src="../assets/js/auth.js"></script>
+<script src="../assets/js/admin.js"></script>
+<script>
+  // Editor for store_settings (migrations 0008 / 0012 / 0013). RLS lets admins write;
+  // cart.html and create-checkout-session read the shipping rows on every request.
+  (function () {
+    var A = window.IBAdmin;
+    function $(id) { return document.getElementById(id); }
+    function baht(n) { return "฿" + Number(n).toLocaleString("en-US"); }
+    function savedText(iso) { return iso ? "Last saved " + A.date(iso, true) : ""; }
+
+    // ---------- Shipping ----------
+    function readBaht(input) {
+      var raw = input.value.trim();
+      if (raw === "") return null;
+      var n = Number(raw);
+      return Number.isInteger(n) && n >= 0 ? n : NaN;
+    }
+
+    function renderPreview() {
+      var fee = readBaht($("s-fee"));
+      var free = readBaht($("s-free"));
+      var p = $("s-preview");
+      if (fee === null || isNaN(fee)) { p.textContent = "Enter a shipping fee (a whole number, 0 or more)."; return; }
+      if (isNaN(free)) { p.textContent = "Free-shipping amount must be a whole number, 0 or more."; return; }
+      if (!free) p.textContent = fee ? "Every order pays " + baht(fee) + " shipping." : "Shipping is free on every order.";
+      else p.textContent = "Orders under " + baht(free) + " pay " + baht(fee) + " shipping; " + baht(free) + " and over ship free.";
+    }
+
+    async function saveShipping(e) {
+      e.preventDefault();
+      var fee = readBaht($("s-fee"));
+      var free = readBaht($("s-free"));
+      $("s-fee").classList.toggle("is-invalid", fee === null || isNaN(fee));
+      $("s-free").classList.toggle("is-invalid", isNaN(free));
+      if (fee === null || isNaN(fee) || isNaN(free)) { A.toast("Check the highlighted field.", true); return; }
+      var now = new Date().toISOString();
+      $("s-save").disabled = true;
+      var res = await window.IBDB.from("store_settings").upsert([
+        { key: "shipping_cents", value: fee * 100, updated_at: now },
+        { key: "free_shipping_threshold_cents", value: (free || 0) * 100, updated_at: now }
+      ]);
+      $("s-save").disabled = false;
+      if (res.error) { console.error(res.error); A.toast("Couldn't save shipping.", true); return; }
+      $("s-free").value = free || 0;
+      $("s-saved").textContent = savedText(now);
+      A.toast("Shipping saved.");
+    }
+
+    // ---------- Categories ----------
+    // rows: [{ orig: name as loaded (null for new), name: current text }]
+    var rows = [];
+    var counts = {};
+
+    function renderCats() {
+      var list = $("cat-list");
+      if (!rows.length) { list.innerHTML = '<p class="hint">No categories yet. Add one below.</p>'; return; }
+      list.innerHTML = rows.map(function (r, i) {
+        var n = r.orig ? (counts[r.orig] || 0) : 0;
+        return '<div class="cat-row" data-i="' + i + '">' +
+          '<input type="text" maxlength="40" value="' + ibEscape(r.name) + '" aria-label="Category ' + (i + 1) + '">' +
+          '<span class="cat-count"' + (n ? ' title="Used by ' + n + (n === 1 ? ' product"' : ' products"') : "") + '>' +
+            (n ? n + '<span class="cat-count-word">' + (n === 1 ? " product" : " products") + '</span>' : "") + '</span>' +
+          '<button type="button" class="cat-btn" data-act="up" aria-label="Move up"' + (i === 0 ? " disabled" : "") + '>↑</button>' +
+          '<button type="button" class="cat-btn" data-act="down" aria-label="Move down"' + (i === rows.length - 1 ? " disabled" : "") + '>↓</button>' +
+          '<button type="button" class="cat-btn remove" data-act="remove" aria-label="Remove">×</button>' +
+        '</div>';
+      }).join("");
+    }
+
+    function addCat() {
+      var input = $("cat-new");
+      var name = input.value.trim();
+      var dup = rows.some(function (r) { return r.name.trim().toLowerCase() === name.toLowerCase(); });
+      input.classList.toggle("is-invalid", !name || dup);
+      if (!name) return;
+      if (dup) { A.toast("“" + name + "” is already in the list.", true); return; }
+      rows.push({ orig: null, name: name });
+      input.value = "";
+      renderCats();
+    }
+
+    async function saveCats(e) {
+      e.preventDefault();
+      // Validate: no blanks, no case-insensitive duplicates.
+      var seen = {};
+      var bad = false;
+      document.querySelectorAll("#cat-list .cat-row").forEach(function (el, i) {
+        var key = rows[i].name.trim().toLowerCase();
+        var invalid = !key || seen[key];
+        seen[key] = true;
+        el.querySelector("input").classList.toggle("is-invalid", !!invalid);
+        if (invalid) bad = true;
+      });
+      if (bad) { A.toast("Categories can't be blank or repeated.", true); return; }
+
+      // Removed categories that products still use: confirm first.
+      var kept = rows.map(function (r) { return r.orig; });
+      var removedInUse = originals.filter(function (o) { return kept.indexOf(o) === -1 && counts[o]; });
+      for (var i = 0; i < removedInUse.length; i++) {
+        var o = removedInUse[i];
+        if (!confirm(counts[o] + " product(s) still use “" + o + "”. They keep the label, but it leaves this list. Remove it?")) return;
+      }
+
+      $("c-save").disabled = true;
+      var names = rows.map(function (r) { return r.name.trim(); });
+      var now = new Date().toISOString();
+      var res = await window.IBDB.from("store_settings").upsert({ key: "product_categories", value: names, updated_at: now });
+      if (res.error) { $("c-save").disabled = false; console.error(res.error); A.toast("Couldn't save categories.", true); return; }
+
+      // Renames carry over to the products that used the old name.
+      var renamed = [];
+      for (var j = 0; j < rows.length; j++) {
+        var r = rows[j];
+        var name = r.name.trim();
+        if (r.orig && name !== r.orig && counts[r.orig]) {
+          var up = await window.IBDB.from("products").update({ category: name }).eq("category", r.orig).select("id");
+          if (up.error) { console.error(up.error); A.toast("Saved the list, but couldn't rename “" + r.orig + "” on its products.", true); await loadCats(); return; }
+          renamed.push("“" + r.orig + "” → “" + name + "” on " + (up.data || []).length);
+        }
+      }
+      await loadCats();
+      A.toast(renamed.length ? "Saved. Renamed " + renamed.join(", ") + " product(s)." : "Categories saved.");
+    }
+
+    var originals = [];
+    async function loadCats() {
+      var r = await Promise.all([
+        window.IBDB.from("store_settings").select("value,updated_at").eq("key", "product_categories").maybeSingle(),
+        window.IBDB.from("products").select("category")
+      ]);
+      if (r[0].error) throw r[0].error;
+      if (r[1].error) throw r[1].error;
+      originals = (r[0].data && Array.isArray(r[0].data.value)) ? r[0].data.value.slice() : [];
+      rows = originals.map(function (n) { return { orig: n, name: n }; });
+      counts = {};
+      (r[1].data || []).forEach(function (p) { if (p.category) counts[p.category] = (counts[p.category] || 0) + 1; });
+      $("c-saved").textContent = savedText(r[0].data && r[0].data.updated_at);
+      $("c-save").disabled = false;
+      renderCats();
+    }
+
+    async function loadShipping() {
+      var res = await window.IBDB.from("store_settings").select("key,value,updated_at").in("key", ["shipping_cents", "free_shipping_threshold_cents"]);
+      if (res.error) throw res.error;
+      var latest = null;
+      (res.data || []).forEach(function (row) {
+        if (row.key === "shipping_cents") $("s-fee").value = row.value / 100;
+        if (row.key === "free_shipping_threshold_cents") $("s-free").value = row.value / 100;
+        if (!latest || row.updated_at > latest) latest = row.updated_at;
+      });
+      $("s-saved").textContent = savedText(latest);
+      $("s-save").disabled = false;
+      renderPreview();
+    }
+
+    $("s-fee").addEventListener("input", renderPreview);
+    $("s-free").addEventListener("input", renderPreview);
+    $("ship-form").addEventListener("submit", saveShipping);
+    $("cat-form").addEventListener("submit", saveCats);
+    $("cat-add").addEventListener("click", addCat);
+    $("cat-new").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); addCat(); } });
+    $("cat-list").addEventListener("input", function (e) {
+      var row = e.target.closest(".cat-row");
+      if (row) { rows[+row.dataset.i].name = e.target.value; e.target.classList.remove("is-invalid"); }
+    });
+    $("cat-list").addEventListener("keydown", function (e) { if (e.key === "Enter") e.preventDefault(); });
+    $("cat-list").addEventListener("click", function (e) {
+      var btn = e.target.closest(".cat-btn");
+      if (!btn) return;
+      var i = +btn.closest(".cat-row").dataset.i;
+      var act = btn.dataset.act;
+      if (act === "remove") rows.splice(i, 1);
+      else {
+        var j = act === "up" ? i - 1 : i + 1;
+        if (j < 0 || j >= rows.length) return;
+        var t = rows[i]; rows[i] = rows[j]; rows[j] = t;
+      }
+      renderCats();
+    });
+
+    A.requireAdmin().then(function (user) {
+      if (!user) return;
+      loadShipping().catch(function (e) {
+        console.error("Shipping settings load failed", e);
+        $("s-preview").textContent = "Couldn't load shipping settings. Refresh to retry.";
+      });
+      loadCats().catch(function (e) {
+        console.error("Categories load failed", e);
+        $("cat-list").innerHTML = '<p class="hint">Couldn\'t load categories. Refresh to retry.</p>';
+      });
+    });
+  })();
+</script>
+</body>
+</html>
