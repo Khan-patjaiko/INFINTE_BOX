@@ -1,7 +1,7 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import Stripe from "https://esm.sh/stripe@17.7.0?target=denonext";
 import {
-  addressLines, button, esc, kv, layout, money, sendEmail, sendOwnerAlert, SITE_URL,
+  addressLines, button, esc, kv, layout, money, OWNER_EMAIL, sendEmail, sendOwnerAlert, SITE_URL,
 } from "../_shared/email.ts";
 
 const cryptoProvider = Stripe.createSubtleCryptoProvider();
@@ -121,6 +121,7 @@ async function sendOrderEmails(
     await sendEmail({
       to: email,
       subject: `Order ${id8} confirmed — Infinite Box`,
+      replyTo: OWNER_EMAIL ?? undefined,
       html: layout(`Thanks for your order`, `
         <p style="margin:0 0 8px;font-size:15px;">We've received your payment for order <strong>${id8}</strong> and will start printing shortly. You'll hear from us again when it ships.</p>
         ${summary}${addrBlock}

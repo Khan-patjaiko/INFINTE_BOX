@@ -1,5 +1,5 @@
 import { createClient } from "jsr:@supabase/supabase-js@2";
-import { button, esc, kv, layout, nl2br, sendEmail, sendOwnerAlert, SITE_URL } from "../_shared/email.ts";
+import { button, esc, kv, layout, nl2br, OWNER_EMAIL, sendEmail, sendOwnerAlert, SITE_URL } from "../_shared/email.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -89,6 +89,7 @@ Deno.serve(async (req) => {
     await sendEmail({
       to: email,
       subject: "We received your custom order request — Infinite Box",
+      replyTo: OWNER_EMAIL ?? undefined,
       html: layout(`Thanks, ${name}`, `
         <p style="margin:0 0 8px;font-size:15px;">We've received your custom order request (ref <strong>${id8}</strong>) and will review it and reply with a quote, usually within 2 business days.</p>
         ${summary}
