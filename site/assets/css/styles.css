@@ -784,6 +784,22 @@ button { font-family: inherit; cursor: pointer; }
   text-align: center;
   color: hsl(var(--muted-foreground));
   font-size: 13px;
+  display: block;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.field-file:hover, .field-file.is-dragover { border-color: hsl(var(--primary)); background: hsl(var(--primary) / 0.05); }
+.field-file:focus-within { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+.field-file.has-file { border-style: solid; }
+.field-file-name { margin-top: 12px; color: hsl(var(--foreground)); word-break: break-all; }
+.field-file-name:empty { display: none; }
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
 .form-note { font-size: 13px; color: hsl(var(--muted-foreground)); margin-top: 8px; }
 .field input.is-invalid { border-color: hsl(var(--destructive)); }

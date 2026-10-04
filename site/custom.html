@@ -33,11 +33,12 @@
     <div class="container">
       <div style="display:grid;grid-template-columns:1fr;gap:64px;" id="custom-layout">
         <form class="form-grid" id="custom-form" onsubmit="return handleCustomSubmit(event)">
-          <div class="field-file">
+          <label class="field-file" id="file-drop" for="design-file">
             <p style="margin-bottom:8px;font-weight:600;color:hsl(var(--foreground));">Drop your file here or click to browse</p>
             <p>STL, STEP, OBJ, or images — max 50MB</p>
-            <input type="file" id="design-file" style="margin-top:16px;">
-          </div>
+            <p class="field-file-name" id="file-name" aria-live="polite"></p>
+            <input type="file" id="design-file" class="visually-hidden">
+          </label>
 
           <div class="form-grid two-col">
             <div class="field">
@@ -117,6 +118,31 @@
 <script src="assets/js/auth.js"></script>
 <script src="assets/js/partials.js"></script>
 <script>
+  // Drop zone: click opens the picker (label), drag-and-drop fills the same input, name shows below.
+  (function () {
+    var drop = document.getElementById("file-drop");
+    var input = document.getElementById("design-file");
+    var nameEl = document.getElementById("file-name");
+    function showName() {
+      var f = input.files[0];
+      var size = f && (f.size < 1048576 ? Math.max(1, Math.round(f.size / 1024)) + " KB" : (f.size / 1048576).toFixed(1) + " MB");
+      nameEl.textContent = f ? "Selected: " + f.name + " (" + size + ")" : "";
+      drop.classList.toggle("has-file", !!f);
+    }
+    input.addEventListener("change", showName);
+    ["dragenter", "dragover"].forEach(function (t) {
+      drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add("is-dragover"); });
+    });
+    ["dragleave", "drop"].forEach(function (t) {
+      drop.addEventListener(t, function () { drop.classList.remove("is-dragover"); });
+    });
+    drop.addEventListener("drop", function (e) {
+      e.preventDefault();
+      if (e.dataTransfer.files.length) { input.files = e.dataTransfer.files; showName(); }
+    });
+    document.getElementById("custom-form").addEventListener("reset", function () { setTimeout(showName); });
+  })();
+
   async function handleCustomSubmit(e) {
     e.preventDefault();
     var btn = document.getElementById("custom-submit");
