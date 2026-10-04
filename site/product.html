@@ -73,7 +73,8 @@
         };
         var specsHtml = Object.keys(p.specs).map(function (k) {
           var lines = String(p.specs[k]).split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
-          return '<div class="pd-meta-row"><span>' + ibEscape(k) + '</span><span>' + (lines.length > 1 ? listHtml(lines) : ibEscape(lines[0] || '')) + '</span></div>';
+          var isList = lines.length > 1;
+          return '<div class="pd-meta-row' + (isList ? ' pd-meta-stack' : '') + '"><span>' + ibEscape(k) + '</span><span>' + (isList ? listHtml(lines) : ibEscape(lines[0] || '')) + '</span></div>';
         }).join('');
         // Description: plain lines stay as text; lines starting with "- " become bullets.
         var descLines = String(p.description || '').split(/\r?\n/);

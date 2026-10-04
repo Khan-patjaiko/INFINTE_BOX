@@ -649,6 +649,8 @@ button { font-family: inherit; cursor: pointer; }
 .pd-meta-row span:first-child { flex: none; width: 140px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
 .pd-meta-row span:last-child { text-align: left; }
 .pd-meta-row ul { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+/* Multi-line specs (lists) always sit under their label; single values do so only on phones */
+.pd-meta-row.pd-meta-stack { flex-direction: column; gap: 8px; }
 @media (max-width: 480px) { .pd-meta-row { flex-direction: column; gap: 6px; } }
 .pd-meta-row li::before, .pd-desc-list li::before { content: "•"; color: hsl(var(--primary)); margin-right: 8px; }
 .pd-desc-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0 0; }
