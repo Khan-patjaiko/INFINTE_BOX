@@ -24,6 +24,10 @@ Session #13. Started from Handover #12. Focus: **legal pages ready for launch** 
 | 2 | `60b8678` | FAQ "Do you ship internationally?" now says Thailand only. FAQ defect window changed from 14 to 7 days. The home strip "Ships worldwide" now reads "Ships across Thailand". Sitemap `lastmod` bumped. |
 | 3 | `bf8de52` | `create-checkout-session` **v13**: Stripe accepts **TH** shipping addresses only. The deployed v12 matched the repo before the edit. Smoke test: OPTIONS 200, GET 405, anon POST 401. |
 
+| 4 | `7edd14c` | Privacy §10 renamed **"Younger customers"**, worded for all ages: everyone may browse, and under-20s need a parent's or guardian's consent to create an account or order (PDPA §20 + Civil Code minors). Kept rather than removed at the owner's request. |
+| 5 | `01dea62` | Product page spec values are **left-aligned** (this also affects the Contact page info box). Below 480px each label sits above its value. **Mobile overflow fix:** `.product-detail > * { min-width: 0 }`. The Mazda 6-photo thumbnail strip had widened the page to 496px at 375px; it now scrolls inside its column. |
+| 6 | `0e5ac93` | List-type specs (several values separated by ` \| ` in Admin → Products, e.g. "Compatible with") always sit **under** their label (`.pd-meta-stack`). Single values stay beside the label on desktop. |
+
 Verified in the preview: 0 `.placeholder` spans on both legal pages, no "worldwide" left in the pages, no console errors.
 
 ## Open items for the owner
