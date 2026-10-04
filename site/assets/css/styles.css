@@ -576,6 +576,7 @@ button { font-family: inherit; cursor: pointer; }
 .footer-brand a.logo-lockup img { height: 24px; width: auto; }
 .footer-brand a.logo-lockup .wordmark { font-family: var(--font-heading); font-weight: 700; font-size: 16px; letter-spacing: 0.02em; color: hsl(var(--foreground)); }
 .footer-brand p { font-size: 14px; line-height: 1.6; color: hsl(var(--muted-foreground)); max-width: 320px; }
+.footer-brand p + p { margin-top: 8px; }
 .footer-brand .tag { margin-top: 16px; font-size: 12px; color: hsl(var(--muted-foreground)); }
 .footer-col p.head {
   font-size: 12px;
