@@ -118,11 +118,16 @@ The fee is per order, whatever the weight. If DHL charges much more for heavy ca
   - The orphan storage image.
   - The ImprovMX badge and a test mail.
 
+## Wrap-up
+
+- `main` pushed to GitHub at the end of session #15 (`aefb2ad..8226e9a`), so all Phase 14 work is on GitHub.
+- The owner signed up for a DHL account and will enter the real zone fees before launch day.
+
 ## Next session (#16): launch day
 
 Same as Handover #14, plus the DHL fees:
-1. Confirm the real DHL fees are saved (`intl_fees_placeholder` = false).
-2. `push main`, then run the keep-awake workflow once (GitHub → Actions) and confirm it is green.
+1. Confirm the real DHL fees are saved (`intl_fees_placeholder` = false). If not yet, launch can still proceed only once the owner has entered them, since the placeholder fees are guesses.
+2. Run the keep-awake workflow once (GitHub → Actions) and confirm it is green. Push any new commits first.
 3. Zip the `site/` contents. The owner uploads them to Hostinger `public_html`, deleting the coming-soon `index.html` and `assets/` first.
 4. Supabase Auth Site URL → `https://infinite-box.co`; Google Auth Platform → Publish app.
 5. Live re-test:
