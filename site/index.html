@@ -34,17 +34,18 @@
           <a class="btn btn-outline" href="custom.html">Custom order</a>
         </div>
       </div>
-      <div class="hero-media">
-        <svg class="art" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-          <rect width="400" height="500" fill="hsl(0 0% 8%)"/>
-          <g opacity="0.9">
-            <rect x="90" y="150" width="220" height="220" rx="10" fill="none" stroke="#ff5a1f" stroke-width="2"/>
-            <circle cx="200" cy="260" r="60" fill="none" stroke="#ffd400" stroke-width="2"/>
-            <path d="M120 380 L280 380 L260 430 L140 430 Z" fill="none" stroke="#00a3ff" stroke-width="2"/>
-            <circle cx="200" cy="260" r="6" fill="#ff5a1f"/>
-          </g>
-        </svg>
-        <div class="fade"></div>
+      <div class="hero-media" id="hero-slides" aria-roledescription="carousel" aria-label="Infinite Box studio photos">
+        <div class="hero-frame">
+        <img class="hero-slide is-active" src="assets/img/home/phone-mount-dash-1080.jpg" width="1080" height="1080" fetchpriority="high"
+             alt="Infinite Box 3D-printed phone mount holding a phone beside a Mazda's 7-inch screen while driving">
+        <img class="hero-slide" src="assets/img/home/reverse-engineer-1080.jpg" width="1080" height="1080" loading="lazy"
+             alt="Scanning a car's engine bay to reverse engineer a new part">
+        <img class="hero-slide" src="assets/img/home/prototype-to-product-1080.jpg" width="1080" height="1080" loading="lazy"
+             alt="A red prototype panel in a Mazda engine bay above the finished black part">
+        <img class="hero-slide" src="assets/img/home/w124-cup-holder-tumbler-1080.jpg" width="1080" height="1080" loading="lazy"
+             alt="Mercedes W124 cup holder insert holding a tumbler in the centre console">
+        </div>
+        <div class="hero-dots" role="group" aria-label="Choose a photo"></div>
       </div>
     </div>
   </section>
@@ -72,6 +73,33 @@
         </a>
       </div>
       <div class="product-grid" id="home-product-grid"></div>
+    </div>
+  </section>
+
+  <section class="section border-top">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">From the studio</p>
+          <h2>Our work</h2>
+        </div>
+        <a class="view-all" href="custom.html">Start a custom order
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M1 7h12M8 2l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </div>
+      <ul class="work-grid">
+        <li><img src="assets/img/home/phone-mount-dash-600.jpg" width="600" height="600" loading="lazy" alt="Phone mount clipped beside a Mazda's 7-inch screen"></li>
+        <li><img src="assets/img/home/mazda-screen-mount-600.jpg" width="600" height="600" loading="lazy" alt="Mazda screen mount fitted to the dashboard display"></li>
+        <li><img src="assets/img/home/w201-cup-holder-600.jpg" width="600" height="600" loading="lazy" alt="Mercedes W201 190E double cup holder in a beige console"></li>
+        <li><img src="assets/img/home/w124-cup-holder-tumbler-600.jpg" width="600" height="600" loading="lazy" alt="Mercedes W124 cup holder holding a tumbler"></li>
+        <li><img src="assets/img/home/cup-holder-tray-600.jpg" width="600" height="600" loading="lazy" alt="Black 3D-printed cup holder tray on a white background"></li>
+        <li><img src="assets/img/home/bmw-e90-insert-600.jpg" width="600" height="600" loading="lazy" alt="BMW E90 centre console cup holder insert"></li>
+        <li><img src="assets/img/home/bmw-e90-insert-bottle-600.jpg" width="600" height="600" loading="lazy" alt="BMW E90 console insert holding a water bottle and a card"></li>
+        <li><img src="assets/img/home/reverse-engineer-600.jpg" width="600" height="600" loading="lazy" alt="Scanning a car's engine bay to reverse engineer a part"></li>
+        <li><img src="assets/img/home/prototype-to-product-600.jpg" width="600" height="600" loading="lazy" alt="Engine bay panel shown as a red prototype and as the finished part"></li>
+        <li><img src="assets/img/home/pig-keychain-600.jpg" width="600" height="600" loading="lazy" alt="Custom pig-in-a-pot keychain printed with a name"></li>
+        <li><img src="assets/img/home/laptop-stand-600.jpg" width="600" height="600" loading="lazy" alt="White vertical laptop stand on a desk"></li>
+      </ul>
     </div>
   </section>
 
@@ -141,6 +169,47 @@
     }
     ibOnRetry(grid, render);
     render();
+  })();
+
+  // Hero slideshow: crossfade every 5s; pauses on hover/focus, hidden tab, reduced motion.
+  (function () {
+    var box = document.getElementById("hero-slides");
+    var slides = box.querySelectorAll(".hero-slide");
+    var dotsBox = box.querySelector(".hero-dots");
+    var current = 0, timer = null, paused = false;
+    var still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var dots = Array.prototype.map.call(slides, function (img, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "hero-dot";
+      b.setAttribute("aria-label", "Photo " + (i + 1) + " of " + slides.length);
+      b.addEventListener("click", function () { show(i); restart(); });
+      dotsBox.appendChild(b);
+      return b;
+    });
+    function show(i) {
+      slides[current].classList.remove("is-active");
+      dots[current].removeAttribute("aria-current");
+      current = (i + slides.length) % slides.length;
+      slides[current].loading = "eager";
+      slides[current].classList.add("is-active");
+      dots[current].setAttribute("aria-current", "true");
+    }
+    function restart() {
+      clearInterval(timer);
+      if (!still && !paused && !document.hidden) timer = setInterval(function () { show(current + 1); }, 5000);
+    }
+    box.addEventListener("mouseenter", function () { paused = true; restart(); });
+    box.addEventListener("mouseleave", function () { paused = false; restart(); });
+    box.addEventListener("focusin", function () { paused = true; restart(); });
+    box.addEventListener("focusout", function () { paused = false; restart(); });
+    document.addEventListener("visibilitychange", restart);
+    // Warm the next slides once the page has loaded so the first fade isn't blank.
+    window.addEventListener("load", function () {
+      Array.prototype.forEach.call(slides, function (img) { img.loading = "eager"; });
+    });
+    dots[0].setAttribute("aria-current", "true");
+    restart();
   })();
 </script>
 </body>
