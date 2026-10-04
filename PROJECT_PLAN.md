@@ -1,18 +1,18 @@
 # Infinite Box — Project Plan (living roadmap)
 
-Last updated: 2026-09-23 · Source of truth for phases and tasks. Session history lives in
+Last updated: 2026-10-04 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
 [HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md),
-[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md), [HANDOVER_11.md](HANDOVER_11.md). How the system is built (four-layer architecture review) lives in
+[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md), [HANDOVER_11.md](HANDOVER_11.md), [HANDOVER_12.md](HANDOVER_12.md). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
-## Where we are now (as of 2026-09-23)
+## Where we are now (as of 2026-10-04)
 
 **Overall: ~97% to a launchable v1.** The store works end-to-end locally including test-mode
 payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages,
 SEO/share metadata, **transactional email (Resend, live)**, **password reset** and **profile
-edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles.
+edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). Launch now waits only on the legal-page details.
 
 | Area | Status |
 |---|---|
@@ -32,7 +32,9 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
 | Hosting | ✅ **Coming-soon page live at `https://infinite-box.co`** (2026-09-21, Handover #9). Hostinger website `infinite-box.co` (Premium, Malaysia DC), DNS via GoDaddy **A record** `145.79.26.182` + `CNAME www`. Store `site/` **not yet uploaded** |
-| Git | ✅ `main` in sync with `origin/main` through Handover #10; Handover #11 commits are local until "push main" |
+| Git | ✅ `main` in sync with `origin/main` through Handover #10; Handover #11–#12 commits are local until "push main" |
+| Supabase free-plan auto-pause | ⚠️ The project **paused after 11 idle days** (found 2026-10-04, restored intact). `.github/workflows/keep-supabase-awake.yml` pings it every 3 days and **becomes active once pushed** |
+| Inbound mail `hello@infinite-box.co` | ✅ 2026-10-04: ImprovMX forwarding → `khanleenine@gmail.com` (GoDaddy MX `mx1`/`mx2.improvmx.com`); the customer receipt and quote ack set Reply-To = `OWNER_EMAIL` |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
 | Real product catalogue | ✅ 4 real products live (2026-09-21): W201 190E cup holder ฿399, Mazda 7" phone mount ฿279–฿359 (owner's real options since 2026-09-23: Color Black/Red × Style Clamp ฿329 / Magnet ฿359 / Mount Only ฿279, stock 2 each), W124 cup holder ฿599, BMW E90 console insert ฿259 — with stock and a 2–6 photo gallery each (`products.images`, `site/assets/img/products/`). Placeholders and the test order deleted. |
 | Admin UI (`site/admin/` — overview, orders, quotes, messages, products, **settings**) | ✅ Done 2026-09-20; Settings page added 2026-09-23 (Handover #11). Sole admin: owner `chaopraya.khan@gmail.com` |
@@ -46,7 +48,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Email notifications (order receipt + owner alert, quote ack + alert, contact alert) | ✅ **Live 2026-09-21** via Resend — domain `infinite-box.co` verified, from `hello@infinite-box.co`, alerts to `OWNER_EMAIL`; all three flows verified with real deliveries |
 | Coming-soon page email capture | ❌ localStorage only, not a real list |
 
-**Immediate blockers on the user side:** (1) fill the placeholders in `privacy.html` / `terms.html`, (2) upload `site/` to Hostinger
+**Immediate blockers on the user side:** (1) give the legal name + address (Thailand / PDPA confirmed) to fill the placeholders in `privacy.html` / `terms.html`, (2) upload `site/` to Hostinger
 `public_html` (domain + HTTPS already done — the coming-soon page is there now), (6) publish the Google OAuth app (Testing → In production) on launch day.
 
 ---
@@ -104,7 +106,7 @@ Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
 ├── Auth: email/password (confirmation on, min length 8, SMTP via Resend from hello@infinite-box.co), Google OAuth · 2 users (owner chaopraya.khan@gmail.com = admin; khanleenine@gmail.com = customer)
-├── Edge Functions: submit-quote ✅ (v3, + emails) · submit-contact ✅ (v1) · create-checkout-session ✅ (v12: options validated per line, **price/stock/SKU per variant**, **401 unless signed in**, THB, ฿50 shipping / free from ฿800 via `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v10: ฿ emails with options, pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
+├── Edge Functions: submit-quote ✅ (v6, + emails, ack Reply-To = owner) · submit-contact ✅ (v1) · create-checkout-session ✅ (v12: options validated per line, **price/stock/SKU per variant**, **401 unless signed in**, THB, ฿50 shipping / free from ฿800 via `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v11 since 2026-10-04: receipt Reply-To = owner; v10: ฿ emails with options, pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
 └── Email: Resend, domain infinite-box.co verified; secrets RESEND_API_KEY / OWNER_EMAIL / EMAIL_FROM
 
 Nav: Shop · Custom Orders · About · Account/Log in · Cart · Shop Now
@@ -144,6 +146,8 @@ Goal: clean state, everything known-good.
 - One further test order (`9acb36b4…`, "Custom Enclosure", $30.50, `paid`) was placed by the user directly while testing the preview on 2026-09-19 — left in the database deliberately (not Claude's to delete). Clear it manually before launch, or ask Claude to.
 
 ### Phase 9 — Deployment to Hostinger (Hostinger hosting purchased; no other blocker)
+- [x] Delete test order `127c7b4e`: done 2026-10-04. The owner still needs to delete the orphan image `w201-190e-cup-holder-1790177065026.png` in the Storage dashboard (SQL delete is blocked).
+- [x] Keep-awake GitHub Action + `hello@` forwarding + Reply-To on customer emails: 2026-10-04 (Handover #12).
 - [ ] Upload `site/` contents to `public_html` (Hostinger File Manager — extract at the root, not into a subfolder; delete the coming-soon `index.html`/`assets` first). No build step.
 - [x] Point the GoDaddy DNS for `infinite-box.co` at Hostinger — done 2026-09-21 via **A record `@` → `145.79.26.182`** (`CNAME www → infinite-box.co` already existed). **Never switch to Hostinger nameservers**: the Resend DKIM/SPF/`send`/`rsend` records live in GoDaddy DNS and would be lost. Let's Encrypt installed automatically, Force HTTPS on, `http://` → 301 `https://`, `www` works.
 - [~] Supabase → Auth → URL Configuration: Redirect URLs now `http://localhost:8790/**` + `https://infinite-box.co/**` (2026-09-21). **Launch day:** change Site URL from `http://localhost:8790` to `https://infinite-box.co`.
@@ -194,7 +198,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] Lighthouse pass — done 2026-09-21: home desktop 98/95/100/100. Fixed footer contrast, qty `aria-label`, sized logos, CLS min-heights. Open: white-on-orange buttons are 3.06:1 (brand decision).
 - [x] Error/empty states for every DB read — done 2026-09-21: Retry button on index/shop/product/cart, empty-catalogue message, product not-found state, admin overview failure rows, admin-check network error distinguished from "not admin".
 - [ ] Stripe → **live mode** keys; swap secrets; final live purchase test with a real card + refund.
-- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_11.md`).
+- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_12.md`).
 
 ### Backlog / ideas (not scheduled)
 - Product search.
