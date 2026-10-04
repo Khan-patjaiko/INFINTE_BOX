@@ -3,7 +3,7 @@
 Last updated: 2026-10-04 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
 [HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md),
-[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md), [HANDOVER_11.md](HANDOVER_11.md), [HANDOVER_12.md](HANDOVER_12.md). How the system is built (four-layer architecture review) lives in
+[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md), [HANDOVER_11.md](HANDOVER_11.md), [HANDOVER_12.md](HANDOVER_12.md), [HANDOVER_13.md](HANDOVER_13.md). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
@@ -12,7 +12,7 @@ Tick boxes here as work lands; add a new phase rather than rewriting history.
 **Overall: ~97% to a launchable v1.** The store works end-to-end locally including test-mode
 payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages,
 SEO/share metadata, **transactional email (Resend, live)**, **password reset** and **profile
-edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). Launch now waits only on the legal-page details.
+edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **Nothing blocks launch.** Next: push, upload, launch-day toggles.
 
 | Area | Status |
 |---|---|
@@ -40,7 +40,8 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Admin UI (`site/admin/` — overview, orders, quotes, messages, products, **settings**) | ✅ Done 2026-09-20; Settings page added 2026-09-23 (Handover #11). Sole admin: owner `chaopraya.khan@gmail.com` |
 | Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20; real stock entered with the catalogue 2026-09-21 (2 / 5 / 3 / 3) |
 | Footer social links (Facebook / Instagram / Line) | ⚠️ Added 2026-09-21 with **placeholder URLs** in `partials.js` `SOCIAL_LINKS` |
-| Legal pages (`privacy.html`, `terms.html`) + footer/signup links | ⚠️ Done 2026-09-21 — **orange bracketed placeholders** (legal name, address, jurisdiction, retention periods) need filling |
+| Legal pages (`privacy.html`, `terms.html`) + footer/signup links | ✅ Filled 2026-10-04 (Handover #13): operator "Infinite Box", Pathum Thani address, PDPA notice, Thai law, 7-day returns, Thailand-only shipping. Lawyer review + DBD registration name still recommended |
+| Shipping area | ✅ Thailand only since 2026-10-04 (`create-checkout-session` v13 `SHIP_TO = ["TH"]`, FAQ/home/terms aligned) |
 | SEO / share prep (robots.txt, sitemap.xml, descriptions, noindex, canonical, Open Graph) | ✅ Done 2026-09-21 — domain **`infinite-box.co` confirmed, registered at GoDaddy** (2026-09-21) |
 | Product categories (`store_settings.product_categories`, migration 0012) | ✅ Done 2026-09-21 — Enclosures · Mechanical · Prototyping · Resin · Accessories · Automotive · Home Decoration · Personal Gadgets · Pets Supplies |
 | Error/empty states + Retry on every DB read; 375px audit; Lighthouse (home 98/95/100/100) | ✅ Done 2026-09-21 |
@@ -48,7 +49,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Email notifications (order receipt + owner alert, quote ack + alert, contact alert) | ✅ **Live 2026-09-21** via Resend — domain `infinite-box.co` verified, from `hello@infinite-box.co`, alerts to `OWNER_EMAIL`; all three flows verified with real deliveries |
 | Coming-soon page email capture | ❌ localStorage only, not a real list |
 
-**Immediate blockers on the user side:** (1) give the legal name + address (Thailand / PDPA confirmed) to fill the placeholders in `privacy.html` / `terms.html`, (2) upload `site/` to Hostinger
+**Immediate blockers on the user side:** (1) ~~legal name + address~~ done 2026-10-04, (2) upload `site/` to Hostinger
 `public_html` (domain + HTTPS already done — the coming-soon page is there now), (6) publish the Google OAuth app (Testing → In production) on launch day.
 
 ---
@@ -106,7 +107,7 @@ Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
 ├── Auth: email/password (confirmation on, min length 8, SMTP via Resend from hello@infinite-box.co), Google OAuth · 2 users (owner chaopraya.khan@gmail.com = admin; khanleenine@gmail.com = customer)
-├── Edge Functions: submit-quote ✅ (v6, + emails, ack Reply-To = owner) · submit-contact ✅ (v1) · create-checkout-session ✅ (v12: options validated per line, **price/stock/SKU per variant**, **401 unless signed in**, THB, ฿50 shipping / free from ฿800 via `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v11 since 2026-10-04: receipt Reply-To = owner; v10: ฿ emails with options, pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
+├── Edge Functions: submit-quote ✅ (v6, + emails, ack Reply-To = owner) · submit-contact ✅ (v1) · create-checkout-session ✅ (v13 since 2026-10-04: ships to TH only; v12: options validated per line, **price/stock/SKU per variant**, **401 unless signed in**, THB, ฿50 shipping / free from ฿800 via `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v11 since 2026-10-04: receipt Reply-To = owner; v10: ฿ emails with options, pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
 └── Email: Resend, domain infinite-box.co verified; secrets RESEND_API_KEY / OWNER_EMAIL / EMAIL_FROM
 
 Nav: Shop · Custom Orders · About · Account/Log in · Cart · Shop Now
@@ -148,6 +149,7 @@ Goal: clean state, everything known-good.
 ### Phase 9 — Deployment to Hostinger (Hostinger hosting purchased; no other blocker)
 - [x] Delete test order `127c7b4e`: done 2026-10-04. The owner still needs to delete the orphan image `w201-190e-cup-holder-1790177065026.png` in the Storage dashboard (SQL delete is blocked).
 - [x] Keep-awake GitHub Action + `hello@` forwarding + Reply-To on customer emails: 2026-10-04 (Handover #12).
+- [x] Legal pages filled + Thailand-only shipping: 2026-10-04 (Handover #13).
 - [ ] Upload `site/` contents to `public_html` (Hostinger File Manager — extract at the root, not into a subfolder; delete the coming-soon `index.html`/`assets` first). No build step.
 - [x] Point the GoDaddy DNS for `infinite-box.co` at Hostinger — done 2026-09-21 via **A record `@` → `145.79.26.182`** (`CNAME www → infinite-box.co` already existed). **Never switch to Hostinger nameservers**: the Resend DKIM/SPF/`send`/`rsend` records live in GoDaddy DNS and would be lost. Let's Encrypt installed automatically, Force HTTPS on, `http://` → 301 `https://`, `www` works.
 - [~] Supabase → Auth → URL Configuration: Redirect URLs now `http://localhost:8790/**` + `https://infinite-box.co/**` (2026-09-21). **Launch day:** change Site URL from `http://localhost:8790` to `https://infinite-box.co`.
@@ -160,7 +162,7 @@ Goal: clean state, everything known-good.
 ### Phase 10 — Content & catalogue
 - [x] Real product photos — done 2026-09-21 for the first 4 products (optimised 1200px JPEGs bundled in `site/assets/img/products/`, root-absolute `image_url`). Future products: upload through **Admin → Products → Photo** (storage bucket) — both paths work.
 - [ ] Review copy on about/faq/materials (currently from the Airo export).
-- [x] Add `privacy.html` and `terms.html` + footer links — done 2026-09-21. **User must fill the bracketed placeholders** (legal name, address, jurisdiction, retention/return periods) and ideally have the copy checked.
+- [x] Add `privacy.html` and `terms.html` + footer links — done 2026-09-21; **placeholders filled 2026-10-04 (Handover #13)**. Still advisable: a Thai lawyer's review, and swap in the DBD-registered name once registered.
 - [ ] Turn coming-soon email capture into a real list (Mailchimp/Brevo) **or** drop the page.
 
 ### Phase 11 — Admin dashboard ✅ Done (2026-09-20)
@@ -198,7 +200,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] Lighthouse pass — done 2026-09-21: home desktop 98/95/100/100. Fixed footer contrast, qty `aria-label`, sized logos, CLS min-heights. Open: white-on-orange buttons are 3.06:1 (brand decision).
 - [x] Error/empty states for every DB read — done 2026-09-21: Retry button on index/shop/product/cart, empty-catalogue message, product not-found state, admin overview failure rows, admin-check network error distinguished from "not admin".
 - [ ] Stripe → **live mode** keys; swap secrets; final live purchase test with a real card + refund.
-- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_12.md`).
+- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_13.md`).
 
 ### Backlog / ideas (not scheduled)
 - Product search.
