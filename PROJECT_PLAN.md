@@ -1,23 +1,23 @@
 # Infinite Box — Project Plan (living roadmap)
 
-Last updated: 2026-10-04 · Source of truth for phases and tasks. Session history lives in
+Last updated: 2026-10-05 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
 [HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md),
-[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md), [HANDOVER_11.md](HANDOVER_11.md), [HANDOVER_12.md](HANDOVER_12.md), [HANDOVER_13.md](HANDOVER_13.md), [HANDOVER_14.md](HANDOVER_14.md). How the system is built (four-layer architecture review) lives in
+[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md), [HANDOVER_11.md](HANDOVER_11.md), [HANDOVER_12.md](HANDOVER_12.md), [HANDOVER_13.md](HANDOVER_13.md), [HANDOVER_14.md](HANDOVER_14.md), [HANDOVER_15.md](HANDOVER_15.md). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
-## Where we are now (as of 2026-10-04)
+## Where we are now (as of 2026-10-05)
 
 **Overall: ~97% to a launchable v1.** The store works end-to-end locally including test-mode
 payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages,
 SEO/share metadata, **transactional email (Resend, live)**, **password reset** and **profile
-edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **2026-10-04 (Handover #14):** home page rebuilt with real photos (hero slideshow + Our work gallery, new engineering-focused copy), visual audit at 1024/375px, Shopee-order product page, real About page, and **visitor stats in Admin → Overview** (own tracking in Supabase). **Next: Phase 14 (international shipping by DHL zone), then launch day** (push done; upload and launch-day toggles remain).
+edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **2026-10-04 (Handover #14):** home page rebuilt with real photos (hero slideshow + Our work gallery, new engineering-focused copy), visual audit at 1024/375px, Shopee-order product page, real About page, and **visitor stats in Admin → Overview** (own tracking in Supabase). **2026-10-05 (Handover #15):** Phase 14 done: worldwide shipping by DHL zone (migration 0019, checkout v14, webhook v12), tested with a Singapore `4242` checkout. **Next: the owner enters the real DHL fees, then launch day** (push, upload and launch-day toggles remain).
 
 | Area | Status |
 |---|---|
 | Static site design (14 pages, dark theme, design tokens) | ✅ Done |
-| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 18 migrations | ✅ Done, advisor clean |
+| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 19 migrations | ✅ Done, advisor clean |
 | Visitor stats (Admin → Overview: visitors/views today·7d·30d, daily chart, top products, funnel, devices) | ✅ 2026-10-04 (Handover #14): `site_events` + `admin_site_stats()` (migrations 0017–0018), tracker in `main.js`, admin browsers opt out, pg_cron purge after 13 months, privacy policy updated |
 | Home page (real-photo hero slideshow, Our work gallery, owner-approved copy) | ✅ 2026-10-04 (Handover #14); photos in `site/assets/img/home/` |
 | Product options / variants (admin-defined groups → picker on product page → cart/checkout/orders/emails) | ✅ **v2 done 2026-09-23 (Handover #10)**: Shopee-style admin editor (up to 3 groups, a price/stock/SKU row per combination, Apply to all); `products.variants` (migration 0016); range price ฿279 – ฿299 on cards; per-variant stock enforced in cart, checkout (v12) and `decrement_order_stock`. Colour groups render as swatches. No per-variant photos |
@@ -43,7 +43,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20; real stock entered with the catalogue 2026-09-21 (2 / 5 / 3 / 3) |
 | Footer social links (Facebook / Instagram / Line) | ⚠️ Added 2026-09-21 with **placeholder URLs** in `partials.js` `SOCIAL_LINKS` |
 | Legal pages (`privacy.html`, `terms.html`) + footer/signup links | ✅ Filled 2026-10-04 (Handover #13): operator "Infinite Box", Pathum Thani address, PDPA notice, Thai law, 7-day returns, Thailand-only shipping. Lawyer review + DBD registration name still recommended |
-| Shipping area | ⏳ Worldwide by DHL zone planned (Phase 14, owner decision 2026-10-04). Currently Thailand only since 2026-10-04 (`create-checkout-session` v13 `SHIP_TO = ["TH"]`, FAQ/home/terms aligned) |
+| Shipping area | ✅ 2026-10-05 (Handover #15): Thailand (฿50, free from ฿800) + **worldwide by DHL Express zone** (44 countries, 7 zones, never free, recipient pays duties); cart "Ship to" picker, Admin → Settings zone editor. ⚠️ Zone fees are **placeholders** until the owner enters the DHL rate card |
 | SEO / share prep (robots.txt, sitemap.xml, descriptions, noindex, canonical, Open Graph) | ✅ Done 2026-09-21 — domain **`infinite-box.co` confirmed, registered at GoDaddy** (2026-09-21) |
 | Product categories (`store_settings.product_categories`, migration 0012) | ✅ Done 2026-09-21 — Enclosures · Mechanical · Prototyping · Resin · Accessories · Automotive · Home Decoration · Personal Gadgets · Pets Supplies |
 | Error/empty states + Retry on every DB read; 375px audit; Lighthouse (home 98/95/100/100) | ✅ Done 2026-09-21 |
@@ -81,7 +81,7 @@ E-Commerce Web/
 │   │   ├── quotes.html            Filter/search, drawer with details, signed-URL file download, status/quoted price/note
 │   │   ├── messages.html          Contact inbox, read/unread, mailto reply
 │   │   ├── products.html          CRUD on products incl. photo gallery, specs, options/variant table, stock, active toggle
-│   │   └── settings.html          store_settings editor: shipping fee, free-shipping threshold, category list (rename carries to products)
+│   │   └── settings.html          store_settings editor: shipping fee, free-shipping threshold, DHL zones (fee + countries), category list (rename carries to products)
 │   └── assets/
 │       ├── css/styles.css         Single stylesheet, HSL tokens, --space-* scale
 │       ├── js/config.js           Supabase URL + anon key (public)
@@ -95,7 +95,7 @@ E-Commerce Web/
 │       └── img/                   icon-/logo- dark/light PNGs · products/ (catalogue photos) · home/ (hero slides 1080px + gallery 600px)
 ├── supabase/                      ← backend source of truth (mirrors hosted project)
 │   ├── config.toml                project id, verify_jwt=false per function
-│   ├── migrations/*.sql           18 migrations (local filenames; production versions differ by timestamp)
+│   ├── migrations/*.sql           19 migrations (local filenames; production versions differ by timestamp)
 │   ├── functions/_shared/email.ts Resend helper (sendEmail/sendOwnerAlert + templates), bundled into each function on deploy
 │   └── functions/<name>/index.ts  submit-quote · submit-contact · create-checkout-session · stripe-webhook · get-order
 ├── docs/ARCHITECTURE.md           Four-layer architecture reference
@@ -105,11 +105,11 @@ E-Commerce Web/
 └── HANDOVER*.md                   Session history
 
 Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
-├── Tables: profiles, products (+stock), orders (+stock_applied_at), order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (shipping_cents, product_categories), site_events (anonymous visit stats; anon insert, admin read) (RLS on all; admins can update orders/quotes/messages)
+├── Tables: profiles, products (+stock), orders (+stock_applied_at), order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (shipping_cents, product_categories, intl_zone_fees, intl_country_zones), site_events (anonymous visit stats; anon insert, admin read) (RLS on all; admins can update orders/quotes/messages)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
 ├── Auth: email/password (confirmation on, min length 8, SMTP via Resend from hello@infinite-box.co), Google OAuth · 2 users (owner chaopraya.khan@gmail.com = admin; khanleenine@gmail.com = customer)
-├── Edge Functions: submit-quote ✅ (v6, + emails, ack Reply-To = owner) · submit-contact ✅ (v1) · create-checkout-session ✅ (v13 since 2026-10-04: ships to TH only; v12: options validated per line, **price/stock/SKU per variant**, **401 unless signed in**, THB, ฿50 shipping / free from ฿800 via `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v11 since 2026-10-04: receipt Reply-To = owner; v10: ฿ emails with options, pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
+├── Edge Functions: submit-quote ✅ (v6, + emails, ack Reply-To = owner) · submit-contact ✅ (v1) · create-checkout-session ✅ (v14 since 2026-10-05: Thailand or a DHL-zoned country via `ship_to`, zone fee, `allowed_countries` = that country, `orders.ship_country`; v13: TH only; v12: options validated per line, **price/stock/SKU per variant**, **401 unless signed in**, THB, ฿50 shipping / free from ฿800 via `store_settings`, 409 on over-stock) · stripe-webhook ✅ (v12 since 2026-10-05: DHL label + duties note on international receipts; v11: receipt Reply-To = owner; v10: ฿ emails with options, pending→paid guard, `decrement_order_stock`, receipt + owner alert) · get-order ✅ (v1)
 └── Email: Resend, domain infinite-box.co verified; secrets RESEND_API_KEY / OWNER_EMAIL / EMAIL_FROM
 
 Nav: Shop · Custom Orders · About · Account/Log in · Cart · Shop Now
@@ -203,16 +203,18 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] Error/empty states for every DB read — done 2026-09-21: Retry button on index/shop/product/cart, empty-catalogue message, product not-found state, admin overview failure rows, admin-check network error distinguished from "not admin".
 - [ ] Stripe → **live mode** keys; swap secrets; final live purchase test with a real card + refund.
 - [x] UI pass before publish — 2026-10-04 (Handover #14): home photos + copy, custom-order drop zone, product buy box under the price, About + footer, 1024/375px audit of every page incl. admin/account.
-- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_14.md`).
+- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_15.md`).
 
 ### Phase 14 — International shipping by DHL zone (next session, before launch)
 Owner decision 2026-10-04 (Handover #14): ship worldwide. Fee per DHL Express zone (zone table, not the live API); domestic stays ฿50 / free from ฿800; international never free; the buyer pays duties. Full plan in [HANDOVER_14.md](HANDOVER_14.md) → "Next session (#15)".
-- [ ] store_settings `intl_zone_fees` + `intl_country_zones` (owner's DHL rate card)
-- [ ] Admin → Settings: zone fees + country/zone editor
-- [ ] Cart "Ship to" picker with the fee shown before checkout
-- [ ] `create-checkout-session` v14: validate the destination, `allowed_countries` = that country, zone fee; webhook/receipt show it
-- [ ] Terms / FAQ / privacy (DHL) / home strip "Ships across Thailand and Worldwide"
-- [ ] Test an international `4242` checkout, then clean up
+**Done 2026-10-05 (Handover #15).**
+- [x] store_settings `intl_zone_fees` + `intl_country_zones` + `intl_fees_placeholder`, `orders.ship_country` (migration 0019). 7 zones / 44 countries with **placeholder fees**
+- [ ] **Owner: enter the real DHL Express fees** in Admin → Settings before launch (banner shows until saved)
+- [x] Admin → Settings: zone fees + country/zone editor; order drawer shows the destination
+- [x] Cart "Ship to" picker with the fee shown before checkout
+- [x] `create-checkout-session` v14: validate the destination, `allowed_countries` = that country, zone fee; webhook v12 receipt shows DHL + duties note
+- [x] Terms / FAQ / privacy (DHL) / home strip "Ships across Thailand and Worldwide"
+- [x] Tested an international `4242` checkout (Singapore), then cleaned up
 
 ### Backlog / ideas (not scheduled)
 - Product search.
