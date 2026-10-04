@@ -24,9 +24,11 @@ const CURRENCY = "thb";
 // fallbacks if those rows are missing or unreadable.
 const DEFAULT_SHIPPING_CENTS = 5000;
 const DEFAULT_FREE_SHIPPING_FROM_CENTS = 80000;
-// Countries Stripe Checkout will accept a shipping address for. Thailand only since
-// 2026-10-04 (terms.html section 5); international orders go through the contact form.
-const SHIP_TO = ["TH"];
+// Destinations: Thailand (flat fee above) or any country in store_settings.intl_country_zones,
+// charged that DHL zone's fee from intl_zone_fees (migration 0019). International shipping is
+// never free; the buyer pays import duties. Stripe only accepts an address in the country the
+// customer picked in the cart.
+const HOME_COUNTRY = "TH";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -40,19 +42,35 @@ Deno.serve(async (req) => {
   });
 
   try {
-    const { items, origin } = await req.json();
+    const { items, origin, ship_to } = await req.json();
     if (!Array.isArray(items) || items.length === 0) return json({ error: "Cart is empty" }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
     const { data: settingRows } = await admin.from("store_settings")
-      .select("key,value").in("key", ["shipping_cents", "free_shipping_threshold_cents"]);
+      .select("key,value").in("key", ["shipping_cents", "free_shipping_threshold_cents", "intl_zone_fees", "intl_country_zones"]);
     const setting = (key: string, fallback: number) => {
       const v = (settingRows ?? []).find((r: { key: string }) => r.key === key)?.value;
       return Number.isInteger(v) && (v as number) >= 0 ? v as number : fallback;
     };
     const flatShippingCents = setting("shipping_cents", DEFAULT_SHIPPING_CENTS);
     const freeShippingFromCents = setting("free_shipping_threshold_cents", DEFAULT_FREE_SHIPPING_FROM_CENTS);
+    const mapSetting = (key: string) => {
+      const v = (settingRows ?? []).find((r: { key: string }) => r.key === key)?.value;
+      return (v && typeof v === "object" && !Array.isArray(v)) ? v as Record<string, unknown> : {};
+    };
+
+    // Destination: default Thailand; anything else must map to a zone with a valid fee.
+    const shipTo = typeof ship_to === "string" && ship_to.trim() ? ship_to.trim().toUpperCase() : HOME_COUNTRY;
+    let intlFeeCents: number | null = null;
+    if (shipTo !== HOME_COUNTRY) {
+      const zone = mapSetting("intl_country_zones")[shipTo];
+      const fee = zone == null ? undefined : mapSetting("intl_zone_fees")[String(zone)];
+      if (!/^[A-Z]{2}$/.test(shipTo) || !Number.isInteger(fee) || (fee as number) < 0) {
+        return json({ error: "Sorry, we don't ship to that country yet. Please contact us for a quote." }, 400);
+      }
+      intlFeeCents = fee as number;
+    }
 
     // Checkout requires a signed-in customer (no guest orders): every order is tied to
     // an account so it shows up in account.html and the customer gets the receipt.
@@ -150,7 +168,8 @@ Deno.serve(async (req) => {
     if (soldOut.length) return json({ error: "Not enough stock: " + soldOut.join(", ") + ". Please update your cart.", sold_out: soldOut }, 409);
     if (lineItems.length === 0) return json({ error: "No valid items in cart" }, 400);
 
-    const shippingCents = freeShippingFromCents > 0 && subtotal >= freeShippingFromCents ? 0 : flatShippingCents;
+    const shippingCents = intlFeeCents ??
+      (freeShippingFromCents > 0 && subtotal >= freeShippingFromCents ? 0 : flatShippingCents);
     const total = subtotal + shippingCents;
 
     const { data: order, error: oErr } = await admin.from("orders").insert({
@@ -160,6 +179,7 @@ Deno.serve(async (req) => {
       subtotal_cents: subtotal,
       shipping_cents: shippingCents,
       total_cents: total,
+      ship_country: shipTo,
     }).select().single();
     if (oErr) throw oErr;
 
@@ -172,15 +192,17 @@ Deno.serve(async (req) => {
       mode: "payment",
       line_items: lineItems as never,
       customer_email: userEmail,
-      // Flat-rate shipping shown as a proper shipping line, and collect the address.
+      // Shipping shown as a proper shipping line; the address is collected in the chosen
+      // country only, so the fee always matches the destination.
       shipping_options: [{
         shipping_rate_data: {
           type: "fixed_amount",
-          display_name: shippingCents === 0 ? "Free shipping" : "Standard shipping",
+          display_name: intlFeeCents != null ? "DHL Express (duties paid by recipient)"
+            : shippingCents === 0 ? "Free shipping" : "Standard shipping",
           fixed_amount: { amount: shippingCents, currency: CURRENCY },
         },
       }],
-      shipping_address_collection: { allowed_countries: SHIP_TO as never },
+      shipping_address_collection: { allowed_countries: [shipTo] as never },
       phone_number_collection: { enabled: true },
       success_url: `${baseUrl}/success.html?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/cancel.html`,

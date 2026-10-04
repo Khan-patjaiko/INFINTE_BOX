@@ -104,14 +104,18 @@ async function sendOrderEmails(
     `<tr><td style="padding:6px 0;">${esc(it.name)} × ${it.qty}${optionText(it.options) ? `<br><span style="color:#78716c;font-size:12px;">${optionText(it.options)}</span>` : ""}</td>` +
     `<td style="padding:6px 0;text-align:right;">${money(it.unit_price_cents * it.qty)}</td></tr>`
   ).join("");
+  // International orders (ship_country other than TH, migration 0019) go by DHL Express and
+  // the recipient pays import duties.
+  const intl = !!order.ship_country && order.ship_country !== "TH";
   const summary = `<table role="presentation" cellspacing="0" cellpadding="0" style="width:100%;font-size:14px;border-top:1px solid #e7e5e4;margin-top:12px;">
     ${itemRows}
     <tr><td style="padding:6px 0;border-top:1px solid #e7e5e4;color:#78716c;">Subtotal</td><td style="padding:6px 0;border-top:1px solid #e7e5e4;text-align:right;">${money(order.subtotal_cents as number)}</td></tr>
-    <tr><td style="padding:6px 0;color:#78716c;">Shipping</td><td style="padding:6px 0;text-align:right;">${money(order.shipping_cents as number)}</td></tr>
+    <tr><td style="padding:6px 0;color:#78716c;">Shipping${intl ? " (DHL Express)" : ""}</td><td style="padding:6px 0;text-align:right;">${money(order.shipping_cents as number)}</td></tr>
     <tr><td style="padding:8px 0;font-weight:700;border-top:1px solid #e7e5e4;">Total</td><td style="padding:8px 0;font-weight:700;text-align:right;border-top:1px solid #e7e5e4;">${total}</td></tr>
   </table>`;
   const addr = addressLines(order.shipping_address as Record<string, unknown> | null);
-  const addrBlock = addr ? `<p style="margin:16px 0 4px;color:#78716c;font-size:14px;">Shipping to</p><p style="margin:0;font-size:14px;">${addr}</p>` : "";
+  const addrBlock = (addr ? `<p style="margin:16px 0 4px;color:#78716c;font-size:14px;">Shipping to</p><p style="margin:0;font-size:14px;">${addr}</p>` : "") +
+    (intl ? `<p style="margin:8px 0 0;font-size:13px;color:#78716c;">Import duties and taxes, if any, are paid by the recipient on delivery.</p>` : "");
 
   const email = String(order.email ?? "");
   if (email && email !== "guest@pending") {
