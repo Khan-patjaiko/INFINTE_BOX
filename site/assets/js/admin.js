@@ -65,6 +65,8 @@
       if (res.error) console.error("Admin check failed", res.error);
       return null;
     }
+    // The owner's own browsing shouldn't inflate the visitor stats (main.js track()).
+    try { localStorage.setItem("ib-no-track", "1"); } catch (e) {}
     return user;
   }
 

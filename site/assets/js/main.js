@@ -36,6 +36,7 @@
     var existing = findLine(cart, lineKey(line));
     if (existing) { existing.qty += qty; } else { cart.push(line); }
     saveCart(cart);
+    track("add_to_cart", id);
   }
 
   function removeFromCart(key) {
@@ -82,7 +83,32 @@
     });
   }
 
+  // Anonymous visit stats for Admin → Overview (site_events, migration 0017): a random
+  // browser id, the page, the product slug, device class. No IP, cookie or account link.
+  // Admins' own browsers opt out (admin.js sets ib-no-track); automated browsers are skipped.
+  function track(event, productSlug) {
+    try {
+      if (!window.IBDB || navigator.webdriver || localStorage.getItem("ib-no-track")) return;
+      var vid = localStorage.getItem("ib-vid");
+      if (!vid) {
+        if (!window.crypto || !crypto.randomUUID) return;
+        vid = crypto.randomUUID();
+        localStorage.setItem("ib-vid", vid);
+      }
+      var w = window.innerWidth;
+      window.IBDB.from("site_events").insert({
+        visitor_id: vid,
+        event: event,
+        path: (location.pathname.split("/").pop() || "index.html").slice(0, 200),
+        product_slug: productSlug ? String(productSlug).slice(0, 120) : null,
+        device: w < 768 ? "mobile" : w < 1024 ? "tablet" : "desktop"
+      }).then(function (r) { if (r.error) console.warn("Visit stat not saved:", r.error.message); });
+    } catch (e) { /* stats must never break the page */ }
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    var page = location.pathname.split("/").pop() || "index.html";
+    track("page_view", page === "product.html" ? new URLSearchParams(location.search).get("id") : null);
     updateCartBadge();
     markActiveNav();
     var toggle = document.querySelector(".menu-toggle");
@@ -98,6 +124,7 @@
     normOptions: normOptions,
     setQty: setQty,
     cartCount: cartCount,
-    updateCartBadge: updateCartBadge
+    updateCartBadge: updateCartBadge,
+    track: track
   };
 })();

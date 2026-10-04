@@ -52,6 +52,7 @@
       if (!(await IBAuth.getUser())) return goLogin();
       btn.disabled = true;
       btn.textContent = "Redirecting to secure checkout…";
+      window.IB.track("checkout_start");
       try {
         var res = await window.IBDB.functions.invoke("create-checkout-session", {
           body: { items: cart, origin: location.origin }

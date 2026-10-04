@@ -30,6 +30,40 @@
         <a class="stat-card" href="orders.html"><p class="stat-label">Revenue (30d)</p><p class="stat-value">–</p><p class="stat-sub">paid + fulfilled</p></a>
       </div>
 
+      <div class="admin-head">
+        <h2>Visitors</h2>
+        <p class="grid-status">Anonymous counts · your own visits on this browser aren't counted</p>
+      </div>
+      <div class="stat-grid" id="visit-stats">
+        <div class="stat-card"><p class="stat-label">Today</p><p class="stat-value">–</p><p class="stat-sub">visitors</p></div>
+        <div class="stat-card"><p class="stat-label">Last 7 days</p><p class="stat-value">–</p><p class="stat-sub">visitors</p></div>
+        <div class="stat-card"><p class="stat-label">Last 30 days</p><p class="stat-value">–</p><p class="stat-sub">visitors</p></div>
+        <div class="stat-card"><p class="stat-label">Page views (30d)</p><p class="stat-value">–</p><p class="stat-sub">pages opened</p></div>
+      </div>
+
+      <div class="an-panel">
+        <div class="an-panel-head"><h3>Visitors per day</h3><p class="muted" id="visit-range"></p></div>
+        <div class="an-chart" id="visit-chart" role="img" aria-label="Visitors per day, last 30 days"></div>
+        <div class="an-axis" id="visit-axis"></div>
+        <div class="an-tip" id="visit-tip" hidden></div>
+      </div>
+
+      <div class="an-grid">
+        <div class="an-panel">
+          <div class="an-panel-head"><h3>Top products</h3><p class="muted">last 30 days</p></div>
+          <table class="an-table">
+            <thead><tr><th>Product</th><th class="num">Views</th><th class="num">Visitors</th><th class="num">Added to cart</th></tr></thead>
+            <tbody id="top-products"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="an-panel">
+          <div class="an-panel-head"><h3>Sales funnel</h3><p class="muted">visitors, last 30 days</p></div>
+          <div class="an-bars" id="funnel"><p class="muted">Loading…</p></div>
+          <div class="an-panel-head" style="margin-top:var(--space-4);"><h3>Devices</h3></div>
+          <div class="an-bars" id="devices"><p class="muted">Loading…</p></div>
+        </div>
+      </div>
+
       <div class="admin-head"><h2>Recent orders</h2><a class="btn btn-outline btn-sm" href="orders.html">All orders</a></div>
       <div class="admin-table-wrap" style="margin-bottom:var(--space-5);">
         <table class="admin-table">
@@ -107,9 +141,95 @@
       rowClick(qb, "quotes.html");
     }
 
+    // ---- Visitor stats (site_events via admin_site_stats, migration 0017) ----
+    function num(n) { return Number(n || 0).toLocaleString("en-US"); }
+    function pct(part, whole) { return whole ? Math.round(part / whole * 100) + "%" : "–"; }
+    function shortDay(iso) { return new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" }); }
+
+    function barRows(el, rows, total) {
+      var max = Math.max.apply(null, rows.map(function (r) { return r.value; }).concat([1]));
+      el.innerHTML = rows.map(function (r) {
+        return '<div class="an-bar-row"><span class="an-bar-label">' + ibEscape(r.label) + '</span>' +
+          '<span class="an-bar-track"><span class="an-bar-fill" style="width:' + (r.value / max * 100) + '%"></span></span>' +
+          '<span class="an-bar-value">' + num(r.value) + (total != null ? ' <span class="muted">' + pct(r.value, total) + '</span>' : '') + '</span></div>';
+      }).join("");
+    }
+
+    function renderChart(daily) {
+      var chart = document.getElementById("visit-chart");
+      var tip = document.getElementById("visit-tip");
+      var max = Math.max.apply(null, daily.map(function (d) { return d.visitors; }).concat([1]));
+      chart.innerHTML = daily.map(function (d, i) {
+        var h = d.visitors ? Math.max(3, d.visitors / max * 100) : 0;
+        return '<button type="button" class="an-col" data-i="' + i + '" aria-label="' + shortDay(d.day) + ': ' + d.visitors + ' visitors, ' + d.views + ' page views">' +
+          '<span class="an-col-bar" style="height:' + h + '%"></span></button>';
+      }).join("");
+      var n = daily.length;
+      document.getElementById("visit-axis").innerHTML =
+        '<span>' + shortDay(daily[0].day) + '</span><span>' + shortDay(daily[Math.floor(n / 2)].day) + '</span><span>' + shortDay(daily[n - 1].day) + '</span>';
+      document.getElementById("visit-range").textContent = "peak " + num(max) + " / day";
+      function show(e) {
+        var col = e.target.closest(".an-col");
+        if (!col) return;
+        var d = daily[col.dataset.i];
+        tip.innerHTML = '<strong>' + shortDay(d.day) + '</strong><br>' + num(d.visitors) + ' visitors · ' + num(d.views) + ' views';
+        tip.hidden = false;
+        var box = chart.getBoundingClientRect(), c = col.getBoundingClientRect();
+        var x = Math.min(Math.max(c.left - box.left + c.width / 2, 70), box.width - 70);
+        tip.style.left = x + "px";
+      }
+      chart.addEventListener("mouseover", show);
+      chart.addEventListener("focusin", show);
+      chart.addEventListener("mouseleave", function () { tip.hidden = true; });
+      chart.addEventListener("focusout", function () { tip.hidden = true; });
+    }
+
+    async function loadVisits() {
+      var res = await window.IBDB.rpc("admin_site_stats", { p_days: 30 });
+      if (res.error) throw res.error;
+      var s = res.data;
+      var cards = document.querySelectorAll("#visit-stats .stat-card");
+      [[s.today, cards[0]], [s.week, cards[1]], [s.period, cards[2]]].forEach(function (p) {
+        p[1].querySelector(".stat-value").textContent = num(p[0].visitors);
+        p[1].querySelector(".stat-sub").textContent = "visitors · " + num(p[0].views) + " page views";
+      });
+      cards[3].querySelector(".stat-value").textContent = num(s.period.views);
+      cards[3].querySelector(".stat-sub").textContent = s.period.visitors ? (s.period.views / s.period.visitors).toFixed(1) + " pages per visitor" : "pages opened";
+
+      renderChart(s.daily);
+
+      var tb = document.getElementById("top-products");
+      tb.innerHTML = s.top_products.length ? s.top_products.map(function (p) {
+        return '<tr><td><a href="../product.html?id=' + encodeURIComponent(p.slug) + '" target="_blank" rel="noopener">' + ibEscape(p.name) + '</a></td>' +
+          '<td class="num">' + num(p.views) + '</td><td class="num">' + num(p.visitors) + '</td><td class="num">' + num(p.carts) + '</td></tr>';
+      }).join("") : '<tr><td colspan="4" class="muted">No product views yet.</td></tr>';
+
+      var f = s.funnel;
+      barRows(document.getElementById("funnel"), [
+        { label: "Visited the site", value: f.visitors },
+        { label: "Viewed a product", value: f.product_viewers },
+        { label: "Added to cart", value: f.add_to_cart },
+        { label: "Started checkout", value: f.checkout },
+        { label: "Paid orders", value: f.paid_orders }
+      ], f.visitors);
+
+      var dv = s.devices, total = (dv.mobile || 0) + (dv.tablet || 0) + (dv.desktop || 0);
+      barRows(document.getElementById("devices"), [
+        { label: "Phone", value: dv.mobile || 0 },
+        { label: "Tablet", value: dv.tablet || 0 },
+        { label: "Desktop", value: dv.desktop || 0 }
+      ], total);
+    }
+
     A.requireAdmin().then(function (user) {
       if (!user) return;
       document.getElementById("admin-greeting").textContent = "Signed in as " + user.email;
+      loadVisits().catch(function (e) {
+        console.error("Visitor stats failed", e);
+        document.getElementById("visit-chart").innerHTML = '<p class="muted">Couldn\'t load visitor stats — refresh to try again.</p>';
+        document.getElementById("top-products").innerHTML = '<tr><td colspan="4" class="muted">Couldn\'t load.</td></tr>';
+        document.getElementById("funnel").innerHTML = document.getElementById("devices").innerHTML = '<p class="muted">Couldn\'t load.</p>';
+      });
       load().catch(function (e) {
         console.error("Overview load failed", e);
         A.toast("Couldn't load dashboard data.", true);
