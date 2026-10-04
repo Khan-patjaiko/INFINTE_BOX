@@ -24,11 +24,9 @@ const CURRENCY = "thb";
 // fallbacks if those rows are missing or unreadable.
 const DEFAULT_SHIPPING_CENTS = 5000;
 const DEFAULT_FREE_SHIPPING_FROM_CENTS = 80000;
-// Countries Stripe Checkout will accept a shipping address for. Edit freely.
-const SHIP_TO = [
-  "US", "CA", "GB", "IE", "AU", "NZ", "TH", "SG", "MY", "JP", "KR", "HK",
-  "DE", "FR", "NL", "BE", "ES", "IT", "PT", "AT", "CH", "SE", "NO", "DK", "FI",
-];
+// Countries Stripe Checkout will accept a shipping address for. Thailand only since
+// 2026-10-04 (terms.html section 5); international orders go through the contact form.
+const SHIP_TO = ["TH"];
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
