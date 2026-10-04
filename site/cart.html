@@ -55,7 +55,7 @@
       window.IB.track("checkout_start");
       try {
         var res = await window.IBDB.functions.invoke("create-checkout-session", {
-          body: { items: cart, origin: location.origin }
+          body: { items: cart, origin: location.origin, ship_to: shipTo }
         });
         if (res.error) {
           // Session expired between page load and click → server says 401.
@@ -148,15 +148,27 @@
         var info = p ? lineInfo(p, item.options) : null;
         return sum + (info && info.stock > 0 ? info.price * item.qty : 0);
       }, 0);
-      var freeShipping = freeShippingFrom > 0 && subtotal >= freeShippingFrom;
-      var shipping = subtotal > 0 && !freeShipping ? shippingBaht : 0;
+      // International: the destination's DHL zone fee, never free. Thailand: flat fee, free
+      // from the threshold.
+      if (shipTo !== "TH" && zoneFeeBaht(shipTo) == null) setShipTo("TH");
+      var intl = shipTo !== "TH";
+      var freeShipping = !intl && freeShippingFrom > 0 && subtotal >= freeShippingFrom;
+      var shipping = subtotal > 0 && !freeShipping ? (intl ? zoneFeeBaht(shipTo) : shippingBaht) : 0;
       var total = subtotal + shipping;
+      var shipOptions = [["TH", countryName("TH")]].concat(
+        Object.keys(countryZones).filter(function (c) { return c !== "TH" && zoneFeeBaht(c) != null; })
+          .map(function (c) { return [c, countryName(c)]; })
+          .sort(function (a, b) { return a[1].localeCompare(b[1]); }));
 
       container.innerHTML = rows +
         '<div class="cart-summary">' +
           '<div class="cart-summary-row"><span>Subtotal</span><span>' + formatPrice(subtotal) + '</span></div>' +
-          '<div class="cart-summary-row"><span>Shipping</span><span>' + (freeShipping ? 'Free' : formatPrice(shipping)) + '</span></div>' +
-          (!freeShipping && freeShippingFrom > 0 && subtotal > 0 ? '<p class="cart-ship-note">Add ' + formatPrice(freeShippingFrom - subtotal) + ' more for free shipping.</p>' : '') +
+          '<label class="cart-ship-to"><span>Ship to</span><select id="ship-to">' +
+            shipOptions.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === shipTo ? ' selected' : '') + '>' + ibEscape(o[1]) + '</option>'; }).join('') +
+          '</select></label>' +
+          '<div class="cart-summary-row"><span>Shipping' + (intl ? ' (DHL Express)' : '') + '</span><span>' + (freeShipping ? 'Free' : formatPrice(shipping)) + '</span></div>' +
+          (!intl && !freeShipping && freeShippingFrom > 0 && subtotal > 0 ? '<p class="cart-ship-note">Add ' + formatPrice(freeShippingFrom - subtotal) + ' more for free shipping.</p>' : '') +
+          (intl ? '<p class="cart-duties-note">Import duties and taxes, if any, are paid by the recipient on delivery.</p>' : '') +
           '<div class="cart-summary-row total"><span>Total</span><span>' + formatPrice(total) + '</span></div>' +
           (blocked
             ? '<button class="btn btn-primary btn-block mt-16" id="checkout-btn" disabled title="Remove sold-out items first">Checkout</button>'
@@ -186,6 +198,13 @@
         });
       });
 
+      document.getElementById("ship-to").addEventListener("change", function (e) {
+        setShipTo(e.target.value);
+        render();
+        var sel = document.getElementById("ship-to");
+        if (sel) sel.focus();
+      });
+
       var checkoutBtn = document.getElementById("checkout-btn");
       if (checkoutBtn && !checkoutBtn.disabled) {
         checkoutBtn.addEventListener("click", function () { startCheckout(checkoutBtn); });
@@ -195,16 +214,38 @@
     // Shipping comes from store_settings (same rows create-checkout-session uses):
     // flat shipping_cents, waived once the subtotal reaches free_shipping_threshold_cents.
     // Fallbacks (฿50, free from ฿800) keep the cart rendering if the read fails.
+    // International: intl_country_zones (country code → DHL zone) and intl_zone_fees (zone →
+    // satang), migration 0019. Only listed countries are offered; the server re-checks.
     var shippingBaht = 50;
     var freeShippingFrom = 800;
+    var countryZones = {}, zoneFees = {};
+    function zoneFeeBaht(code) {
+      var fee = zoneFees[countryZones[code]];
+      return typeof fee === "number" && fee >= 0 ? fee / 100 : null;
+    }
+    var regionNames = null;
+    try { regionNames = new Intl.DisplayNames(["en"], { type: "region" }); } catch (e) {}
+    function countryName(code) {
+      try { return (regionNames && regionNames.of(code)) || code; } catch (e) { return code; }
+    }
+    var shipTo = "TH";
+    try { shipTo = localStorage.getItem("ib-ship-to") || "TH"; } catch (e) {}
+    function setShipTo(code) {
+      shipTo = code;
+      try { localStorage.setItem("ib-ship-to", code); } catch (e) {}
+    }
     function loadShipping() {
       if (!window.IBDB) return Promise.resolve();
-      return window.IBDB.from("store_settings").select("key,value").in("key", ["shipping_cents", "free_shipping_threshold_cents"])
+      return window.IBDB.from("store_settings").select("key,value")
+        .in("key", ["shipping_cents", "free_shipping_threshold_cents", "intl_zone_fees", "intl_country_zones"])
         .then(function (res) {
           (res && res.data || []).forEach(function (row) {
-            if (typeof row.value !== "number" || row.value < 0) return;
-            if (row.key === "shipping_cents") shippingBaht = row.value / 100;
-            if (row.key === "free_shipping_threshold_cents") freeShippingFrom = row.value / 100;
+            var v = row.value;
+            if (row.key === "intl_zone_fees" && v && typeof v === "object") zoneFees = v;
+            if (row.key === "intl_country_zones" && v && typeof v === "object") countryZones = v;
+            if (typeof v !== "number" || v < 0) return;
+            if (row.key === "shipping_cents") shippingBaht = v / 100;
+            if (row.key === "free_shipping_threshold_cents") freeShippingFrom = v / 100;
           });
         }, function () {});
     }

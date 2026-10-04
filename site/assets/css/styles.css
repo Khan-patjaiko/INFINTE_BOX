@@ -872,6 +872,10 @@ button { font-family: inherit; cursor: pointer; }
 .cart-summary-row { display: flex; justify-content: space-between; font-size: 14px; color: hsl(var(--muted-foreground)); }
 .cart-summary-row.total { font-size: 18px; font-weight: 700; color: hsl(var(--foreground)); padding-top: 12px; border-top: 1px solid hsl(var(--border)); }
 .cart-ship-note { font-size: 12px; color: hsl(var(--primary)); margin-top: -4px; }
+.cart-ship-to { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 14px; color: hsl(var(--muted-foreground)); }
+.cart-ship-to select { flex: 1; min-width: 0; max-width: 220px; background: hsl(var(--card)); border: 1px solid hsl(var(--input)); border-radius: var(--radius-button); color: hsl(var(--foreground)); padding: 8px 12px; font-family: inherit; font-size: 14px; }
+.cart-ship-to select:focus { outline: none; border-color: hsl(var(--ring)); }
+.cart-duties-note { font-size: 12px; color: hsl(var(--muted-foreground)); margin-top: -4px; }
 .empty-state { text-align: center; padding: 96px 0; color: hsl(var(--muted-foreground)); }
 .empty-state p { margin-bottom: 24px; }
 
