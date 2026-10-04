@@ -95,7 +95,9 @@ document.addEventListener("DOMContentLoaded", function () {
   if (toggle) {
     toggle.addEventListener("click", function () {
       var nav = document.querySelector(".mobile-nav");
-      nav.classList.toggle("open");
+      var open = nav.classList.toggle("open");
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
     });
   }
 });
