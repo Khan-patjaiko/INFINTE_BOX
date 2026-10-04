@@ -1,0 +1,7 @@
+# Hostinger (LiteSpeed): one canonical origin, https://infinite-box.co.
+# www and plain http both 301 to it, so the cart (localStorage) and the
+# Supabase auth redirects always run on the same origin.
+RewriteEngine On
+RewriteCond %{HTTPS} off [OR]
+RewriteCond %{HTTP_HOST} ^www\. [NC]
+RewriteRule ^ https://infinite-box.co%{REQUEST_URI} [L,R=301]
