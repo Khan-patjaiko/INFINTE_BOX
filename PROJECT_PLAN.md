@@ -3,7 +3,7 @@
 Last updated: 2026-10-04 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
 [HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md),
-[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md), [HANDOVER_11.md](HANDOVER_11.md), [HANDOVER_12.md](HANDOVER_12.md), [HANDOVER_13.md](HANDOVER_13.md). How the system is built (four-layer architecture review) lives in
+[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md), [HANDOVER_11.md](HANDOVER_11.md), [HANDOVER_12.md](HANDOVER_12.md), [HANDOVER_13.md](HANDOVER_13.md), [HANDOVER_14.md](HANDOVER_14.md). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
@@ -12,12 +12,14 @@ Tick boxes here as work lands; add a new phase rather than rewriting history.
 **Overall: ~97% to a launchable v1.** The store works end-to-end locally including test-mode
 payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages,
 SEO/share metadata, **transactional email (Resend, live)**, **password reset** and **profile
-edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **Nothing blocks launch.** Next: push, upload, launch-day toggles.
+edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **2026-10-04 (Handover #14):** home page rebuilt with real photos (hero slideshow + Our work gallery, new engineering-focused copy), visual audit at 1024/375px, Shopee-order product page, real About page, and **visitor stats in Admin → Overview** (own tracking in Supabase). **Nothing blocks launch.** Next: push, upload, launch-day toggles.
 
 | Area | Status |
 |---|---|
 | Static site design (14 pages, dark theme, design tokens) | ✅ Done |
-| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 16 migrations | ✅ Done, advisor clean |
+| Supabase project `ptwfidmlnuggxvqhimhe` — schema, RLS, storage, 18 migrations | ✅ Done, advisor clean |
+| Visitor stats (Admin → Overview: visitors/views today·7d·30d, daily chart, top products, funnel, devices) | ✅ 2026-10-04 (Handover #14): `site_events` + `admin_site_stats()` (migrations 0017–0018), tracker in `main.js`, admin browsers opt out, pg_cron purge after 13 months, privacy policy updated |
+| Home page (real-photo hero slideshow, Our work gallery, owner-approved copy) | ✅ 2026-10-04 (Handover #14); photos in `site/assets/img/home/` |
 | Product options / variants (admin-defined groups → picker on product page → cart/checkout/orders/emails) | ✅ **v2 done 2026-09-23 (Handover #10)**: Shopee-style admin editor (up to 3 groups, a price/stock/SKU row per combination, Apply to all); `products.variants` (migration 0016); range price ฿279 – ฿299 on cards; per-variant stock enforced in cart, checkout (v12) and `decrement_order_stock`. Colour groups render as swatches. No per-variant photos |
 | **Currency: THB** (switched 2026-09-21, Handover #8) — `*_cents` = satang, ฿ everywhere, Stripe `thb`; shipping ฿50 flat, **free from ฿800** (`store_settings`, editable in Admin → Settings since Handover #11) | ✅ Done |
 | Live product catalogue from DB (index/shop/product/cart) | ✅ Done |
@@ -32,7 +34,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
 | Hosting | ✅ **Coming-soon page live at `https://infinite-box.co`** (2026-09-21, Handover #9). Hostinger website `infinite-box.co` (Premium, Malaysia DC), DNS via GoDaddy **A record** `145.79.26.182` + `CNAME www`. Store `site/` **not yet uploaded** |
-| Git | ✅ `main` in sync with `origin/main` through Handover #10; Handover #11–#12 commits are local until "push main" |
+| Git | ✅ `main` in sync with `origin/main` through Handover #10; Handover #11–#14 commits are local until "push main" |
 | Supabase free-plan auto-pause | ⚠️ The project **paused after 11 idle days** (found 2026-10-04, restored intact). `.github/workflows/keep-supabase-awake.yml` pings it every 3 days and **becomes active once pushed** |
 | Inbound mail `hello@infinite-box.co` | ✅ 2026-10-04: ImprovMX forwarding → `khanleenine@gmail.com` (GoDaddy MX `mx1`/`mx2.improvmx.com`); the customer receipt and quote ack set Reply-To = `OWNER_EMAIL` |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
@@ -59,7 +61,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 ```
 E-Commerce Web/
 ├── site/                          ← main storefront (static, deploy to Hostinger public_html)
-│   ├── index.html                 Home (hero, featured products)          [partials.js header/footer]
+│   ├── index.html                 Home (photo slideshow hero, featured products, Our work gallery)   [partials.js header/footer]
 │   ├── shop.html                  Catalogue grid; category chips in the hero from store_settings.product_categories
 │   ├── product.html?id=<slug>     Product detail + spec table
 │   ├── cart.html                  Cart → Stripe Checkout (signed-in only; "Log in to check out" otherwise) / link to custom quote
@@ -74,7 +76,7 @@ E-Commerce Web/
 │   ├── success.html · cancel.html Stripe return pages (success.html has a "My order" button → order.html)
 │   ├── robots.txt · sitemap.xml   Crawler config (admin + transactional pages disallowed)
 │   ├── admin/                     Admin dashboard (guarded by profiles.is_admin; own header via admin.js, noindex)
-│   │   ├── index.html             Overview: counts (to-fulfil, new quotes, unread, 30d revenue) + recent orders/quotes
+│   │   ├── index.html             Overview: counts (to-fulfil, new quotes, unread, 30d revenue) + visitor stats (admin_site_stats) + recent orders/quotes
 │   │   ├── orders.html            Filter/search, drawer with items + address, change status
 │   │   ├── quotes.html            Filter/search, drawer with details, signed-URL file download, status/quoted price/note
 │   │   ├── messages.html          Contact inbox, read/unread, mailto reply
@@ -90,10 +92,10 @@ E-Commerce Web/
 │       ├── js/icons.js            SVG placeholder icons
 │       ├── js/main.js             window.IB cart API, mobile nav
 │       ├── js/partials.js         HEADER_HTML / FOOTER_HTML injection (all pages) + SOCIAL_LINKS (footer Follow column)
-│       └── img/                   icon-/logo- dark/light PNGs
+│       └── img/                   icon-/logo- dark/light PNGs · products/ (catalogue photos) · home/ (hero slides 1080px + gallery 600px)
 ├── supabase/                      ← backend source of truth (mirrors hosted project)
 │   ├── config.toml                project id, verify_jwt=false per function
-│   ├── migrations/*.sql           16 migrations (local filenames; production versions differ by timestamp)
+│   ├── migrations/*.sql           18 migrations (local filenames; production versions differ by timestamp)
 │   ├── functions/_shared/email.ts Resend helper (sendEmail/sendOwnerAlert + templates), bundled into each function on deploy
 │   └── functions/<name>/index.ts  submit-quote · submit-contact · create-checkout-session · stripe-webhook · get-order
 ├── docs/ARCHITECTURE.md           Four-layer architecture reference
@@ -103,7 +105,7 @@ E-Commerce Web/
 └── HANDOVER*.md                   Session history
 
 Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
-├── Tables: profiles, products (+stock), orders (+stock_applied_at), order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (shipping_cents, product_categories) (RLS on all; admins can update orders/quotes/messages)
+├── Tables: profiles, products (+stock), orders (+stock_applied_at), order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (shipping_cents, product_categories), site_events (anonymous visit stats; anon insert, admin read) (RLS on all; admins can update orders/quotes/messages)
 ├── Helper: private.is_admin()
 ├── Storage: product-images (public read, admin write), custom-uploads (private; admin read for signed URLs)
 ├── Auth: email/password (confirmation on, min length 8, SMTP via Resend from hello@infinite-box.co), Google OAuth · 2 users (owner chaopraya.khan@gmail.com = admin; khanleenine@gmail.com = customer)
@@ -161,7 +163,7 @@ Goal: clean state, everything known-good.
 
 ### Phase 10 — Content & catalogue
 - [x] Real product photos — done 2026-09-21 for the first 4 products (optimised 1200px JPEGs bundled in `site/assets/img/products/`, root-absolute `image_url`). Future products: upload through **Admin → Products → Photo** (storage bucket) — both paths work.
-- [ ] Review copy on about/faq/materials (currently from the Airo export).
+- [~] Review copy on about/faq/materials — About rewritten 2026-10-04 (Handover #14; owner may tweak); home copy replaced; FAQ rush line removed. Materials page still from the Airo export.
 - [x] Add `privacy.html` and `terms.html` + footer links — done 2026-09-21; **placeholders filled 2026-10-04 (Handover #13)**. Still advisable: a Thai lawyer's review, and swap in the DBD-registered name once registered.
 - [ ] Turn coming-soon email capture into a real list (Mailchimp/Brevo) **or** drop the page.
 
@@ -200,7 +202,8 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] Lighthouse pass — done 2026-09-21: home desktop 98/95/100/100. Fixed footer contrast, qty `aria-label`, sized logos, CLS min-heights. Open: white-on-orange buttons are 3.06:1 (brand decision).
 - [x] Error/empty states for every DB read — done 2026-09-21: Retry button on index/shop/product/cart, empty-catalogue message, product not-found state, admin overview failure rows, admin-check network error distinguished from "not admin".
 - [ ] Stripe → **live mode** keys; swap secrets; final live purchase test with a real card + refund.
-- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_13.md`).
+- [x] UI pass before publish — 2026-10-04 (Handover #14): home photos + copy, custom-order drop zone, product buy box under the price, About + footer, 1024/375px audit of every page incl. admin/account.
+- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_14.md`).
 
 ### Backlog / ideas (not scheduled)
 - Product search.
@@ -211,7 +214,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - Multi-currency — store is **THB** since 2026-09-21 (was USD). Stripe presents THB; confirm the Stripe account's settlement currency before live mode (Phase 13).
 - ~~Admin UI for the product photo gallery~~ — done 2026-09-23 (Handover #10): Photos strip in Admin → Products.
 - Fix the "BWM E90" typo in the BMW poster `1.png` (the store uses `2.png` instead).
-- PWA / offline cart, analytics (Plausible/GA4), reviews.
+- PWA / offline cart, reviews. (Analytics: built in-house 2026-10-04, Handover #14; traffic sources by referrer not yet tracked.)
 
 ---
 
