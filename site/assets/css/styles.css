@@ -1139,6 +1139,14 @@ button { font-family: inherit; cursor: pointer; }
 .settings-foot .hint { margin-right: auto; }
 .cat-list { display: flex; flex-direction: column; gap: 8px; }
 .cat-row { display: flex; align-items: center; gap: 6px; }
+.settings-warn { background: hsl(var(--primary) / 0.12); border: 1px solid hsl(var(--primary) / 0.4); border-radius: var(--radius-button); padding: 10px 12px; font-size: 13px; margin: 0; }
+.settings-warn[hidden] { display: none; }
+.zone-list { display: flex; flex-direction: column; gap: 12px; }
+.zone-row { border: 1px solid hsl(var(--border)); border-radius: var(--radius-button); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.zone-head { display: flex; align-items: flex-end; gap: 12px; }
+.zone-head strong { margin-right: auto; align-self: center; }
+.zone-fee { width: 140px; }
+.zone-row .field input { min-width: 0; width: 100%; }
 .cat-row input, .cat-add input { flex: 1; min-width: 0; background: hsl(var(--background)); border: 1px solid hsl(var(--input)); border-radius: var(--radius-button); color: hsl(var(--foreground)); padding: 8px 12px; font-family: inherit; font-size: 14px; }
 .cat-row input:focus, .cat-add input:focus { outline: none; border-color: hsl(var(--ring)); }
 .cat-row input.is-invalid, .cat-add input.is-invalid { border-color: hsl(var(--destructive)); }

@@ -91,6 +91,10 @@
       }).join("") : '<tr><td colspan="6" class="muted">No orders match.</td></tr>';
     }
 
+    function countryName(code) {
+      try { return new Intl.DisplayNames(["en"], { type: "region" }).of(code) || code; } catch (e) { return code; }
+    }
+
     function addressHTML(a) {
       if (!a) return '<span class="muted">No shipping address (checkout not completed).</span>';
       var lines = [a.name, a.line1, a.line2, [a.city, a.state, a.postal_code].filter(Boolean).join(", "), a.country, a.phone]
@@ -105,6 +109,8 @@
       var items = (o.order_items || []).map(function (it) {
         return '<div class="order-line"><span>' + ibEscape(it.name) + ' × ' + it.qty + optionsHTML(it) + '</span><span>' + A.money(it.unit_price_cents * it.qty) + '</span></div>';
       }).join("");
+      // ship_country (migration 0019): the destination picked in the cart; abroad = DHL zone fee.
+      var intl = !!o.ship_country && o.ship_country !== "TH";
       var opts = STATUSES.map(function (s) {
         return '<option value="' + s + '"' + (s === o.status ? " selected" : "") + '>' + s + '</option>';
       }).join("");
@@ -115,10 +121,11 @@
           '<dt>Customer</dt><dd><a href="mailto:' + ibEscape(o.email) + '">' + ibEscape(o.email) + '</a>' + (o.user_id ? "" : ' <span class="muted">(guest)</span>') + '</dd>' +
           '<dt>Order id</dt><dd class="muted" style="font-size:12px;">' + ibEscape(o.id) + '</dd>' +
           '<dt>Stripe</dt><dd class="muted" style="font-size:12px;">' + ibEscape(o.stripe_payment_intent || o.stripe_session_id || "—") + '</dd>' +
+          (intl ? '<dt>Destination</dt><dd>' + ibEscape(countryName(o.ship_country)) + ' · DHL Express <span class="muted">(duties paid by recipient)</span></dd>' : '') +
           '<dt>Ship to</dt><dd>' + addressHTML(o.shipping_address) + '</dd>' +
         '</dl>' +
         '<h3 style="font-size:14px;margin-bottom:8px;">Items</h3>' + items +
-        '<div class="order-line"><span>Shipping</span><span>' + A.money(o.shipping_cents) + '</span></div>' +
+        '<div class="order-line"><span>Shipping' + (intl ? ' (DHL Express)' : '') + '</span><span>' + A.money(o.shipping_cents) + '</span></div>' +
         '<div class="order-total"><span>Total</span><span>' + A.money(o.total_cents) + '</span></div>' +
         '<div class="drawer-actions">' +
           '<div class="field" style="flex-direction:row;align-items:center;"><label for="d-status">Set status</label><select id="d-status">' + opts + '</select></div>' +

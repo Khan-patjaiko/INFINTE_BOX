@@ -34,6 +34,18 @@
           </div>
         </form>
 
+        <form class="settings-card" id="intl-form" novalidate>
+          <h2>International shipping (DHL zones)</h2>
+          <p class="hint">One fee per order for each zone, never free; the buyer pays import duties. Countries are 2-letter codes (SG, US, GB…). The cart only offers countries listed here, and Stripe accepts an address in the chosen country only.</p>
+          <p class="settings-warn" id="z-placeholder" hidden>Placeholder fees: replace them with your DHL Express rate card before launch. This note goes away once you save.</p>
+          <div class="zone-list" id="zone-list"><p class="hint">Loading…</p></div>
+          <div><button type="button" class="btn btn-outline btn-sm" id="zone-add">Add zone</button></div>
+          <div class="settings-foot">
+            <p class="hint" id="z-saved"></p>
+            <button type="submit" class="btn btn-primary btn-sm" id="z-save" disabled>Save international shipping</button>
+          </div>
+        </form>
+
         <form class="settings-card" id="cat-form" novalidate>
           <h2>Product categories</h2>
           <p class="hint">Shown as filter chips on the Shop page, in this order, and suggested when you edit a product. Renaming a category also renames it on its products.</p>
@@ -59,7 +71,7 @@
 <script src="../assets/js/auth.js"></script>
 <script src="../assets/js/admin.js"></script>
 <script>
-  // Editor for store_settings (migrations 0008 / 0012 / 0013). RLS lets admins write;
+  // Editor for store_settings (migrations 0008 / 0012 / 0013 / 0019). RLS lets admins write;
   // cart.html and create-checkout-session read the shipping rows on every request.
   (function () {
     var A = window.IBAdmin;
@@ -103,6 +115,102 @@
       $("s-free").value = free || 0;
       $("s-saved").textContent = savedText(now);
       A.toast("Shipping saved.");
+    }
+
+    // ---------- International zones (migration 0019) ----------
+    // zones: [{ fee: "900" (baht, as typed), codes: "SG, MY" (as typed) }], saved renumbered 1..n
+    // as intl_zone_fees { "1": satang } + intl_country_zones { "SG": "1" }.
+    var zones = [];
+    var regionNames = null;
+    try { regionNames = new Intl.DisplayNames(["en"], { type: "region" }); } catch (e) {}
+    function countryName(code) {
+      try { var n = regionNames && regionNames.of(code); return n && n !== code ? n : null; } catch (e) { return null; }
+    }
+    function parseCodes(text) {
+      return text.split(/[\s,;]+/).map(function (c) { return c.trim().toUpperCase(); }).filter(Boolean);
+    }
+
+    function zonePreview(codes) {
+      if (!codes.length) return "No countries yet.";
+      return codes.map(function (c) {
+        if (c === "TH") return "TH (Thailand uses the domestic fee above)";
+        return countryName(c) || (c + " (unknown code)");
+      }).join(", ");
+    }
+
+    function renderZones() {
+      var list = $("zone-list");
+      if (!zones.length) { list.innerHTML = '<p class="hint">No zones: the cart offers Thailand only.</p>'; return; }
+      list.innerHTML = zones.map(function (z, i) {
+        return '<div class="zone-row" data-i="' + i + '">' +
+          '<div class="zone-head"><strong>Zone ' + (i + 1) + '</strong>' +
+            '<div class="field zone-fee"><label for="z-fee-' + i + '">Fee (฿)</label><input type="number" id="z-fee-' + i + '" data-k="fee" min="0" step="1" inputmode="numeric" value="' + ibEscape(z.fee) + '"></div>' +
+            '<button type="button" class="cat-btn remove" data-act="remove" aria-label="Remove zone ' + (i + 1) + '">×</button></div>' +
+          '<div class="field"><label for="z-codes-' + i + '">Countries</label><input type="text" id="z-codes-' + i + '" data-k="codes" value="' + ibEscape(z.codes) + '" autocapitalize="characters" spellcheck="false"></div>' +
+          '<p class="hint zone-names">' + ibEscape(zonePreview(parseCodes(z.codes))) + '</p>' +
+        '</div>';
+      }).join("");
+    }
+
+    async function saveZones(e) {
+      e.preventDefault();
+      var fees = {}, map = {}, problem = null;
+      document.querySelectorAll("#zone-list .zone-row").forEach(function (el, i) {
+        var z = zones[i], key = String(i + 1);
+        var feeIn = el.querySelector('[data-k="fee"]'), codesIn = el.querySelector('[data-k="codes"]');
+        var fee = readBaht(feeIn);
+        var feeBad = fee === null || isNaN(fee);
+        var codes = parseCodes(z.codes), codesBad = !codes.length;
+        codes.forEach(function (c) {
+          if (c === "TH" || !/^[A-Z]{2}$/.test(c) || !countryName(c)) { codesBad = true; problem = problem || c + " isn't a valid destination country code."; }
+          else if (map[c]) { codesBad = true; problem = problem || c + " is in two zones."; }
+          else map[c] = key;
+        });
+        if (!codes.length) problem = problem || "Zone " + key + " has no countries (remove it instead).";
+        if (feeBad) problem = problem || "Zone " + key + " needs a fee (a whole number, 0 or more).";
+        feeIn.classList.toggle("is-invalid", feeBad);
+        codesIn.classList.toggle("is-invalid", codesBad);
+        if (!feeBad) fees[key] = fee * 100;
+      });
+      if (problem) { A.toast(problem, true); return; }
+      var now = new Date().toISOString();
+      $("z-save").disabled = true;
+      var res = await window.IBDB.from("store_settings").upsert([
+        { key: "intl_zone_fees", value: fees, updated_at: now },
+        { key: "intl_country_zones", value: map, updated_at: now },
+        { key: "intl_fees_placeholder", value: false, updated_at: now }
+      ]);
+      $("z-save").disabled = false;
+      if (res.error) { console.error(res.error); A.toast("Couldn't save international shipping.", true); return; }
+      $("z-placeholder").hidden = true;
+      $("z-saved").textContent = savedText(now);
+      A.toast("International shipping saved.");
+    }
+
+    async function loadZones() {
+      var res = await window.IBDB.from("store_settings").select("key,value,updated_at")
+        .in("key", ["intl_zone_fees", "intl_country_zones", "intl_fees_placeholder"]);
+      if (res.error) throw res.error;
+      var fees = {}, map = {}, placeholder = false, latest = null;
+      (res.data || []).forEach(function (row) {
+        if (row.key === "intl_zone_fees" && row.value && typeof row.value === "object") fees = row.value;
+        if (row.key === "intl_country_zones" && row.value && typeof row.value === "object") map = row.value;
+        if (row.key === "intl_fees_placeholder") placeholder = row.value === true;
+        if (row.key !== "intl_fees_placeholder" && (!latest || row.updated_at > latest)) latest = row.updated_at;
+      });
+      var keys = Object.keys(fees);
+      Object.keys(map).forEach(function (c) { if (keys.indexOf(String(map[c])) === -1) keys.push(String(map[c])); });
+      keys.sort(function (a, b) { return Number(a) - Number(b) || a.localeCompare(b); });
+      zones = keys.map(function (k) {
+        return {
+          fee: typeof fees[k] === "number" ? String(fees[k] / 100) : "",
+          codes: Object.keys(map).filter(function (c) { return String(map[c]) === k; }).join(", ")
+        };
+      });
+      $("z-placeholder").hidden = !placeholder;
+      $("z-saved").textContent = savedText(latest);
+      $("z-save").disabled = false;
+      renderZones();
     }
 
     // ---------- Categories ----------
@@ -215,6 +323,30 @@
     $("s-fee").addEventListener("input", renderPreview);
     $("s-free").addEventListener("input", renderPreview);
     $("ship-form").addEventListener("submit", saveShipping);
+    $("intl-form").addEventListener("submit", saveZones);
+    $("zone-add").addEventListener("click", function () {
+      zones.push({ fee: "", codes: "" });
+      renderZones();
+      var input = $("z-fee-" + (zones.length - 1));
+      if (input) input.focus();
+    });
+    $("zone-list").addEventListener("input", function (e) {
+      var row = e.target.closest(".zone-row");
+      if (!row || !e.target.dataset.k) return;
+      var z = zones[+row.dataset.i];
+      z[e.target.dataset.k] = e.target.value;
+      e.target.classList.remove("is-invalid");
+      if (e.target.dataset.k === "codes") row.querySelector(".zone-names").textContent = zonePreview(parseCodes(z.codes));
+    });
+    $("zone-list").addEventListener("keydown", function (e) { if (e.key === "Enter") e.preventDefault(); });
+    $("zone-list").addEventListener("click", function (e) {
+      var btn = e.target.closest('[data-act="remove"]');
+      if (!btn) return;
+      var i = +btn.closest(".zone-row").dataset.i;
+      if (zones[i].codes.trim() && !confirm("Remove zone " + (i + 1) + "? Its countries can no longer be shipped to once you save.")) return;
+      zones.splice(i, 1);
+      renderZones();
+    });
     $("cat-form").addEventListener("submit", saveCats);
     $("cat-add").addEventListener("click", addCat);
     $("cat-new").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); addCat(); } });
@@ -242,6 +374,10 @@
       loadShipping().catch(function (e) {
         console.error("Shipping settings load failed", e);
         $("s-preview").textContent = "Couldn't load shipping settings. Refresh to retry.";
+      });
+      loadZones().catch(function (e) {
+        console.error("International shipping load failed", e);
+        $("zone-list").innerHTML = '<p class="hint">Couldn\'t load international shipping. Refresh to retry.</p>';
       });
       loadCats().catch(function (e) {
         console.error("Categories load failed", e);
