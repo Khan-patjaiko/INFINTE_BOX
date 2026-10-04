@@ -80,10 +80,55 @@ Session #14. Started from Handover #13. Focus: **UI before publish** (home page 
 - About heading now "Design. Development. Fabrication." (done at wrap-up).
 - Carried over: a Thai lawyer review + the DBD registration name on the legal pages; the orphan storage image; the ImprovMX badge + a test mail.
 
-## Next session (launch day, unchanged)
+## Late changes (after the first wrap-up)
 
-1. `main` was **pushed at the end of session #14** (all Handover #11–#14 work is on GitHub). Run the keep-awake workflow once (GitHub → Actions) and confirm it is green.
+- `0077087` Home hero proportions (desktop only): photo capped at 520px and right-aligned, centred on the copy block (dots no longer shift it); a little more spacing in the copy.
+- Home strip: "FDM & Resin Printing" removed. "Ships across Thailand" **stays** until international shipping is live (checkout still accepts TH only).
+- `main` was pushed at the end of session #14, so all Handover #11–#14 work is on GitHub.
+
+## Owner decision: international shipping (worldwide), before launch
+
+The owner wants **real worldwide shipping**, with the fee depending on the destination and based on DHL Express pricing.
+- **Approach: DHL zone table** (not live DHL API quotes).
+- **Domestic stays ฿50 flat**, free from ฿800.
+- **International is never free.**
+- **The buyer pays import duties and taxes.**
+- **Order:** session #15 = international shipping, then session #16 = launch day.
+
+## Next session (#15): international shipping by DHL zone
+
+Design agreed. Settle the details at the start of the session.
+1. **Data.**
+   - `store_settings` (no new table needed, admin-write RLS already exists):
+     - `intl_zone_fees`: one fee in satang per DHL zone.
+     - `intl_country_zones`: country code → zone.
+     - Countries that aren't listed can't be shipped to.
+   - The owner supplies their DHL Express rate card (export from Thailand), or confirms one parcel weight to price from.
+2. **Admin → Settings:** a section for editing the fee per zone and which countries are in each zone.
+3. **Cart:** a "Ship to" picker (Thailand by default, then the zoned countries). It shows the right fee before checkout, and the choice is passed to the checkout function.
+4. **`create-checkout-session` v14:**
+   - Reads the destination and validates it against the zone map.
+   - Sets `allowed_countries` to that one country, so Stripe refuses any other address.
+   - Charges the zone fee (or ฿50/free for TH).
+   - Stores the destination on the order.
+   - The webhook and receipt then show the international fee.
+5. **Content:**
+   - Terms: worldwide shipping, the buyer pays duties and taxes, international delivery ~7–21 business days (confirm), returns from abroad.
+   - FAQ "Do you ship internationally?".
+   - Home strip: "Ships across Thailand and Worldwide".
+   - Privacy: the carrier is DHL for international parcels.
+   - Sitemap dates.
+6. **Test:** a `4242` checkout to one international country (e.g. Singapore). Check:
+   - the zone fee in Stripe;
+   - a Thai address is refused for that session;
+   - the order and receipt are correct.
+
+   Then delete the test order and restore stock.
+
+## Session #16: launch day
+
+1. Run the keep-awake workflow once (GitHub → Actions) and confirm it is green.
 2. Zip the `site/` contents → the owner uploads them to Hostinger `public_html` (delete the coming-soon `index.html` + `assets/` first).
 3. Supabase Auth Site URL → `https://infinite-box.co`; Google Auth Platform → Publish app.
-4. Live re-test: login (email + Google), a `4242` checkout with a Thai address → paid + receipt + stock decrement; then restore stock and delete the order.
-5. After the live test, open Admin → Overview and confirm the visits from the live domain show up. Your own browser is excluded once you've opened the admin there.
+4. Live re-test: login (email + Google), a `4242` checkout with a Thai address and one with an international address → paid + receipt + stock decrement; then restore stock and delete the orders.
+5. Open Admin → Overview and confirm visits from the live domain show up. Your own browser is excluded once you've opened the admin there.

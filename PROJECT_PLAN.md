@@ -12,7 +12,7 @@ Tick boxes here as work lands; add a new phase rather than rewriting history.
 **Overall: ~97% to a launchable v1.** The store works end-to-end locally including test-mode
 payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages,
 SEO/share metadata, **transactional email (Resend, live)**, **password reset** and **profile
-edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **2026-10-04 (Handover #14):** home page rebuilt with real photos (hero slideshow + Our work gallery, new engineering-focused copy), visual audit at 1024/375px, Shopee-order product page, real About page, and **visitor stats in Admin → Overview** (own tracking in Supabase). **Nothing blocks launch.** Next: push, upload, launch-day toggles.
+edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **2026-10-04 (Handover #14):** home page rebuilt with real photos (hero slideshow + Our work gallery, new engineering-focused copy), visual audit at 1024/375px, Shopee-order product page, real About page, and **visitor stats in Admin → Overview** (own tracking in Supabase). **Next: Phase 14 (international shipping by DHL zone), then launch day** (push done; upload and launch-day toggles remain).
 
 | Area | Status |
 |---|---|
@@ -43,7 +43,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20; real stock entered with the catalogue 2026-09-21 (2 / 5 / 3 / 3) |
 | Footer social links (Facebook / Instagram / Line) | ⚠️ Added 2026-09-21 with **placeholder URLs** in `partials.js` `SOCIAL_LINKS` |
 | Legal pages (`privacy.html`, `terms.html`) + footer/signup links | ✅ Filled 2026-10-04 (Handover #13): operator "Infinite Box", Pathum Thani address, PDPA notice, Thai law, 7-day returns, Thailand-only shipping. Lawyer review + DBD registration name still recommended |
-| Shipping area | ✅ Thailand only since 2026-10-04 (`create-checkout-session` v13 `SHIP_TO = ["TH"]`, FAQ/home/terms aligned) |
+| Shipping area | ⏳ Worldwide by DHL zone planned (Phase 14, owner decision 2026-10-04). Currently Thailand only since 2026-10-04 (`create-checkout-session` v13 `SHIP_TO = ["TH"]`, FAQ/home/terms aligned) |
 | SEO / share prep (robots.txt, sitemap.xml, descriptions, noindex, canonical, Open Graph) | ✅ Done 2026-09-21 — domain **`infinite-box.co` confirmed, registered at GoDaddy** (2026-09-21) |
 | Product categories (`store_settings.product_categories`, migration 0012) | ✅ Done 2026-09-21 — Enclosures · Mechanical · Prototyping · Resin · Accessories · Automotive · Home Decoration · Personal Gadgets · Pets Supplies |
 | Error/empty states + Retry on every DB read; 375px audit; Lighthouse (home 98/95/100/100) | ✅ Done 2026-09-21 |
@@ -204,6 +204,15 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [ ] Stripe → **live mode** keys; swap secrets; final live purchase test with a real card + refund.
 - [x] UI pass before publish — 2026-10-04 (Handover #14): home photos + copy, custom-order drop zone, product buy box under the price, About + footer, 1024/375px audit of every page incl. admin/account.
 - [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_14.md`).
+
+### Phase 14 — International shipping by DHL zone (next session, before launch)
+Owner decision 2026-10-04 (Handover #14): ship worldwide. Fee per DHL Express zone (zone table, not the live API); domestic stays ฿50 / free from ฿800; international never free; the buyer pays duties. Full plan in [HANDOVER_14.md](HANDOVER_14.md) → "Next session (#15)".
+- [ ] store_settings `intl_zone_fees` + `intl_country_zones` (owner's DHL rate card)
+- [ ] Admin → Settings: zone fees + country/zone editor
+- [ ] Cart "Ship to" picker with the fee shown before checkout
+- [ ] `create-checkout-session` v14: validate the destination, `allowed_countries` = that country, zone fee; webhook/receipt show it
+- [ ] Terms / FAQ / privacy (DHL) / home strip "Ships across Thailand and Worldwide"
+- [ ] Test an international `4242` checkout, then clean up
 
 ### Backlog / ideas (not scheduled)
 - Product search.
