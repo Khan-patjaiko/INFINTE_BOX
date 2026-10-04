@@ -34,7 +34,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
 | Hosting | ✅ **Coming-soon page live at `https://infinite-box.co`** (2026-09-21, Handover #9). Hostinger website `infinite-box.co` (Premium, Malaysia DC), DNS via GoDaddy **A record** `145.79.26.182` + `CNAME www`. Store `site/` **not yet uploaded** |
-| Git | ✅ `main` in sync with `origin/main` through Handover #10; Handover #11–#14 commits are local until "push main" |
+| Git | ✅ `main` in sync with `origin/main` through Handover #10; pushed 2026-10-04 at the end of Handover #14 |
 | Supabase free-plan auto-pause | ⚠️ The project **paused after 11 idle days** (found 2026-10-04, restored intact). `.github/workflows/keep-supabase-awake.yml` pings it every 3 days and **becomes active once pushed** |
 | Inbound mail `hello@infinite-box.co` | ✅ 2026-10-04: ImprovMX forwarding → `khanleenine@gmail.com` (GoDaddy MX `mx1`/`mx2.improvmx.com`); the customer receipt and quote ack set Reply-To = `OWNER_EMAIL` |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |

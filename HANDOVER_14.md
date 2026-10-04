@@ -77,12 +77,12 @@ Session #14. Started from Handover #13. Focus: **UI before publish** (home page 
 - About page wording tweaks (the owner said they'd send them).
 - More "Our work" photos (12 photos fill every grid layout).
 - Optional: the home `<title>` / meta description still say "for Small Businesses".
-- Optional: the About heading "Design. Develop. 3D print." could match the new "Design · Development · Fabrication".
+- About heading now "Design. Development. Fabrication." (done at wrap-up).
 - Carried over: a Thai lawyer review + the DBD registration name on the legal pages; the orphan storage image; the ImprovMX badge + a test mail.
 
 ## Next session (launch day, unchanged)
 
-1. "push main" (`main` is now 27 ahead) → run the keep-awake workflow once and confirm it is green.
+1. `main` was **pushed at the end of session #14** (all Handover #11–#14 work is on GitHub). Run the keep-awake workflow once (GitHub → Actions) and confirm it is green.
 2. Zip the `site/` contents → the owner uploads them to Hostinger `public_html` (delete the coming-soon `index.html` + `assets/` first).
 3. Supabase Auth Site URL → `https://infinite-box.co`; Google Auth Platform → Publish app.
 4. Live re-test: login (email + Google), a `4242` checkout with a Thai address → paid + receipt + stock decrement; then restore stock and delete the order.
