@@ -695,6 +695,7 @@ button { font-family: inherit; cursor: pointer; }
 .pd-price { font-size: 24px; font-weight: 700; color: hsl(var(--primary)); margin-bottom: 24px; }
 .pd-desc { font-size: 15px; line-height: 1.7; color: hsl(var(--muted-foreground)); margin-bottom: 32px; }
 .pd-meta { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+.pd-details { margin-top: 32px; padding-top: 32px; border-top: 1px solid hsl(var(--border)); }
 .pd-meta-row { display: flex; justify-content: flex-start; gap: 24px; font-size: 13px; padding: 12px 0; border-bottom: 1px solid hsl(var(--border)); }
 .pd-meta-row span:first-child { flex: none; width: 140px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
 .pd-meta-row span:last-child { text-align: left; }
