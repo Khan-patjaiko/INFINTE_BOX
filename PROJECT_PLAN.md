@@ -1,18 +1,18 @@
 # Infinite Box — Project Plan (living roadmap)
 
-Last updated: 2026-10-05 · Source of truth for phases and tasks. Session history lives in
+Last updated: 2026-10-06 · Source of truth for phases and tasks. Session history lives in
 [HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
 [HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md),
-[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md), [HANDOVER_11.md](HANDOVER_11.md), [HANDOVER_12.md](HANDOVER_12.md), [HANDOVER_13.md](HANDOVER_13.md), [HANDOVER_14.md](HANDOVER_14.md), [HANDOVER_15.md](HANDOVER_15.md). How the system is built (four-layer architecture review) lives in
+[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md), [HANDOVER_11.md](HANDOVER_11.md), [HANDOVER_12.md](HANDOVER_12.md), [HANDOVER_13.md](HANDOVER_13.md), [HANDOVER_14.md](HANDOVER_14.md), [HANDOVER_15.md](HANDOVER_15.md), [HANDOVER_16.md](HANDOVER_16.md). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
-## Where we are now (as of 2026-10-05)
+## Where we are now (as of 2026-10-06)
 
 **Overall: ~97% to a launchable v1.** The store works end-to-end locally including test-mode
 payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages,
 SEO/share metadata, **transactional email (Resend, live)**, **password reset** and **profile
-edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **2026-10-04 (Handover #14):** home page rebuilt with real photos (hero slideshow + Our work gallery, new engineering-focused copy), visual audit at 1024/375px, Shopee-order product page, real About page, and **visitor stats in Admin → Overview** (own tracking in Supabase). **2026-10-05 (Handover #15):** Phase 14 done: worldwide shipping by DHL zone (migration 0019, checkout v14, webhook v12), tested with a Singapore `4242` checkout. **Next: the owner enters the real DHL fees, then launch day** (push, upload and launch-day toggles remain).
+edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **2026-10-04 (Handover #14):** home page rebuilt with real photos (hero slideshow + Our work gallery, new engineering-focused copy), visual audit at 1024/375px, Shopee-order product page, real About page, and **visitor stats in Admin → Overview** (own tracking in Supabase). **2026-10-05 (Handover #15):** Phase 14 done: worldwide shipping by DHL zone (migration 0019, checkout v14, webhook v12), tested with a Singapore `4242` checkout. **2026-10-06 (Handover #16): the store is LIVE at `https://infinite-box.co`** (Stripe still in test mode): `site/` uploaded, `.htaccess` www/http → apex, Supabase Site URL + Google app In production, live login + Thailand/Japan checkouts verified. **Next: Stripe live mode, then Search Console + Google brand verification.**
 
 | Area | Status |
 |---|---|
@@ -33,7 +33,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | UI polish pass #1 (spacing scale, focus ring, mobile padding, nav animation) | ✅ Done |
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
-| Hosting | ✅ **Coming-soon page live at `https://infinite-box.co`** (2026-09-21, Handover #9). Hostinger website `infinite-box.co` (Premium, Malaysia DC), DNS via GoDaddy **A record** `145.79.26.182` + `CNAME www`. Store `site/` **not yet uploaded** |
+| Hosting | ✅ **Store live at `https://infinite-box.co` since 2026-10-06** (Handover #16; coming-soon page retired; `site/.htaccess` 301s www/http to the apex). Hostinger website `infinite-box.co` (Premium, Malaysia DC), DNS via GoDaddy **A record** `145.79.26.182` + `CNAME www`. Re-deploy = zip `site/` (forward-slash paths) → Extract into `public_html` (folder name `.`, Overwrite on) |
 | Git | ✅ `main` in sync with `origin/main` through Handover #10; pushed 2026-10-04 at the end of Handover #14 |
 | Supabase free-plan auto-pause | ⚠️ The project **paused after 11 idle days** (found 2026-10-04, restored intact). `.github/workflows/keep-supabase-awake.yml` pings it every 3 days and **becomes active once pushed** |
 | Inbound mail `hello@infinite-box.co` | ✅ 2026-10-04: ImprovMX forwarding → `khanleenine@gmail.com` (GoDaddy MX `mx1`/`mx2.improvmx.com`); the customer receipt and quote ack set Reply-To = `OWNER_EMAIL` |
@@ -43,7 +43,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20; real stock entered with the catalogue 2026-09-21 (2 / 5 / 3 / 3) |
 | Footer social links (Facebook / Instagram / Line) | ⚠️ Added 2026-09-21 with **placeholder URLs** in `partials.js` `SOCIAL_LINKS` |
 | Legal pages (`privacy.html`, `terms.html`) + footer/signup links | ✅ Filled 2026-10-04 (Handover #13): operator "Infinite Box", Pathum Thani address, PDPA notice, Thai law, 7-day returns, Thailand-only shipping. Lawyer review + DBD registration name still recommended |
-| Shipping area | ✅ 2026-10-05 (Handover #15): Thailand (฿50, free from ฿800) + **worldwide by DHL Express zone** (44 countries, 7 zones, never free, recipient pays duties); cart "Ship to" picker, Admin → Settings zone editor. ⚠️ Zone fees are **placeholders** until the owner enters the DHL rate card |
+| Shipping area | ✅ 2026-10-05 (Handover #15): Thailand (฿50, free from ฿800) + **worldwide by DHL Express zone** (44 countries, 7 zones, never free, recipient pays duties); cart "Ship to" picker, Admin → Settings zone editor. Real DHL fees entered by the owner (2026-10-06) |
 | SEO / share prep (robots.txt, sitemap.xml, descriptions, noindex, canonical, Open Graph) | ✅ Done 2026-09-21 — domain **`infinite-box.co` confirmed, registered at GoDaddy** (2026-09-21) |
 | Product categories (`store_settings.product_categories`, migration 0012) | ✅ Done 2026-09-21 — Enclosures · Mechanical · Prototyping · Resin · Accessories · Automotive · Home Decoration · Personal Gadgets · Pets Supplies |
 | Error/empty states + Retry on every DB read; 375px audit; Lighthouse (home 98/95/100/100) | ✅ Done 2026-09-21 |
@@ -152,12 +152,12 @@ Goal: clean state, everything known-good.
 - [x] Delete test order `127c7b4e`: done 2026-10-04. The owner still needs to delete the orphan image `w201-190e-cup-holder-1790177065026.png` in the Storage dashboard (SQL delete is blocked).
 - [x] Keep-awake GitHub Action + `hello@` forwarding + Reply-To on customer emails: 2026-10-04 (Handover #12).
 - [x] Legal pages filled + Thailand-only shipping: 2026-10-04 (Handover #13).
-- [ ] Upload `site/` contents to `public_html` (Hostinger File Manager — extract at the root, not into a subfolder; delete the coming-soon `index.html`/`assets` first). No build step.
+- [x] **Done 2026-10-06 (Handover #16).** Upload `site/` contents to `public_html` (Hostinger File Manager — extract at the root, not into a subfolder; delete the coming-soon `index.html`/`assets` first). No build step.
 - [x] Point the GoDaddy DNS for `infinite-box.co` at Hostinger — done 2026-09-21 via **A record `@` → `145.79.26.182`** (`CNAME www → infinite-box.co` already existed). **Never switch to Hostinger nameservers**: the Resend DKIM/SPF/`send`/`rsend` records live in GoDaddy DNS and would be lost. Let's Encrypt installed automatically, Force HTTPS on, `http://` → 301 `https://`, `www` works.
-- [~] Supabase → Auth → URL Configuration: Redirect URLs now `http://localhost:8790/**` + `https://infinite-box.co/**` (2026-09-21). **Launch day:** change Site URL from `http://localhost:8790` to `https://infinite-box.co`.
-- [ ] Google Cloud Console → Google Auth Platform → **Audience → Publish app** (Testing → In production). Launch-day step: in Testing only listed test users can use Google sign-in. Branding (name, logo, home/privacy/terms URLs, authorized domains `ptwfidmlnuggxvqhimhe.supabase.co` + `infinite-box.co`) was filled in 2026-09-21.
+- [x] Supabase → Auth → URL Configuration (Site URL set to `https://infinite-box.co` 2026-10-06): Redirect URLs now `http://localhost:8790/**` + `https://infinite-box.co/**` (2026-09-21). **Launch day:** change Site URL from `http://localhost:8790` to `https://infinite-box.co`.
+- [x] (In production since 2026-10-06) Google Cloud Console → Google Auth Platform → **Audience → Publish app** (Testing → In production). Launch-day step: in Testing only listed test users can use Google sign-in. Branding (name, logo, home/privacy/terms URLs, authorized domains `ptwfidmlnuggxvqhimhe.supabase.co` + `infinite-box.co`) was filled in 2026-09-21.
 - [ ] After the site is live: verify `infinite-box.co` in Google Search Console, then submit the OAuth app for **brand verification** so the consent screen says "Sign in to Infinite Box" instead of the raw `…supabase.co` domain. If Google objects to the unowned supabase.co domain, the fallback is a Supabase custom domain (`api.infinite-box.co`, $10/mo add-on) + updating `config.js`, the Google redirect URI and the Stripe webhook URL.
-- [ ] Re-run login (email + Google) and a test checkout on the live domain.
+- [x] Re-run login (email + Google) and a test checkout on the live domain — 2026-10-06: Google login, email sign-up confirm link → infinite-box.co, `4242` checkouts to Thailand and Japan; test data cleaned up.
 - [x] Deploy `coming-soon/` — done 2026-09-21: it is what `public_html` serves now (`index.html` + `assets/`), with `<meta name="robots" content="noindex, nofollow">` so Google doesn't cache a "coming soon" snippet. Retired automatically when `site/` is uploaded over it.
 - [x] Add `robots.txt`, `sitemap.xml`, `<meta description>` per page, `noindex` on transactional pages, canonical + Open Graph tags — done 2026-09-21 (Handover #6). Origin hardcoded as `https://infinite-box.co`.
 
@@ -209,7 +209,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 Owner decision 2026-10-04 (Handover #14): ship worldwide. Fee per DHL Express zone (zone table, not the live API); domestic stays ฿50 / free from ฿800; international never free; the buyer pays duties. Full plan in [HANDOVER_14.md](HANDOVER_14.md) → "Next session (#15)".
 **Done 2026-10-05 (Handover #15).**
 - [x] store_settings `intl_zone_fees` + `intl_country_zones` + `intl_fees_placeholder`, `orders.ship_country` (migration 0019). 7 zones / 44 countries with **placeholder fees**
-- [ ] **Owner: enter the real DHL Express fees** in Admin → Settings before launch (banner shows until saved)
+- [x] (saved by 2026-10-06) **Owner: enter the real DHL Express fees** in Admin → Settings before launch (banner shows until saved)
 - [x] Admin → Settings: zone fees + country/zone editor; order drawer shows the destination
 - [x] Cart "Ship to" picker with the fee shown before checkout
 - [x] `create-checkout-session` v14: validate the destination, `allowed_countries` = that country, zone fee; webhook v12 receipt shows DHL + duties note
