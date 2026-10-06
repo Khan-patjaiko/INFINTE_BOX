@@ -11,7 +11,7 @@ product decision: **checkout requires a signed-in customer**. Six commits, all l
 
 ## Part 1 — Transactional email via Resend (Phase 12)
 
-- New [`supabase/functions/_shared/email.ts`](supabase/functions/_shared/email.ts):
+- New [`supabase/functions/_shared/email.ts`](../../supabase/functions/_shared/email.ts):
   `sendEmail()` / `sendOwnerAlert()` call the Resend API. They **never throw** — a failed or
   disabled send is logged and the caller carries on (a 500 from `stripe-webhook` would make
   Stripe retry and re-run the handler). With `RESEND_API_KEY` unset they log "email disabled".
@@ -45,9 +45,9 @@ contact alert, quote ack + alert, and — twice — order receipt + owner alert.
 
 - `auth.js`: `IBAuth.resetPassword(email)` (`resetPasswordForEmail` with `redirectTo =
   reset-password.html`) and `IBAuth.updatePassword(pw)`.
-- [`site/forgot-password.html`](site/forgot-password.html): email → same success message
+- [`site/forgot-password.html`](../../site/forgot-password.html): email → same success message
   whether or not the account exists (no enumeration); only rate-limit/network errors surface.
-- [`site/reset-password.html`](site/reset-password.html): waits up to 2.5 s for a session
+- [`site/reset-password.html`](../../site/reset-password.html): waits up to 2.5 s for a session
   (`PASSWORD_RECOVERY` / `getSession`), otherwise shows "invalid or expired" + link to request
   a new one. Works for a signed-in user too (account page links to it as "Change password").
 - `login.html` has a "Forgot password?" link. Both pages are `noindex` and in `robots.txt`.

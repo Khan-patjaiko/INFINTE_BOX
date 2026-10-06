@@ -1,9 +1,7 @@
 # Infinite Box — Project Plan (living roadmap)
 
-Last updated: 2026-10-06 · Source of truth for phases and tasks. Session history lives in
-[HANDOVER.md](HANDOVER.md), [HANDOVER_2.md](HANDOVER_2.md), [HANDOVER_3.md](HANDOVER_3.md),
-[HANDOVER_4.md](HANDOVER_4.md), [HANDOVER_5.md](HANDOVER_5.md), [HANDOVER_6.md](HANDOVER_6.md),
-[HANDOVER_7.md](HANDOVER_7.md), [HANDOVER_8.md](HANDOVER_8.md), [HANDOVER_9.md](HANDOVER_9.md), [HANDOVER_10.md](HANDOVER_10.md), [HANDOVER_11.md](HANDOVER_11.md), [HANDOVER_12.md](HANDOVER_12.md), [HANDOVER_13.md](HANDOVER_13.md), [HANDOVER_14.md](HANDOVER_14.md), [HANDOVER_15.md](HANDOVER_15.md), [HANDOVER_16.md](HANDOVER_16.md). How the system is built (four-layer architecture review) lives in
+Last updated: 2026-10-06 · Source of truth for phases and tasks. The latest session is
+[HANDOVER_16.md](HANDOVER_16.md); older handovers (#1–#15) live in [docs/handovers/](docs/handovers/). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
@@ -27,14 +25,14 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Custom quote form → `submit-quote` Edge Function + file upload | ✅ Live, verified |
 | Contact form → `contact_messages` | ✅ Live, verified |
 | Auth: email/password + `account.html` order history + **profile edit (name/phone)** | ✅ Done (profile edit 2026-09-21) |
-| Auth: Google OAuth | ✅ **Verified end-to-end 2026-09-21** — the owner signed in with Google and placed a paid order tied to that user. Google Cloud OAuth app is in **Testing** status (branding + logo + domains filled in); must be **published** before launch and brand-verified after deploy (Phase 9) |
+| Auth: Google OAuth | ✅ **Verified end-to-end 2026-09-21** — the owner signed in with Google and placed a paid order tied to that user. Google Cloud OAuth app **In production since 2026-10-06** (branding + logo + domains filled in); brand verification still to do (Phase 9) |
 | Auth: password reset (`forgot-password.html` → `reset-password.html`) | ✅ Done 2026-09-21 (Supabase default SMTP; consider Resend SMTP later) |
 | **Checkout requires login** (no guest orders; `create-checkout-session` returns 401) | ✅ Done 2026-09-21 — product decision by the owner |
 | UI polish pass #1 (spacing scale, focus ring, mobile padding, nav animation) | ✅ Done |
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
 | Hosting | ✅ **Store live at `https://infinite-box.co` since 2026-10-06** (Handover #16; coming-soon page retired; `site/.htaccess` 301s www/http to the apex). Hostinger website `infinite-box.co` (Premium, Malaysia DC), DNS via GoDaddy **A record** `145.79.26.182` + `CNAME www`. Re-deploy = zip `site/` (forward-slash paths) → Extract into `public_html` (folder name `.`, Overwrite on) |
-| Git | ✅ `main` in sync with `origin/main` through Handover #10; pushed 2026-10-04 at the end of Handover #14 |
+| Git | ✅ `main` in sync with `origin/main`; last pushed 2026-10-06 at the end of Handover #16 |
 | Supabase free-plan auto-pause | ⚠️ The project **paused after 11 idle days** (found 2026-10-04, restored intact). `.github/workflows/keep-supabase-awake.yml` pings it every 3 days; **active on GitHub, first manual run green 2026-10-06** |
 | Inbound mail `hello@infinite-box.co` | ✅ 2026-10-04: ImprovMX forwarding → `khanleenine@gmail.com` (GoDaddy MX `mx1`/`mx2.improvmx.com`); the customer receipt and quote ack set Reply-To = `OWNER_EMAIL` |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
@@ -42,7 +40,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Admin UI (`site/admin/` — overview, orders, quotes, messages, products, **settings**) | ✅ Done 2026-09-20; Settings page added 2026-09-23 (Handover #11). Sole admin: owner `chaopraya.khan@gmail.com` |
 | Stock management + sold-out enforcement (storefront, checkout 409, webhook decrement) | ✅ Done 2026-09-20; real stock entered with the catalogue 2026-09-21 (2 / 5 / 3 / 3) |
 | Footer social links (Facebook / Instagram / Line) | ⚠️ Added 2026-09-21 with **placeholder URLs** in `partials.js` `SOCIAL_LINKS` |
-| Legal pages (`privacy.html`, `terms.html`) + footer/signup links | ✅ Filled 2026-10-04 (Handover #13): operator "Infinite Box", Pathum Thani address, PDPA notice, Thai law, 7-day returns, Thailand-only shipping. Lawyer review + DBD registration name still recommended |
+| Legal pages (`privacy.html`, `terms.html`) + footer/signup links | ✅ Filled 2026-10-04 (Handover #13): operator "Infinite Box", Pathum Thani address, PDPA notice, Thai law, 7-day returns; worldwide DHL shipping added 2026-10-05 (Handover #15). Lawyer review + DBD registration name still recommended |
 | Shipping area | ✅ 2026-10-05 (Handover #15): Thailand (฿50, free from ฿800) + **worldwide by DHL Express zone** (44 countries, 7 zones, never free, recipient pays duties); cart "Ship to" picker, Admin → Settings zone editor. Real DHL fees entered by the owner (2026-10-06) |
 | SEO / share prep (robots.txt, sitemap.xml, descriptions, noindex, canonical, Open Graph) | ✅ Done 2026-09-21 — domain **`infinite-box.co` confirmed, registered at GoDaddy** (2026-09-21) |
 | Product categories (`store_settings.product_categories`, migration 0012) | ✅ Done 2026-09-21 — Enclosures · Mechanical · Prototyping · Resin · Accessories · Automotive · Home Decoration · Personal Gadgets · Pets Supplies |
@@ -51,8 +49,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Email notifications (order receipt + owner alert, quote ack + alert, contact alert) | ✅ **Live 2026-09-21** via Resend — domain `infinite-box.co` verified, from `hello@infinite-box.co`, alerts to `OWNER_EMAIL`; all three flows verified with real deliveries |
 | Coming-soon page email capture | ❌ localStorage only, not a real list |
 
-**Immediate blockers on the user side:** (1) ~~legal name + address~~ done 2026-10-04, (2) upload `site/` to Hostinger
-`public_html` (domain + HTTPS already done — the coming-soon page is there now), (6) publish the Google OAuth app (Testing → In production) on launch day.
+**Immediate blockers on the user side:** none for the test-mode store (launched 2026-10-06). Before taking real money: Stripe live mode (Phase 13).
 
 ---
 
@@ -68,7 +65,7 @@ E-Commerce Web/
 │   ├── custom.html                Custom-order quote form (+ file upload) → submit-quote
 │   ├── contact.html               Contact form → submit-contact Edge Function
 │   ├── about.html · faq.html · materials.html   Static content
-│   ├── privacy.html · terms.html  Legal pages (placeholders to fill; `.legal` prose class)
+│   ├── privacy.html · terms.html  Legal pages (`.legal` prose class)
 │   ├── login.html · signup.html   Email/password + Google OAuth; both honour ?next= (e.g. cart.html)
 │   ├── forgot-password.html · reset-password.html   Password reset (noindex; reset also serves "Change password" when signed in)
 │   ├── account.html               Auth-guarded: profile edit (name/phone) + order history (cards link to order.html)
@@ -99,10 +96,11 @@ E-Commerce Web/
 │   ├── functions/_shared/email.ts Resend helper (sendEmail/sendOwnerAlert + templates), bundled into each function on deploy
 │   └── functions/<name>/index.ts  submit-quote · submit-contact · create-checkout-session · stripe-webhook · get-order
 ├── docs/ARCHITECTURE.md           Four-layer architecture reference
-├── coming-soon/index.html         Standalone pre-launch page — LIVE at https://infinite-box.co since 2026-09-21 (noindex, no backend)
+├── coming-soon/index.html         Standalone pre-launch page — served 2026-09-21 → 2026-10-06, retired when the store went live
 ├── Example/                       Original Airo export (reference only)
 ├── .claude/launch.json            preview servers: infinite-box-site :8790, infinite-box-coming-soon :8791
-└── HANDOVER*.md                   Session history
+├── HANDOVER_16.md                 Latest session handover
+└── docs/handovers/                Older handovers #1–#15
 
 Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
 ├── Tables: profiles, products (+stock), orders (+stock_applied_at), order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (shipping_cents, product_categories, intl_zone_fees, intl_country_zones), site_events (anonymous visit stats; anon insert, admin read) (RLS on all; admins can update orders/quotes/messages)
@@ -203,10 +201,10 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] Error/empty states for every DB read — done 2026-09-21: Retry button on index/shop/product/cart, empty-catalogue message, product not-found state, admin overview failure rows, admin-check network error distinguished from "not admin".
 - [ ] Stripe → **live mode** keys; swap secrets; final live purchase test with a real card + refund.
 - [x] UI pass before publish — 2026-10-04 (Handover #14): home photos + copy, custom-order drop zone, product buy box under the price, About + footer, 1024/375px audit of every page incl. admin/account.
-- [ ] Retire older handovers into `PROJECT_PLAN.md` as source of truth (latest is `HANDOVER_15.md`).
+- [x] Retire older handovers — 2026-10-06 (Handover #17): #1–#15 moved to `docs/handovers/`; `PROJECT_PLAN.md` stays the source of truth.
 
 ### Phase 14 — International shipping by DHL zone (next session, before launch)
-Owner decision 2026-10-04 (Handover #14): ship worldwide. Fee per DHL Express zone (zone table, not the live API); domestic stays ฿50 / free from ฿800; international never free; the buyer pays duties. Full plan in [HANDOVER_14.md](HANDOVER_14.md) → "Next session (#15)".
+Owner decision 2026-10-04 (Handover #14): ship worldwide. Fee per DHL Express zone (zone table, not the live API); domestic stays ฿50 / free from ฿800; international never free; the buyer pays duties. Full plan in [HANDOVER_14.md](docs/handovers/HANDOVER_14.md) → "Next session (#15)".
 **Done 2026-10-05 (Handover #15).**
 - [x] store_settings `intl_zone_fees` + `intl_country_zones` + `intl_fees_placeholder`, `orders.ship_country` (migration 0019). 7 zones / 44 countries with **placeholder fees**
 - [x] (saved by 2026-10-06) **Owner: enter the real DHL Express fees** in Admin → Settings before launch (banner shows until saved)

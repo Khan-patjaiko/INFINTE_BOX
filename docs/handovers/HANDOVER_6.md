@@ -11,7 +11,7 @@ layout fixes. Eight commits, all local (see [Git state](#git-state)).
 
 ## Part 1 — Legal pages (Phase 10)
 
-- New [`site/privacy.html`](site/privacy.html) and [`site/terms.html`](site/terms.html), built on
+- New [`site/privacy.html`](../../site/privacy.html) and [`site/terms.html`](../../site/terms.html), built on
   the `faq.html` skeleton with a new `.legal` prose class in `styles.css`. Plain-English copy
   covering what we collect (account, orders + shipping address via Stripe, uploaded design files,
   contact messages), third parties (Stripe, Supabase, Google sign-in, carriers), retention,

@@ -37,7 +37,7 @@ Five static pages under `site/admin/`, same pattern as the storefront, guarded c
 | `messages.html` | Contact inbox with read/unread (opening marks read), mailto reply |
 | `products.html` | Full CRUD: name, slug (auto from name), price, category (datalist), material, description, specs editor (`Label: value` per line), placeholder icon, **stock**, sort, active toggle, **photo upload** to `product-images` (this is how real photos get added — Phase 10 needs no code) |
 
-Shared code: [`site/assets/js/admin.js`](site/assets/js/admin.js) — injects its own admin
+Shared code: [`site/assets/js/admin.js`](../../site/assets/js/admin.js) — injects its own admin
 header (Overview · Orders · Quotes · Messages · Products · View store · Log out), exposes
 `window.IBAdmin` (`requireAdmin`, `money`, `date`, `statusBadge`, `toast`, `signedUrl`).
 Signed out → `../login.html?next=admin/<page>.html` (login's `next` regex was widened to
