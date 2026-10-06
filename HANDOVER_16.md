@@ -43,9 +43,13 @@ Session #16. Started from Handover #15. Focus: **Phase 9, publish the store**. *
 
 ## Open items for the owner
 
-- Run **GitHub → Actions → keep-supabase-awake → Run workflow** once and check it's green (not confirmed this session).
 - Glance at **Admin → Overview** to see the real visits.
 - Carried over: About wording / more "Our work" photos, lawyer review + DBD name, orphan storage image, ImprovMX badge + test mail.
+
+## Wrap-up
+
+- Keep-awake workflow run manually by the owner: **green** (the Actions page hides the workflow list in the "All workflows ▾" dropdown on narrow windows).
+- `main` pushed (`cb64888..152cab3`).
 
 ## Next session (#17) options
 
