@@ -45,3 +45,10 @@ Session #17. Started from Handover #16. Focus: **small fixes, email, Google Sear
 1. **Stripe live mode** (Phase 13), when the owner is ready. Check first that the Stripe account is Thai and pays out THB to a Thai bank; then a live webhook + `sk_live`/`whsec` secrets, one real ฿309 purchase + refund. Test cards stop working after the switch.
 2. **Product pages in `sitemap.xml`** (`product.html?id=<slug>` for the 4 products) so Google can list them.
 3. Optional: a separate test environment (second free Supabase project with Stripe test keys) so `4242` testing stays possible after going live.
+
+## Addendum (2026-10-07): sitemap + product pages
+
+- Search Console then said **"Sitemap could not be read"** (Last read 10/7/26). The file is valid (parsed as XML; live copy identical to `site/sitemap.xml`; 200 for Googlebot UA, HEAD, gzip/brotli, HTTP/1.0; http/www 301 to it), so the cause is on Google's side or in how Hostinger answers Google's own IPs. Owner to run **URL Inspection → Test live URL** on the sitemap to see what Google gets.
+- **`product.html` had a static canonical `https://infinite-box.co/product.html`**, so all 4 products looked like one duplicate page to Google. Now each product sets its own canonical `product.html?id=<slug>` and meta description (first 155 chars of its description) once loaded; static `og:url` removed.
+- `sitemap.xml` now lists the 4 product pages (13 URLs). **New products must be added to `site/sitemap.xml` by hand** (no build step).
+- Deploy: upload `site/product.html` and `site/sitemap.xml` to `public_html` (overwrite).
