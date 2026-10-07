@@ -31,7 +31,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | UI polish pass #1 (spacing scale, focus ring, mobile padding, nav animation) | ✅ Done |
 | Stripe checkout (`create-checkout-session`, `stripe-webhook`) | ✅ **Live in test mode** — full checkout verified 2026-09-19 (paid order, address captured, cancel path preserves cart) |
 | Order status page (`order.html` + `get-order` Edge Function) | ✅ Done 2026-09-19 — linked from `success.html` ("My order") and `account.html` order cards |
-| Hosting | ✅ **Store live at `https://infinite-box.co` since 2026-10-06** (Handover #16; coming-soon page retired; `site/.htaccess` 301s www/http to the apex). Hostinger website `infinite-box.co` (Premium, Malaysia DC), DNS via GoDaddy **A record** `145.79.26.182` + `CNAME www`. Re-deploy = zip `site/` (forward-slash paths) → Extract into `public_html` (folder name `.`, Overwrite on) |
+| Hosting | ✅ **Store live at `https://infinite-box.co` since 2026-10-06** (Handover #16; coming-soon page retired; `site/.htaccess` 301s www/http to the apex). Hostinger website `infinite-box.co` (Premium, Malaysia DC), DNS via GoDaddy **A record** `145.79.26.182` + `CNAME www`. Re-deploy = zip `site/` (forward-slash paths) → Extract into `public_html` (folder name `.`, Overwrite on), or upload the changed files in File Manager. `scripts/deploy.sh` (FTPS, files changed since tag `deployed`) is ready but **waits on the owner's FTP credentials file** (Handover #17) |
 | Git | ✅ `main` in sync with `origin/main`; last pushed 2026-10-06 at the end of Handover #16 |
 | Supabase free-plan auto-pause | ⚠️ The project **paused after 11 idle days** (found 2026-10-04, restored intact). `.github/workflows/keep-supabase-awake.yml` pings it every 3 days; **active on GitHub, first manual run green 2026-10-06** |
 | Inbound mail `hello@infinite-box.co` | ✅ 2026-10-04: ImprovMX forwarding → `chaopraya.khan@gmail.com` (since 2026-10-07; root SPF includes ImprovMX; Gmail "Send mail as" Infinite Box via Resend SMTP — still lands in spam while the domain is new) (GoDaddy MX `mx1`/`mx2.improvmx.com`); the customer receipt and quote ack set Reply-To = `OWNER_EMAIL` |
@@ -213,6 +213,11 @@ Owner decision 2026-10-04 (Handover #14): ship worldwide. Fee per DHL Express zo
 - [x] `create-checkout-session` v14: validate the destination, `allowed_countries` = that country, zone fee; webhook v12 receipt shows DHL + duties note
 - [x] Terms / FAQ / privacy (DHL) / home strip "Ships across Thailand and Worldwide"
 - [x] Tested an international `4242` checkout (Singapore), then cleaned up
+
+### To do (owner-dependent)
+- [ ] **Hostinger auto-deploy**: owner creates `C:\Users\Chaopraya\.infinitebox-ftp` (see Handover #17), then Claude checks the FTP folder and runs `scripts/deploy.sh`.
+- [x] Product pages in `sitemap.xml` + per-product canonical: 2026-10-07; Search Console sitemap status **Success**.
+- [ ] Re-check in a few weeks: hello@ replies (and store receipts) landing in spam.
 
 ### Backlog / ideas (not scheduled)
 - Product search.

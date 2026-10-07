@@ -43,7 +43,7 @@ Session #17. Started from Handover #16. Focus: **small fixes, email, Google Sear
 ## Next session (#18) options
 
 1. **Stripe live mode** (Phase 13), when the owner is ready. Check first that the Stripe account is Thai and pays out THB to a Thai bank; then a live webhook + `sk_live`/`whsec` secrets, one real ฿309 purchase + refund. Test cards stop working after the switch.
-2. **Product pages in `sitemap.xml`** (`product.html?id=<slug>` for the 4 products) so Google can list them.
+2. **Hostinger auto-deploy**: owner creates the FTP credentials file (see below), then test `scripts/deploy.sh`.
 3. Optional: a separate test environment (second free Supabase project with Stripe test keys) so `4242` testing stays possible after going live.
 
 ## Addendum (2026-10-07): sitemap + product pages
@@ -51,4 +51,12 @@ Session #17. Started from Handover #16. Focus: **small fixes, email, Google Sear
 - Search Console then said **"Sitemap could not be read"** (Last read 10/7/26). The file is valid (parsed as XML; live copy identical to `site/sitemap.xml`; 200 for Googlebot UA, HEAD, gzip/brotli, HTTP/1.0; http/www 301 to it), so the cause is on Google's side or in how Hostinger answers Google's own IPs. Owner to run **URL Inspection → Test live URL** on the sitemap to see what Google gets.
 - **`product.html` had a static canonical `https://infinite-box.co/product.html`**, so all 4 products looked like one duplicate page to Google. Now each product sets its own canonical `product.html?id=<slug>` and meta description (first 155 chars of its description) once loaded; static `og:url` removed.
 - `sitemap.xml` now lists the 4 product pages (13 URLs). **New products must be added to `site/sitemap.xml` by hand** (no build step).
-- Deploy: upload `site/product.html` and `site/sitemap.xml` to `public_html` (overwrite).
+- Deployed by the owner (manual upload); live copies verified identical. After resubmitting, **Search Console sitemap status: Success** (13 URLs).
+
+## Hostinger auto-deploy (TO DO, waiting on the owner)
+
+`scripts/deploy.sh` uploads the `site/` files changed since the git tag `deployed` (local tag, now at the live version) over FTPS: `--dry-run` lists them, no arguments uploads and moves the tag, or pass explicit paths. It connects to `145.79.26.182` under the certificate name `ftp.hstgr.io` (Hostinger's `*.hstgr.io` cert; checked). Deleted files are only reported, never removed on the server.
+
+**Owner step to enable it:** create `C:\Users\Chaopraya\.infinitebox-ftp` (Notepad, "All files", no `.txt`) with one line
+`machine ftp.hstgr.io login <FTP username from hPanel → Files → FTP Accounts> password <FTP password>`.
+Then Claude: list the FTP root to confirm `public_html` is the right `IB_FTP_DIR`, run a dry run, deploy, compare live files. Until then, upload changed files by hand in File Manager.
