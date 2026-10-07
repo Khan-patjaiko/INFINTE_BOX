@@ -1,7 +1,7 @@
 # Infinite Box — Project Plan (living roadmap)
 
 Last updated: 2026-10-06 · Source of truth for phases and tasks. The latest session is
-[HANDOVER_16.md](HANDOVER_16.md); older handovers (#1–#15) live in [docs/handovers/](docs/handovers/). How the system is built (four-layer architecture review) lives in
+[HANDOVER_17.md](HANDOVER_17.md); older handovers (#1–#16) live in [docs/handovers/](docs/handovers/). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
@@ -10,7 +10,7 @@ Tick boxes here as work lands; add a new phase rather than rewriting history.
 **Overall: ~97% to a launchable v1.** The store works end-to-end locally including test-mode
 payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages,
 SEO/share metadata, **transactional email (Resend, live)**, **password reset** and **profile
-edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **2026-10-04 (Handover #14):** home page rebuilt with real photos (hero slideshow + Our work gallery, new engineering-focused copy), visual audit at 1024/375px, Shopee-order product page, real About page, and **visitor stats in Admin → Overview** (own tracking in Supabase). **2026-10-05 (Handover #15):** Phase 14 done: worldwide shipping by DHL zone (migration 0019, checkout v14, webhook v12), tested with a Singapore `4242` checkout. **2026-10-06 (Handover #16): the store is LIVE at `https://infinite-box.co`** (Stripe still in test mode): `site/` uploaded, `.htaccess` www/http → apex, Supabase Site URL + Google app In production, live login + Thailand/Japan checkouts verified. **Next: Stripe live mode, then Search Console + Google brand verification.**
+edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **2026-10-04 (Handover #14):** home page rebuilt with real photos (hero slideshow + Our work gallery, new engineering-focused copy), visual audit at 1024/375px, Shopee-order product page, real About page, and **visitor stats in Admin → Overview** (own tracking in Supabase). **2026-10-05 (Handover #15):** Phase 14 done: worldwide shipping by DHL zone (migration 0019, checkout v14, webhook v12), tested with a Singapore `4242` checkout. **2026-10-06 (Handover #16): the store is LIVE at `https://infinite-box.co`** (Stripe still in test mode): `site/` uploaded, `.htaccess` www/http → apex, Supabase Site URL + Google app In production, live login + Thailand/Japan checkouts verified. **2026-10-07 (Handover #17):** ImprovMX SPF fixed, hello@ replies sent as Infinite Box, Search Console verified + sitemap, Google brand verification published. **Next: Stripe live mode when the owner is ready (staying in test mode for now).**
 
 | Area | Status |
 |---|---|
@@ -34,7 +34,7 @@ edit**; checkout **requires a signed-in customer**; auth emails now go out via R
 | Hosting | ✅ **Store live at `https://infinite-box.co` since 2026-10-06** (Handover #16; coming-soon page retired; `site/.htaccess` 301s www/http to the apex). Hostinger website `infinite-box.co` (Premium, Malaysia DC), DNS via GoDaddy **A record** `145.79.26.182` + `CNAME www`. Re-deploy = zip `site/` (forward-slash paths) → Extract into `public_html` (folder name `.`, Overwrite on) |
 | Git | ✅ `main` in sync with `origin/main`; last pushed 2026-10-06 at the end of Handover #16 |
 | Supabase free-plan auto-pause | ⚠️ The project **paused after 11 idle days** (found 2026-10-04, restored intact). `.github/workflows/keep-supabase-awake.yml` pings it every 3 days; **active on GitHub, first manual run green 2026-10-06** |
-| Inbound mail `hello@infinite-box.co` | ✅ 2026-10-04: ImprovMX forwarding → `khanleenine@gmail.com` (GoDaddy MX `mx1`/`mx2.improvmx.com`); the customer receipt and quote ack set Reply-To = `OWNER_EMAIL` |
+| Inbound mail `hello@infinite-box.co` | ✅ 2026-10-04: ImprovMX forwarding → `chaopraya.khan@gmail.com` (since 2026-10-07; root SPF includes ImprovMX; Gmail "Send mail as" Infinite Box via Resend SMTP — still lands in spam while the domain is new) (GoDaddy MX `mx1`/`mx2.improvmx.com`); the customer receipt and quote ack set Reply-To = `OWNER_EMAIL` |
 | Backend source in git (`supabase/` migrations + Edge Functions) | ✅ Done 2026-09-19 — exported from the hosted project; edit here first, then deploy (see `supabase/README.md`) |
 | Real product catalogue | ✅ 4 real products live (2026-09-21): W201 190E cup holder ฿399, Mazda 7" phone mount ฿279–฿359 (owner's real options since 2026-09-23: Color Black/Red × Style Clamp ฿329 / Magnet ฿359 / Mount Only ฿279, stock 2 each), W124 cup holder ฿599, BMW E90 console insert ฿259 — with stock and a 2–6 photo gallery each (`products.images`, `site/assets/img/products/`). Placeholders and the test order deleted. |
 | Admin UI (`site/admin/` — overview, orders, quotes, messages, products, **settings**) | ✅ Done 2026-09-20; Settings page added 2026-09-23 (Handover #11). Sole admin: owner `chaopraya.khan@gmail.com` |
@@ -99,8 +99,8 @@ E-Commerce Web/
 ├── coming-soon/index.html         Standalone pre-launch page — served 2026-09-21 → 2026-10-06, retired when the store went live
 ├── Example/                       Original Airo export (reference only)
 ├── .claude/launch.json            preview servers: infinite-box-site :8790, infinite-box-coming-soon :8791
-├── HANDOVER_16.md                 Latest session handover
-└── docs/handovers/                Older handovers #1–#15
+├── HANDOVER_17.md                 Latest session handover
+└── docs/handovers/                Older handovers #1–#16
 
 Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
 ├── Tables: profiles, products (+stock), orders (+stock_applied_at), order_items, quote_requests (+quoted_price_cents, admin_note), contact_messages (+is_read), store_settings (shipping_cents, product_categories, intl_zone_fees, intl_country_zones), site_events (anonymous visit stats; anon insert, admin read) (RLS on all; admins can update orders/quotes/messages)
@@ -201,7 +201,7 @@ Same static-page pattern, guarded by `profiles.is_admin` (RLS already enforces i
 - [x] Error/empty states for every DB read — done 2026-09-21: Retry button on index/shop/product/cart, empty-catalogue message, product not-found state, admin overview failure rows, admin-check network error distinguished from "not admin".
 - [ ] Stripe → **live mode** keys; swap secrets; final live purchase test with a real card + refund.
 - [x] UI pass before publish — 2026-10-04 (Handover #14): home photos + copy, custom-order drop zone, product buy box under the price, About + footer, 1024/375px audit of every page incl. admin/account.
-- [x] Retire older handovers — 2026-10-06 (Handover #17): #1–#15 moved to `docs/handovers/`; `PROJECT_PLAN.md` stays the source of truth.
+- [x] Retire older handovers — 2026-10-06 (Handover #17): #1–#16 moved to `docs/handovers/`; `PROJECT_PLAN.md` stays the source of truth.
 
 ### Phase 14 — International shipping by DHL zone (next session, before launch)
 Owner decision 2026-10-04 (Handover #14): ship worldwide. Fee per DHL Express zone (zone table, not the live API); domestic stays ฿50 / free from ฿800; international never free; the buyer pays duties. Full plan in [HANDOVER_14.md](docs/handovers/HANDOVER_14.md) → "Next session (#15)".
