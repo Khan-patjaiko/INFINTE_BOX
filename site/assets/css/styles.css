@@ -235,7 +235,8 @@ button { font-family: inherit; cursor: pointer; }
 @media (min-width: 768px) {
   .main-nav { display: flex; }
   .header-actions { display: flex; }
-  .mobile-actions .menu-toggle, .mobile-actions .cart-link { display: none; }
+  /* Hide the whole group: an empty flex item would still take the last slot of space-between. */
+  .mobile-actions { display: none; }
   .mobile-nav { display: none !important; }
 }
 @media (max-width: 767px) {
