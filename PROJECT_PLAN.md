@@ -225,7 +225,7 @@ Owner decision 2026-10-04 (Handover #14): ship worldwide. Fee per DHL Express zo
 - [x] JSON-LD: Organization + WebSite on home; Product (THB offer, stock, images) injected on product pages
 - [x] IndexNow: `site/indexnow-key.txt` (keep forever) + `scripts/indexnow.sh`; 13 URLs accepted (202)
 - [x] Bing Webmaster Tools: imported from Search Console, sitemap submitted
-- [x] Header: Log in / cart / Shop Now flush right on desktop (`79ecdaa`), **styles.css awaiting upload**
+- [x] Header: Log in / cart / Shop Now flush right on desktop (`79ecdaa`), deployed 2026-10-09
 - [ ] **Automatic sitemap**: `sitemap.php` on Hostinger reads active products from Supabase (anon REST, same as the shop), `.htaccess` rewrites `/sitemap.xml` to it, so new products need no manual sitemap edit
 - [x] Owner: Search Console → Request indexing (home, shop, 4 products), 2026-10-09
 - [ ] Owner: Rich Results Test on a product page (needs a signed-in Google account; Claude's pane could not run it)

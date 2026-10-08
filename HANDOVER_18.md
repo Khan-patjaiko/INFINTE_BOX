@@ -24,9 +24,11 @@ Session #18. Started from Handover #17. Focus: **getting the site found on Googl
 | 7 | `79ecdaa` | **Header fix**: on desktop, `.mobile-actions` (empty flex item) still took the last `space-between` slot, so Log in / cart / Shop Now sat ~one gap left of the content edge. Now the whole group is `display:none` ≥768px. Verified 1600px (Shop Now right edge = hero right edge) and 375px (cart + menu still shown) |
 | 8 | (this) | Handover #18; PROJECT_PLAN Phase 15 section |
 
-## ⚠️ To deploy
+## Deploy
 
-`assets/css/styles.css` (header fix) is **not uploaded yet**. Owner: upload `site/assets/css/styles.css` to `public_html/assets/css/`, then Claude verifies and moves the `deployed` tag. (`bash scripts/deploy.sh --dry-run` lists it.)
+`assets/css/styles.css` uploaded and verified identical (first attempt landed in the `public_html/` root; stray copy deleted). The `deployed` tag is at the live version.
+
+**Caching:** LiteSpeed sends `Cache-Control: max-age=604800` (7 days) for CSS, so returning visitors can see old styles for up to a week. Idea for #19: version the stylesheet link (`styles.css?v=N`) on every page.
 
 ## Keep forever
 
