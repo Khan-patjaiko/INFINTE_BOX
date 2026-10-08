@@ -73,6 +73,32 @@
         if (summary) {
           document.getElementById("page-description").setAttribute("content", summary.length > 155 ? summary.slice(0, 152) + "…" : summary);
         }
+        // schema.org Product so Google can show price, stock and photo in results (rich results).
+        var offer = {
+          "@type": p.priceMin === p.priceMax ? "Offer" : "AggregateOffer",
+          url: canonical.href,
+          priceCurrency: "THB",
+          availability: "https://schema.org/" + (p.soldOut ? "OutOfStock" : "InStock"),
+          itemCondition: "https://schema.org/NewCondition",
+          seller: { "@type": "Organization", name: "Infinite Box" }
+        };
+        if (offer["@type"] === "Offer") { offer.price = p.priceMin.toFixed(2); }
+        else { offer.lowPrice = p.priceMin.toFixed(2); offer.highPrice = p.priceMax.toFixed(2); offer.offerCount = p.variants.length; }
+        var ld = document.getElementById("product-jsonld") || document.head.appendChild(document.createElement("script"));
+        ld.id = "product-jsonld";
+        ld.type = "application/ld+json";
+        ld.textContent = JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: p.name,
+          description: summary || undefined,
+          image: p.images.length ? p.images.map(function (u) { return new URL(u, "https://infinite-box.co/").href; }) : undefined,
+          sku: p.slug,
+          material: p.material || undefined,
+          category: p.category || undefined,
+          brand: { "@type": "Brand", name: "Infinite Box" },
+          offers: offer
+        });
 
         // A spec value with several lines ("A\nB\nC") renders as a bullet list.
         var listHtml = function (lines) {
