@@ -72,6 +72,7 @@ E-Commerce Web/
 │   ├── order.html?id=<uuid> or ?session_id=<cs_...>  Single-order status (items, total, shipping address)
 │   ├── success.html · cancel.html Stripe return pages (success.html has a "My order" button → order.html)
 │   ├── robots.txt · sitemap.xml   Crawler config (admin + transactional pages disallowed)
+│   ├── indexnow-key.txt           IndexNow ownership key for Bing etc. KEEP in public_html forever (scripts/indexnow.sh checks it)
 │   ├── admin/                     Admin dashboard (guarded by profiles.is_admin; own header via admin.js, noindex)
 │   │   ├── index.html             Overview: counts (to-fulfil, new quotes, unread, 30d revenue) + visitor stats (admin_site_stats) + recent orders/quotes
 │   │   ├── orders.html            Filter/search, drawer with items + address, change status
