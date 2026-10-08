@@ -1,7 +1,7 @@
 # Infinite Box — Project Plan (living roadmap)
 
 Last updated: 2026-10-06 · Source of truth for phases and tasks. The latest session is
-[HANDOVER_17.md](HANDOVER_17.md); older handovers (#1–#16) live in [docs/handovers/](docs/handovers/). How the system is built (four-layer architecture review) lives in
+[HANDOVER_18.md](HANDOVER_18.md); older handovers (#1–#17) live in [docs/handovers/](docs/handovers/). How the system is built (four-layer architecture review) lives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 Tick boxes here as work lands; add a new phase rather than rewriting history.
 
@@ -10,7 +10,7 @@ Tick boxes here as work lands; add a new phase rather than rewriting history.
 **Overall: ~97% to a launchable v1.** The store works end-to-end locally including test-mode
 payments, a per-order status page, stock/sold-out enforcement, an admin dashboard, legal pages,
 SEO/share metadata, **transactional email (Resend, live)**, **password reset** and **profile
-edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **2026-10-04 (Handover #14):** home page rebuilt with real photos (hero slideshow + Our work gallery, new engineering-focused copy), visual audit at 1024/375px, Shopee-order product page, real About page, and **visitor stats in Admin → Overview** (own tracking in Supabase). **2026-10-05 (Handover #15):** Phase 14 done: worldwide shipping by DHL zone (migration 0019, checkout v14, webhook v12), tested with a Singapore `4242` checkout. **2026-10-06 (Handover #16): the store is LIVE at `https://infinite-box.co`** (Stripe still in test mode): `site/` uploaded, `.htaccess` www/http → apex, Supabase Site URL + Google app In production, live login + Thailand/Japan checkouts verified. **2026-10-07 (Handover #17):** ImprovMX SPF fixed, hello@ replies sent as Infinite Box, Search Console verified + sitemap, Google brand verification published. **Next: Stripe live mode when the owner is ready (staying in test mode for now).**
+edit**; checkout **requires a signed-in customer**; auth emails now go out via Resend from `hello@infinite-box.co`; the owner’s Google account is the sole user/admin (test user removed). Pre-launch chores done 2026-09-21 (Handover #8) — the only remaining engineering phase is **Phase 9 (deploy)**. **Since 2026-09-21 (Handover #9) `https://infinite-box.co` is live with the coming-soon page** — Hostinger website created, GoDaddy A record pointed, Let's Encrypt + Force HTTPS on. The store itself is not uploaded yet: going live = upload `site/` over `public_html` + the launch-day toggles. **2026-10-04 (Handover #12):** launch-readiness fixes done (keep-awake workflow, customer emails reply to the owner, `hello@` forwarding via ImprovMX, test order deleted). **2026-10-04 (Handover #13):** legal pages filled (PDPA), shipping limited to Thailand. **2026-10-04 (Handover #14):** home page rebuilt with real photos (hero slideshow + Our work gallery, new engineering-focused copy), visual audit at 1024/375px, Shopee-order product page, real About page, and **visitor stats in Admin → Overview** (own tracking in Supabase). **2026-10-05 (Handover #15):** Phase 14 done: worldwide shipping by DHL zone (migration 0019, checkout v14, webhook v12), tested with a Singapore `4242` checkout. **2026-10-06 (Handover #16): the store is LIVE at `https://infinite-box.co`** (Stripe still in test mode): `site/` uploaded, `.htaccess` www/http → apex, Supabase Site URL + Google app In production, live login + Thailand/Japan checkouts verified. **2026-10-07 (Handover #17):** ImprovMX SPF fixed, hello@ replies sent as Infinite Box, Search Console verified + sitemap, Google brand verification published. **2026-10-09 (Handover #18):** Phase 15 search visibility started (SEO copy, JSON-LD, IndexNow, Bing), header alignment fix. **Next: Stripe live mode when the owner is ready (staying in test mode for now).**
 
 | Area | Status |
 |---|---|
@@ -100,7 +100,7 @@ E-Commerce Web/
 ├── coming-soon/index.html         Standalone pre-launch page — served 2026-09-21 → 2026-10-06, retired when the store went live
 ├── Example/                       Original Airo export (reference only)
 ├── .claude/launch.json            preview servers: infinite-box-site :8790, infinite-box-coming-soon :8791
-├── HANDOVER_17.md                 Latest session handover
+├── HANDOVER_18.md                 Latest session handover
 └── docs/handovers/                Older handovers #1–#16
 
 Supabase (project ptwfidmlnuggxvqhimhe, ap-southeast-1)
@@ -219,6 +219,22 @@ Owner decision 2026-10-04 (Handover #14): ship worldwide. Fee per DHL Express zo
 - [ ] **Hostinger auto-deploy**: owner creates `C:\Users\Chaopraya\.infinitebox-ftp` (see Handover #17), then Claude checks the FTP folder and runs `scripts/deploy.sh`.
 - [x] Product pages in `sitemap.xml` + per-product canonical: 2026-10-07; Search Console sitemap status **Success**.
 - [ ] Re-check in a few weeks: hello@ replies (and store receipts) landing in spam.
+
+### Phase 15 — Search visibility (started 2026-10-09, Handover #18)
+- [x] Home/Shop titles + descriptions rewritten (home leads with "Custom Design, Development, Fabrication & 3D Printing Studio"; owner's wording)
+- [x] JSON-LD: Organization + WebSite on home; Product (THB offer, stock, images) injected on product pages
+- [x] IndexNow: `site/indexnow-key.txt` (keep forever) + `scripts/indexnow.sh`; 13 URLs accepted (202)
+- [x] Bing Webmaster Tools: imported from Search Console, sitemap submitted
+- [x] Header: Log in / cart / Shop Now flush right on desktop (`79ecdaa`), **styles.css awaiting upload**
+- [ ] **Automatic sitemap**: `sitemap.php` on Hostinger reads active products from Supabase (anon REST, same as the shop), `.htaccess` rewrites `/sitemap.xml` to it, so new products need no manual sitemap edit
+- [x] Owner: Search Console → Request indexing (home, shop, 4 products), 2026-10-09
+- [ ] Owner: Rich Results Test on a product page (needs a signed-in Google account; Claude's pane could not run it)
+- [ ] Prerender product pages (static HTML per product, real `<a>` links) so crawlers don't depend on JavaScript
+- [ ] Services page(s) targeting search terms: reverse engineering, 3D printing service, custom part design (Thailand)
+- [ ] "Our work" project pages (one per project, photos + story), each a new indexable page
+- [ ] Thai-language versions of the key pages (Thai searchers search in Thai: รับปริ้น 3D, รับออกแบบชิ้นงาน, รับทำ reverse engineering)
+- [ ] Owner: Google Business Profile (service-area business, address hidden), declined for 2026-10-09, recommended later
+- [ ] Owner: backlinks: website link on Facebook, Instagram, LINE, Shopee/Lazada, car-club groups/forums (W124/W201/E90 owners)
 
 ### Backlog / ideas (not scheduled)
 - Product search.
