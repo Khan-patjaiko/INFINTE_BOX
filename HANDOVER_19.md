@@ -52,7 +52,20 @@ Session #19. Started from Handover #18. Focus:
 - Privacy/Terms and admin are English only. On Thai pages the footer links to the English legal pages.
 - No automatic language redirect: visitors choose with EN | TH. Google finds the Thai pages through the sitemap and hreflang.
 
-## Deploy (owner, not done yet)
+## Deploy
+
+**Done 2026-10-12:**
+- The owner uploaded `site-upload.zip` (all of `site/`, extracted over `public_html`).
+- Claude verified that the live files are identical to local and that `/th/` pages return 200 for Googlebot.
+- The live Thai product page was checked in the browser.
+- IndexNow returned **HTTP 200 for 24 URLs**.
+- The `deployed` tag is at `06750be`.
+
+Still to do:
+- **Owner:** Search Console → Sitemaps → resubmit `sitemap.xml`, plus URL Inspection → Request indexing for `https://infinite-box.co/th/`.
+- **Edge Functions:** step 3 below.
+
+Original steps:
 
 1. **Upload `site/`**, either as a zip extracted over `public_html` or the changed files in File Manager. That means every `.html`, the new `th/` folder, `assets/js/*` (incl. new `i18n.js`, `i18n-th.js`), `assets/css/styles.css`, `assets/img/home/` (4 new JPEGs), `admin/products.html`, `sitemap.xml` and `robots.txt`.
 2. Then `scripts/indexnow.sh` (submits the 24 sitemap URLs) and Search Console → Sitemaps → resubmit, plus Request indexing for `/th/`.
