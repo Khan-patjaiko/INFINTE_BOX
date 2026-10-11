@@ -47,6 +47,10 @@
     <div class="field"><label for="f-material">Material</label><input type="text" id="f-material" placeholder="e.g. PETG"></div>
     <div class="field span-2"><label for="f-description">Description</label><textarea id="f-description" rows="4" style="min-height:96px;"></textarea></div>
     <div class="field span-2"><label for="f-specs">Specs <span class="muted">(one per line, <code>Label: value</code>; separate list items with <code> | </code>)</span></label><textarea id="f-specs" rows="5" style="min-height:110px;font-size:13px;" placeholder="Material: PETG&#10;Layer height: 0.2mm&#10;Lead time: 3-5 days"></textarea></div>
+    <div class="field span-2 th-fields-head"><p class="muted" style="margin:8px 0 0;">Thai version <span lang="th">(ภาษาไทย)</span>: shown on the Thai site (/th/). Leave empty to show the English text there.</p></div>
+    <div class="field span-2"><label for="f-name-th">Name (Thai)</label><input type="text" id="f-name-th" lang="th"></div>
+    <div class="field span-2"><label for="f-description-th">Description (Thai)</label><textarea id="f-description-th" lang="th" rows="4" style="min-height:96px;"></textarea></div>
+    <div class="field span-2"><label for="f-specs-th">Specs (Thai) <span class="muted">(same format as Specs)</span></label><textarea id="f-specs-th" lang="th" rows="4" style="min-height:96px;font-size:13px;" placeholder="วัสดุ: ABS&#10;ใช้กับรุ่น: Mercedes-Benz W124"></textarea></div>
     <div class="field span-2">
       <label>Options <span class="muted">(up to 3, e.g. Color, Style — the customer picks one value of each)</span></label>
       <div id="f-options" class="opt-groups"></div>
@@ -274,6 +278,9 @@
       $("f-material").value = p ? (p.material || "") : "";
       $("f-description").value = p ? (p.description || "") : "";
       $("f-specs").value = p ? specsToText(p.specs) : "";
+      $("f-name-th").value = p ? (p.name_th || "") : "";
+      $("f-description-th").value = p ? (p.description_th || "") : "";
+      $("f-specs-th").value = p ? specsToText(p.specs_th) : "";
       setOptions(p ? p.options : []);
       loadVariantCache(p);
       $("vb-price").value = $("vb-stock").value = $("vb-sku").value = "";
@@ -364,6 +371,10 @@
           material: $("f-material").value.trim() || null,
           description: $("f-description").value.trim() || null,
           specs: textToSpecs($("f-specs").value),
+          // Thai version (migration 0020); empty = the Thai site falls back to the English text.
+          name_th: $("f-name-th").value.trim() || null,
+          description_th: $("f-description-th").value.trim() || null,
+          specs_th: Object.keys(textToSpecs($("f-specs-th").value)).length ? textToSpecs($("f-specs-th").value) : null,
           options: options,
           variants: variants,
           // Icon and sort order are not editable in the UI: keep them on edit, default on create.
