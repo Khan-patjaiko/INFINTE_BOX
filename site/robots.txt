@@ -10,5 +10,14 @@ Disallow: /login.html
 Disallow: /signup.html
 Disallow: /forgot-password.html
 Disallow: /reset-password.html
+Disallow: /th/cart.html
+Disallow: /th/account.html
+Disallow: /th/order.html
+Disallow: /th/success.html
+Disallow: /th/cancel.html
+Disallow: /th/login.html
+Disallow: /th/signup.html
+Disallow: /th/forgot-password.html
+Disallow: /th/reset-password.html
 
 Sitemap: https://infinite-box.co/sitemap.xml

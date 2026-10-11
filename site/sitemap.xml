@@ -1,48 +1,159 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<!-- Each English page and its Thai copy (/th/) list both versions as alternates (hreflang). -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://infinite-box.co/</loc>
-    <lastmod>2026-10-09</lastmod>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/"/>
+  </url>
+  <url>
+    <loc>https://infinite-box.co/th/</loc>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/"/>
   </url>
   <url>
     <loc>https://infinite-box.co/shop.html</loc>
-    <lastmod>2026-10-09</lastmod>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/shop.html"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/shop.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/shop.html"/>
+  </url>
+  <url>
+    <loc>https://infinite-box.co/th/shop.html</loc>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/shop.html"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/shop.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/shop.html"/>
   </url>
   <url>
     <loc>https://infinite-box.co/product.html?id=w201-190e-cup-holder</loc>
-    <lastmod>2026-10-09</lastmod>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/product.html?id=w201-190e-cup-holder"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/product.html?id=w201-190e-cup-holder"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/product.html?id=w201-190e-cup-holder"/>
+  </url>
+  <url>
+    <loc>https://infinite-box.co/th/product.html?id=w201-190e-cup-holder</loc>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/product.html?id=w201-190e-cup-holder"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/product.html?id=w201-190e-cup-holder"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/product.html?id=w201-190e-cup-holder"/>
   </url>
   <url>
     <loc>https://infinite-box.co/product.html?id=mazda-phone-mount-7-inch</loc>
-    <lastmod>2026-10-09</lastmod>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/product.html?id=mazda-phone-mount-7-inch"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/product.html?id=mazda-phone-mount-7-inch"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/product.html?id=mazda-phone-mount-7-inch"/>
+  </url>
+  <url>
+    <loc>https://infinite-box.co/th/product.html?id=mazda-phone-mount-7-inch</loc>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/product.html?id=mazda-phone-mount-7-inch"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/product.html?id=mazda-phone-mount-7-inch"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/product.html?id=mazda-phone-mount-7-inch"/>
   </url>
   <url>
     <loc>https://infinite-box.co/product.html?id=w124-cup-holder</loc>
-    <lastmod>2026-10-09</lastmod>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/product.html?id=w124-cup-holder"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/product.html?id=w124-cup-holder"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/product.html?id=w124-cup-holder"/>
+  </url>
+  <url>
+    <loc>https://infinite-box.co/th/product.html?id=w124-cup-holder</loc>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/product.html?id=w124-cup-holder"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/product.html?id=w124-cup-holder"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/product.html?id=w124-cup-holder"/>
   </url>
   <url>
     <loc>https://infinite-box.co/product.html?id=bmw-e90-center-console-insert</loc>
-    <lastmod>2026-10-09</lastmod>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/product.html?id=bmw-e90-center-console-insert"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/product.html?id=bmw-e90-center-console-insert"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/product.html?id=bmw-e90-center-console-insert"/>
+  </url>
+  <url>
+    <loc>https://infinite-box.co/th/product.html?id=bmw-e90-center-console-insert</loc>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/product.html?id=bmw-e90-center-console-insert"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/product.html?id=bmw-e90-center-console-insert"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/product.html?id=bmw-e90-center-console-insert"/>
   </url>
   <url>
     <loc>https://infinite-box.co/custom.html</loc>
-    <lastmod>2026-10-04</lastmod>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/custom.html"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/custom.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/custom.html"/>
+  </url>
+  <url>
+    <loc>https://infinite-box.co/th/custom.html</loc>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/custom.html"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/custom.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/custom.html"/>
   </url>
   <url>
     <loc>https://infinite-box.co/materials.html</loc>
-    <lastmod>2026-09-21</lastmod>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/materials.html"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/materials.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/materials.html"/>
+  </url>
+  <url>
+    <loc>https://infinite-box.co/th/materials.html</loc>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/materials.html"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/materials.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/materials.html"/>
   </url>
   <url>
     <loc>https://infinite-box.co/about.html</loc>
-    <lastmod>2026-10-04</lastmod>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/about.html"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/about.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/about.html"/>
+  </url>
+  <url>
+    <loc>https://infinite-box.co/th/about.html</loc>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/about.html"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/about.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/about.html"/>
   </url>
   <url>
     <loc>https://infinite-box.co/contact.html</loc>
-    <lastmod>2026-09-21</lastmod>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/contact.html"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/contact.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/contact.html"/>
+  </url>
+  <url>
+    <loc>https://infinite-box.co/th/contact.html</loc>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/contact.html"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/contact.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/contact.html"/>
   </url>
   <url>
     <loc>https://infinite-box.co/faq.html</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/faq.html"/>
+  </url>
+  <url>
+    <loc>https://infinite-box.co/th/faq.html</loc>
+    <lastmod>2026-10-12</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://infinite-box.co/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="th" href="https://infinite-box.co/th/faq.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://infinite-box.co/faq.html"/>
   </url>
   <url>
     <loc>https://infinite-box.co/privacy.html</loc>
