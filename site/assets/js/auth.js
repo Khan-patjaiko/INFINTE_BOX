@@ -53,10 +53,10 @@
     var user = await getUser();
     document.querySelectorAll(".account-link").forEach(function (a) {
       if (user) {
-        a.textContent = "Account";
+        a.textContent = ibT("Account");
         a.setAttribute("href", "account.html");
       } else {
-        a.textContent = "Log in";
+        a.textContent = ibT("Log in");
         a.setAttribute("href", "login.html");
       }
     });
@@ -74,7 +74,7 @@
       document.querySelectorAll(".account-link").forEach(function (a) {
         var link = document.createElement("a");
         link.className = "admin-link";
-        link.href = "admin/index.html";
+        link.href = IBI18n.root + "admin/index.html"; // admin is English only, at the site root
         link.textContent = "Admin";
         a.parentNode.insertBefore(link, a);
       });
@@ -97,11 +97,11 @@
   // keystroke, and keeps the submit button disabled until every rule passes
   // (and the confirm field matches, when there is one).
   var PASSWORD_RULES = [
-    { id: "len",    label: "Between 8 and 50 characters", test: function (p) { return p.length >= 8 && p.length <= 50; } },
-    { id: "upper",  label: "At least one uppercase letter (A–Z)", test: function (p) { return /[A-Z]/.test(p); } },
-    { id: "lower",  label: "At least one lowercase letter (a–z)", test: function (p) { return /[a-z]/.test(p); } },
-    { id: "number", label: "At least one number (0–9)", test: function (p) { return /[0-9]/.test(p); } },
-    { id: "symbol", label: "At least one symbol (e.g. ! @ # $ %)", test: function (p) { return /[^A-Za-z0-9\s]/.test(p); } }
+    { id: "len",    label: ibT("Between 8 and 50 characters"), test: function (p) { return p.length >= 8 && p.length <= 50; } },
+    { id: "upper",  label: ibT("At least one uppercase letter (A–Z)"), test: function (p) { return /[A-Z]/.test(p); } },
+    { id: "lower",  label: ibT("At least one lowercase letter (a–z)"), test: function (p) { return /[a-z]/.test(p); } },
+    { id: "number", label: ibT("At least one number (0–9)"), test: function (p) { return /[0-9]/.test(p); } },
+    { id: "symbol", label: ibT("At least one symbol (e.g. ! @ # $ %)"), test: function (p) { return /[^A-Za-z0-9\s]/.test(p); } }
   ];
 
   function passwordIsValid(p) {
@@ -117,7 +117,7 @@
     var matchEl = opts.matchError ? document.getElementById(opts.matchError) : null;
     if (!pw || !list || !submit) return;
 
-    list.innerHTML = '<p class="pw-rules-title">Password conditions</p><ul>' +
+    list.innerHTML = '<p class="pw-rules-title">' + ibT("Password conditions") + '</p><ul>' +
       PASSWORD_RULES.map(function (r) {
         return '<li data-rule="' + r.id + '"><span class="pw-rule-mark" aria-hidden="true"></span>' + r.label + '</li>';
       }).join("") + "</ul>";

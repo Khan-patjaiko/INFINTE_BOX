@@ -13,39 +13,54 @@ var SOCIAL_LINKS = [
 
 function socialLinksHTML() {
   return SOCIAL_LINKS.filter(function (s) { return s.url; }).map(function (s) {
-    return '<a href="' + s.url + '" target="_blank" rel="noopener">' + s.icon + '<span>' + s.name + '</span></a>';
+    return '<a href="' + s.url + '" target="_blank" rel="noopener">' + s.icon + '<span>' + ibT(s.name) + '</span></a>';
   }).join("");
 }
+// EN | TH switch: links to this same page in the other language (query string kept).
+function langSwitchHTML() {
+  return '<div class="lang-switch" role="group" aria-label="' + ibT("Language") + '">' +
+    [["en", "EN", "English"], ["th", "TH", "ภาษาไทย"]].map(function (l) {
+      return l[0] === IBI18n.lang
+        ? '<span aria-current="true" lang="' + l[0] + '" title="' + l[2] + '">' + l[1] + '</span>'
+        : '<a href="' + IBI18n.urlFor(l[0]) + '" hreflang="' + l[0] + '" lang="' + l[0] + '" title="' + l[2] + '">' + l[1] + '</a>';
+    }).join("") + '</div>';
+}
+
+// Privacy and Terms are English only for now, so Thai pages link to the English copies.
+function legalHref(page) { return IBI18n.lang === "th" ? IBI18n.root + page : page; }
+
 var HEADER_HTML = [
 '<header class="site-header">',
   '<div class="header-inner">',
-    '<a class="brand" href="index.html"><img src="assets/img/icon-light.png" alt="" width="782" height="784"><span class="wordmark">INFINITE BOX</span></a>',
-    '<nav class="main-nav" aria-label="Main navigation">',
-      '<a href="shop.html">Shop</a>',
-      '<a href="custom.html">Custom Orders</a>',
-      '<a href="about.html">About</a>',
+    '<a class="brand" href="index.html"><img src="' + IBI18n.asset("assets/img/icon-light.png") + '" alt="" width="782" height="784"><span class="wordmark">INFINITE BOX</span></a>',
+    '<nav class="main-nav" aria-label="' + ibT("Main navigation") + '">',
+      '<a href="shop.html">' + ibT("Shop") + '</a>',
+      '<a href="custom.html">' + ibT("Custom Orders") + '</a>',
+      '<a href="about.html">' + ibT("About") + '</a>',
     '</nav>',
     '<div class="header-actions">',
-      '<a class="account-link" href="login.html">Log in</a>',
-      '<a class="cart-link" href="cart.html" aria-label="Shopping cart">',
+      '<a class="account-link" href="login.html">' + ibT("Log in") + '</a>',
+      '<a class="cart-link" href="cart.html" aria-label="' + ibT("Shopping cart") + '">',
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>',
         '<span class="cart-badge" data-cart-badge style="display:none;"></span>',
       '</a>',
-      '<a class="btn-shop-now" href="shop.html">Shop Now</a>',
+      langSwitchHTML(),
+      '<a class="btn-shop-now" href="shop.html">' + ibT("Shop Now") + '</a>',
     '</div>',
     '<div class="mobile-actions">',
-      '<a class="cart-link" href="cart.html" aria-label="Shopping cart">',
+      langSwitchHTML(),
+      '<a class="cart-link" href="cart.html" aria-label="' + ibT("Shopping cart") + '">',
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"></circle><circle cx="19" cy="21" r="1"></circle><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path></svg>',
         '<span class="cart-badge" data-cart-badge style="display:none;"></span>',
       '</a>',
-      '<button class="menu-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>',
+      '<button class="menu-toggle" aria-label="' + ibT("Open menu") + '" aria-expanded="false"><span></span><span></span><span></span></button>',
     '</div>',
   '</div>',
-  '<nav class="mobile-nav" aria-label="Mobile navigation">',
-    '<a href="shop.html">Shop</a>',
-    '<a href="custom.html">Custom Orders</a>',
-    '<a href="about.html">About</a>',
-    '<a class="account-link" href="login.html">Log in</a>',
+  '<nav class="mobile-nav" aria-label="' + ibT("Mobile navigation") + '">',
+    '<a href="shop.html">' + ibT("Shop") + '</a>',
+    '<a href="custom.html">' + ibT("Custom Orders") + '</a>',
+    '<a href="about.html">' + ibT("About") + '</a>',
+    '<a class="account-link" href="login.html">' + ibT("Log in") + '</a>',
   '</nav>',
 '</header>'
 ].join("");
@@ -55,27 +70,27 @@ var FOOTER_HTML = [
   '<div class="footer-inner">',
     '<div class="footer-grid">',
       '<div class="footer-brand">',
-        '<a class="logo-lockup" href="index.html"><img src="assets/img/icon-light.png" alt="" width="782" height="784"><span class="wordmark">INFINITE BOX</span></a>',
-        '<p>Design • Development • Fabrication</p>',
-        '<p>INFINITE BOX - 3D Printing Studio est. 2024, Based in Thailand</p>',
+        '<a class="logo-lockup" href="index.html"><img src="' + IBI18n.asset("assets/img/icon-light.png") + '" alt="" width="782" height="784"><span class="wordmark">INFINITE BOX</span></a>',
+        '<p>' + ibT("Design • Development • Fabrication") + '</p>',
+        '<p>' + ibT("INFINITE BOX - 3D Printing Studio est. 2024, Based in Thailand") + '</p>',
         '<p class="tag">infinite-box.co</p>',
       '</div>',
       '<div class="footer-col">',
-        '<p class="head">Shop</p>',
-        '<nav><a href="shop.html">All Products</a><a href="custom.html">Custom Orders</a><a href="materials.html">Materials</a></nav>',
+        '<p class="head">' + ibT("Shop") + '</p>',
+        '<nav><a href="shop.html">' + ibT("All Products") + '</a><a href="custom.html">' + ibT("Custom Orders") + '</a><a href="materials.html">' + ibT("Materials") + '</a></nav>',
       '</div>',
       '<div class="footer-col">',
-        '<p class="head">Company</p>',
-        '<nav><a href="about.html">About</a><a href="contact.html">Contact</a><a href="faq.html">FAQ</a></nav>',
+        '<p class="head">' + ibT("Company") + '</p>',
+        '<nav><a href="about.html">' + ibT("About") + '</a><a href="contact.html">' + ibT("Contact") + '</a><a href="faq.html">' + ibT("FAQ") + '</a></nav>',
       '</div>',
       '<div class="footer-col">',
-        '<p class="head">Follow</p>',
+        '<p class="head">' + ibT("Follow") + '</p>',
         '<nav class="footer-social">' + socialLinksHTML() + '</nav>',
       '</div>',
     '</div>',
     '<div class="footer-bottom">',
-      '<p>© 2026 Infinite Box. All rights reserved.</p>',
-      '<div class="footer-legal"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></div>',
+      '<p>' + ibT("© 2026 Infinite Box. All rights reserved.") + '</p>',
+      '<div class="footer-legal"><a href="' + legalHref("privacy.html") + '">' + ibT("Privacy Policy") + '</a><a href="' + legalHref("terms.html") + '">' + ibT("Terms of Service") + '</a></div>',
     '</div>',
   '</div>',
 '</footer>'
@@ -98,7 +113,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var nav = document.querySelector(".mobile-nav");
       var open = nav.classList.toggle("open");
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
-      toggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      toggle.setAttribute("aria-label", open ? ibT("Close menu") : ibT("Open menu"));
     });
   }
 });
