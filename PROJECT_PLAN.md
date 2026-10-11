@@ -249,7 +249,7 @@ Owner decision: separate indexable Thai pages under `/th/`, chosen with an EN | 
 - [x] Code: Thai Stripe checkout (locale, names, errors, /th/ return), Thai receipt + quote acknowledgement
 - [x] Sitemap with en/th alternates; robots.txt for /th/ transactional pages
 - [x] Owner uploaded `site/` (2026-10-12), verified live; IndexNow 24 URLs accepted
-- [ ] Owner: Search Console sitemap resubmit + Request indexing for `/th/`
+- [x] Owner: Search Console sitemap resubmitted 2026-10-12 → Success (24 URLs)
 - [ ] Deploy `create-checkout-session`, `stripe-webhook`, `submit-quote` + Thai `4242` test checkout (not approved yet)
 - [ ] Owner proofreads `i18n/th.json` and the product Thai text
 - [ ] Thai Privacy / Terms (lawyer review)
