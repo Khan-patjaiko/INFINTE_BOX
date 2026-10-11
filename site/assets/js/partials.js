@@ -71,8 +71,9 @@ var FOOTER_HTML = [
     '<div class="footer-grid">',
       '<div class="footer-brand">',
         '<a class="logo-lockup" href="index.html"><img src="' + IBI18n.asset("assets/img/icon-light.png") + '" alt="" width="782" height="784"><span class="wordmark">INFINITE BOX</span></a>',
-        '<p>' + ibT("Design • Development • Fabrication") + '</p>',
-        '<p>' + ibT("INFINITE BOX - 3D Printing Studio est. 2024, Based in Thailand") + '</p>',
+        // Brand lines stay English on the Thai site too (owner, 2026-10-12).
+        '<p>Design • Development • Fabrication</p>',
+        '<p>INFINITE BOX - 3D Printing Studio est. 2024, Based in Thailand</p>',
         '<p class="tag">infinite-box.co</p>',
       '</div>',
       '<div class="footer-col">',
