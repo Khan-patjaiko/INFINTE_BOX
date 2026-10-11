@@ -1189,3 +1189,6 @@ button { font-family: inherit; cursor: pointer; }
    needs a little more line height than the Latin type scale. The wordmark stays as designed. */
 html[lang="th"] body *:not(.wordmark) { letter-spacing: normal; }
 html[lang="th"] body { line-height: 1.7; }
+/* Thai tone marks sit above and vowels below the line, so tight Latin heading line-heights
+   (hero h1 is 1.05) make the lines touch. */
+html[lang="th"] h1, html[lang="th"] h2, html[lang="th"] h3 { line-height: 1.4; }
