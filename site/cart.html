@@ -40,7 +40,7 @@
 <script>
   (function () {
     var container = document.getElementById("cart-container");
-    container.innerHTML = '<p class="grid-status">Loading your cart…</p>';
+    container.innerHTML = '<p class="grid-status">' + ibT("Loading your cart…") + '</p>';
 
     // Orders always belong to a customer account: no guest checkout. Send signed-out
     // shoppers to log in (or sign up) and bring them straight back here.
@@ -52,11 +52,11 @@
       if (!cart.length) return;
       if (!(await IBAuth.getUser())) return goLogin();
       btn.disabled = true;
-      btn.textContent = "Redirecting to secure checkout…";
+      btn.textContent = ibT("Redirecting to secure checkout…");
       window.IB.track("checkout_start");
       try {
         var res = await window.IBDB.functions.invoke("create-checkout-session", {
-          body: { items: cart, origin: location.origin, ship_to: shipTo }
+          body: { items: cart, origin: location.origin, ship_to: shipTo, lang: IBI18n.lang }
         });
         if (res.error) {
           // Session expired between page load and click → server says 401.
@@ -69,7 +69,7 @@
         console.error("Checkout failed", e);
         // The Edge Function returns 409 with a readable message when stock ran out
         // between adding to cart and checking out; surface that instead of the generic text.
-        var message = "Sorry, checkout couldn't start. Please try again.";
+        var message = ibT("Sorry, checkout couldn't start. Please try again.");
         var stockProblem = false;
         try {
           if (e && e.context && typeof e.context.json === "function") {
@@ -78,7 +78,7 @@
           }
         } catch (ignore) {}
         btn.disabled = false;
-        btn.textContent = "Checkout";
+        btn.textContent = ibT("Checkout");
         if (stockProblem) {
           // Re-fetch products so the cart re-renders with current stock, then show the note.
           _productsPromise = null;
@@ -104,8 +104,8 @@
       if (cart.length === 0) {
         container.innerHTML =
           '<div class="empty-state">' +
-            '<p>Your cart is empty.</p>' +
-            '<a class="btn btn-primary" href="shop.html">Browse Products</a>' +
+            '<p>' + ibT("Your cart is empty.") + '</p>' +
+            '<a class="btn btn-primary" href="shop.html">' + ibT("Browse Products") + '</a>' +
           '</div>';
         return;
       }
@@ -126,9 +126,9 @@
         if (!p) return "";
         var info = lineInfo(p, item.options), soldOut = info.stock <= 0;
         var stockNote = soldOut
-          ? '<p class="cart-item-material cart-stock-warn">Sold out — remove this item to check out</p>'
-          : (item.qty >= info.stock ? '<p class="cart-item-material cart-stock-warn">Only ' + info.stock + ' in stock</p>' : "");
-        var opts = item.options ? Object.keys(item.options).map(function (k) { return ibEscape(k) + ': ' + ibEscape(item.options[k]); }).join(' · ') : '';
+          ? '<p class="cart-item-material cart-stock-warn">' + ibT("Sold out — remove this item to check out") + '</p>'
+          : (item.qty >= info.stock ? '<p class="cart-item-material cart-stock-warn">' + ibT("Only {n} in stock", { n: info.stock }) + '</p>' : "");
+        var opts = item.options ? Object.keys(item.options).map(function (k) { return ibEscape(ibT(k)) + ': ' + ibEscape(ibT(item.options[k])); }).join(' · ') : '';
         return '<div class="cart-row' + (soldOut ? " sold-out" : "") + '" data-key="' + ibEscape(IB.lineKey(item)) + '" data-id="' + ibEscape(p.id) + '">' +
           '<div class="cart-thumb">' + productThumbHTML(p) + '</div>' +
           '<div>' +
@@ -137,9 +137,9 @@
             '<p class="cart-item-material">' + ibEscape(p.material) + ' · ' + formatPrice(info.price) + '</p>' + stockNote +
           '</div>' +
           '<div class="cart-item-actions">' +
-            '<div class="qty-input"><button type="button" data-qty-down>−</button><input type="text" value="' + item.qty + '" readonly aria-label="Quantity"><button type="button" data-qty-up>+</button></div>' +
+            '<div class="qty-input"><button type="button" data-qty-down>−</button><input type="text" value="' + item.qty + '" readonly aria-label="' + ibT("Quantity") + '"><button type="button" data-qty-up>+</button></div>' +
             '<p class="product-price">' + formatPrice(info.price * item.qty) + '</p>' +
-            '<button class="cart-remove" data-remove>Remove</button>' +
+            '<button class="cart-remove" data-remove>' + ibT("Remove") + '</button>' +
           '</div>' +
         '</div>';
       }).join("");
@@ -159,24 +159,24 @@
       var shipOptions = [["TH", countryName("TH")]].concat(
         Object.keys(countryZones).filter(function (c) { return c !== "TH" && zoneFeeBaht(c) != null; })
           .map(function (c) { return [c, countryName(c)]; })
-          .sort(function (a, b) { return a[1].localeCompare(b[1]); }));
+          .sort(function (a, b) { return a[1].localeCompare(b[1], IBI18n.lang); }));
 
       container.innerHTML = rows +
         '<div class="cart-summary">' +
-          '<div class="cart-summary-row"><span>Subtotal</span><span>' + formatPrice(subtotal) + '</span></div>' +
-          '<label class="cart-ship-to"><span>Ship to</span><select id="ship-to">' +
+          '<div class="cart-summary-row"><span>' + ibT("Subtotal") + '</span><span>' + formatPrice(subtotal) + '</span></div>' +
+          '<label class="cart-ship-to"><span>' + ibT("Ship to") + '</span><select id="ship-to">' +
             shipOptions.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === shipTo ? ' selected' : '') + '>' + ibEscape(o[1]) + '</option>'; }).join('') +
           '</select></label>' +
-          '<div class="cart-summary-row"><span>Shipping' + (intl ? ' (DHL Express)' : '') + '</span><span>' + (freeShipping ? 'Free' : formatPrice(shipping)) + '</span></div>' +
-          (!intl && !freeShipping && freeShippingFrom > 0 && subtotal > 0 ? '<p class="cart-ship-note">Add ' + formatPrice(freeShippingFrom - subtotal) + ' more for free shipping.</p>' : '') +
-          (intl ? '<p class="cart-duties-note">Import duties and taxes, if any, are paid by the recipient on delivery.</p>' : '') +
-          '<div class="cart-summary-row total"><span>Total</span><span>' + formatPrice(total) + '</span></div>' +
+          '<div class="cart-summary-row"><span>' + ibT("Shipping") + (intl ? ' (DHL Express)' : '') + '</span><span>' + (freeShipping ? ibT("Free") : formatPrice(shipping)) + '</span></div>' +
+          (!intl && !freeShipping && freeShippingFrom > 0 && subtotal > 0 ? '<p class="cart-ship-note">' + ibT("Add {amount} more for free shipping.", { amount: formatPrice(freeShippingFrom - subtotal) }) + '</p>' : '') +
+          (intl ? '<p class="cart-duties-note">' + ibT("Import duties and taxes, if any, are paid by the recipient on delivery.") + '</p>' : '') +
+          '<div class="cart-summary-row total"><span>' + ibT("Total") + '</span><span>' + formatPrice(total) + '</span></div>' +
           (blocked
-            ? '<button class="btn btn-primary btn-block mt-16" id="checkout-btn" disabled title="Remove sold-out items first">Checkout</button>'
-            : '<button class="btn btn-primary btn-block mt-16" id="checkout-btn">' + (signedIn ? "Checkout" : "Log in to check out") + '</button>') +
-          (signedIn ? '' : '<p class="form-note" style="margin:8px 0 0;text-align:center;">Orders are tied to your account so you can track them. New here? <a href="signup.html?next=cart.html">Create an account</a> — your cart will be waiting.</p>') +
-          '<a class="btn btn-outline btn-block mt-16" href="custom.html">Need a custom quote instead?</a>' +
-          '<p class="form-note" id="checkout-error" style="display:none;color:hsl(var(--destructive));">Sorry, checkout couldn\'t start. Please try again.</p>' +
+            ? '<button class="btn btn-primary btn-block mt-16" id="checkout-btn" disabled title="' + ibT("Remove sold-out items first") + '">' + ibT("Checkout") + '</button>'
+            : '<button class="btn btn-primary btn-block mt-16" id="checkout-btn">' + (signedIn ? ibT("Checkout") : ibT("Log in to check out")) + '</button>') +
+          (signedIn ? '' : '<p class="form-note" style="margin:8px 0 0;text-align:center;">' + ibT("Orders are tied to your account so you can track them. New here? <a href=\"signup.html?next=cart.html\">Create an account</a> — your cart will be waiting.") + '</p>') +
+          '<a class="btn btn-outline btn-block mt-16" href="custom.html">' + ibT("Need a custom quote instead?") + '</a>' +
+          '<p class="form-note" id="checkout-error" style="display:none;color:hsl(var(--destructive));">' + ibT("Sorry, checkout couldn't start. Please try again.") + '</p>' +
         '</div>';
 
       container.querySelectorAll(".cart-row").forEach(function (row) {
@@ -225,7 +225,7 @@
       return typeof fee === "number" && fee >= 0 ? fee / 100 : null;
     }
     var regionNames = null;
-    try { regionNames = new Intl.DisplayNames(["en"], { type: "region" }); } catch (e) {}
+    try { regionNames = new Intl.DisplayNames([IBI18n.lang], { type: "region" }); } catch (e) {}
     function countryName(code) {
       try { return (regionNames && regionNames.of(code)) || code; } catch (e) { return code; }
     }
@@ -252,10 +252,10 @@
     }
 
     function load() {
-      container.innerHTML = '<p class="grid-status">Loading your cart…</p>';
+      container.innerHTML = '<p class="grid-status">' + ibT("Loading your cart…") + '</p>';
       var whoami = IBAuth.getUser().then(function (u) { signedIn = !!u; });
       Promise.all([loadProducts(), loadShipping(), whoami]).then(render).catch(function () {
-        container.innerHTML = loadErrorHTML("Couldn't load your cart.");
+        container.innerHTML = loadErrorHTML(ibT("Couldn't load your cart."));
       });
     }
     ibOnRetry(container, load);

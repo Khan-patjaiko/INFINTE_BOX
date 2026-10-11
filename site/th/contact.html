@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ติดต่อเรา — Infinite Box</title>
+<meta name="description" content="ติดต่อ Infinite Box เพื่อขอใบเสนอราคา สอบถามคำสั่งซื้อ หรือขอความช่วยเหลือ">
+<link rel="canonical" href="https://infinite-box.co/th/contact.html">
+<link rel="alternate" hreflang="en" href="https://infinite-box.co/contact.html">
+<link rel="alternate" hreflang="th" href="https://infinite-box.co/th/contact.html">
+<link rel="alternate" hreflang="x-default" href="https://infinite-box.co/contact.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Infinite Box">
+<meta property="og:title" content="ติดต่อเรา — Infinite Box">
+<meta property="og:description" content="ติดต่อ Infinite Box เพื่อขอใบเสนอราคา สอบถามคำสั่งซื้อ หรือขอความช่วยเหลือ">
+<meta property="og:url" content="https://infinite-box.co/th/contact.html">
+<meta property="og:image" content="https://infinite-box.co/assets/img/logo-dark.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css?v=19">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">ติดต่อเรา</p>
+      <h1>คุยกับเรา</h1>
+      <p>มีคำถามเรื่องคำสั่งซื้อ ใบเสนอราคา หรือวัสดุ? ส่งข้อความมา แล้วเราจะตอบกลับภายใน 1 วันทำการ</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr;gap:64px;">
+        <form class="form-grid" onsubmit="return handleContactSubmit(event)" id="contact-form">
+          <div class="form-grid two-col">
+            <div class="field">
+              <label for="c-name">ชื่อ</label>
+              <input type="text" id="c-name" required>
+            </div>
+            <div class="field">
+              <label for="c-email">อีเมล</label>
+              <input type="email" id="c-email" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="c-subject">หัวข้อ</label>
+            <select id="c-subject">
+              <option>สถานะคำสั่งซื้อ</option>
+              <option>ใบเสนอราคาสั่งทำ</option>
+              <option>สอบถามเรื่องวัสดุ</option>
+              <option>เรื่องอื่น ๆ</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="c-message">ข้อความ</label>
+            <textarea id="c-message" required></textarea>
+          </div>
+          <button class="btn btn-primary btn-block" type="submit" id="c-submit">ส่งข้อความ</button>
+          <p class="form-note" id="c-success" style="display:none;color:hsl(var(--success));">ส่งข้อความแล้ว — เราจะติดต่อกลับโดยเร็ว</p>
+          <p class="form-note" id="c-error" style="display:none;color:hsl(var(--destructive));">ขออภัย ส่งข้อความไม่สำเร็จ กรุณาลองอีกครั้ง</p>
+        </form>
+
+        <div>
+          <p class="eyebrow">ช่องทางตรง</p>
+          <h2 style="margin-bottom:24px;">ช่องทางติดต่ออื่น ๆ</h2>
+          <div class="pd-meta">
+            <div class="pd-meta-row"><span>อีเมล</span><span>hello@infinite-box.co</span></div>
+            <div class="pd-meta-row"><span>ระยะเวลาตอบกลับ</span><span>ภายใน 1 วันทำการ</span></div>
+            <div class="pd-meta-row"><span>เวลาทำการ</span><span>จันทร์–ศุกร์ 9:00–18:00 น.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/i18n-th.js?v=19"></script>
+<script src="../assets/js/i18n.js?v=19"></script>
+<script src="../assets/js/config.js?v=19"></script>
+<script src="../assets/js/supabase-client.js?v=19"></script>
+<script src="../assets/js/products.js?v=19"></script>
+<script src="../assets/js/main.js?v=19"></script>
+<script src="../assets/js/auth.js?v=19"></script>
+<script src="../assets/js/partials.js?v=19"></script>
+<script>
+  async function handleContactSubmit(e) {
+    e.preventDefault();
+    var btn = document.getElementById("c-submit");
+    var successEl = document.getElementById("c-success");
+    var errorEl = document.getElementById("c-error");
+    successEl.style.display = "none";
+    errorEl.style.display = "none";
+    btn.disabled = true;
+    btn.textContent = ibT("Sending…");
+    try {
+      // Goes through the submit-contact Edge Function so the owner gets an email alert.
+      var res = await window.IBDB.functions.invoke("submit-contact", { body: {
+        name: document.getElementById("c-name").value,
+        email: document.getElementById("c-email").value,
+        subject: document.getElementById("c-subject").value,
+        message: document.getElementById("c-message").value
+      } });
+      if (res.error) throw res.error;
+      if (res.data && res.data.error) throw new Error(res.data.error);
+      document.getElementById("contact-form").reset();
+      successEl.style.display = "block";
+    } catch (err) {
+      console.error("Contact submit failed", err);
+      errorEl.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = ibT("Send Message");
+    }
+    return false;
+  }
+</script>
+</body>
+</html>

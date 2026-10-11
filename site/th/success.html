@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ยืนยันคำสั่งซื้อแล้ว — Infinite Box</title>
+<meta name="description" content="คำสั่งซื้อ Infinite Box ของคุณเรียบร้อยแล้ว">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css?v=19">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">ขอบคุณ</p>
+      <h1>ยืนยันคำสั่งซื้อแล้ว</h1>
+      <p>ชำระเงินสำเร็จ และคำสั่งซื้อของคุณอยู่ในคิวแล้ว เราส่งใบเสร็จไปทางอีเมลแล้ว — คำสั่งซื้อส่วนใหญ่พิมพ์และจัดส่งภายใน 3–5 วันทำการ</p>
+      <div class="btn-row" style="margin-top:32px;">
+        <a class="btn btn-outline" href="#" id="my-order-link" style="display:none;">ดูคำสั่งซื้อ</a>
+        <a class="btn btn-primary" href="shop.html">ช้อปต่อ</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/i18n-th.js?v=19"></script>
+<script src="../assets/js/i18n.js?v=19"></script>
+<script src="../assets/js/config.js?v=19"></script>
+<script src="../assets/js/supabase-client.js?v=19"></script>
+<script src="../assets/js/products.js?v=19"></script>
+<script src="../assets/js/main.js?v=19"></script>
+<script src="../assets/js/auth.js?v=19"></script>
+<script src="../assets/js/partials.js?v=19"></script>
+<script>
+  // The order succeeded — clear the local cart.
+  try { localStorage.removeItem("infinitebox_cart"); } catch (e) {}
+  if (window.IB) IB.updateCartBadge();
+
+  // Stripe redirects here with ?session_id=... — use it to link straight to
+  // this order's status page (works for guests and signed-in customers alike).
+  var sessionId = new URLSearchParams(location.search).get("session_id");
+  if (sessionId) {
+    var link = document.getElementById("my-order-link");
+    if (link) {
+      link.href = "order.html?session_id=" + encodeURIComponent(sessionId);
+      link.style.display = "";
+    }
+  }
+</script>
+</body>
+</html>

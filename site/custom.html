@@ -6,6 +6,9 @@
 <title>Custom Orders — Infinite Box</title>
 <meta name="description" content="Send Infinite Box your design, sketch, or idea and get a custom 3D printing quote, usually within 2 business days.">
 <link rel="canonical" href="https://infinite-box.co/custom.html">
+<link rel="alternate" hreflang="en" href="https://infinite-box.co/custom.html">
+<link rel="alternate" hreflang="th" href="https://infinite-box.co/th/custom.html">
+<link rel="alternate" hreflang="x-default" href="https://infinite-box.co/custom.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Infinite Box">
 <meta property="og:title" content="Custom Orders — Infinite Box">
@@ -127,7 +130,7 @@
     function showName() {
       var f = input.files[0];
       var size = f && (f.size < 1048576 ? Math.max(1, Math.round(f.size / 1024)) + " KB" : (f.size / 1048576).toFixed(1) + " MB");
-      nameEl.textContent = f ? "Selected: " + f.name + " (" + size + ")" : "";
+      nameEl.textContent = f ? ibT("Selected: {name} ({size})", { name: f.name, size: size }) : "";
       drop.classList.toggle("has-file", !!f);
     }
     input.addEventListener("change", showName);
@@ -155,7 +158,7 @@
     var fileInput = document.getElementById("design-file");
     var file = fileInput.files[0];
     if (file && file.size > 50 * 1024 * 1024) {
-      errorEl.textContent = "That file is larger than 50MB. Please upload a smaller file.";
+      errorEl.textContent = ibT("That file is larger than 50MB. Please upload a smaller file.");
       errorEl.style.display = "block";
       return false;
     }
@@ -166,10 +169,11 @@
     fd.append("material", document.getElementById("material").value);
     fd.append("quantity", document.getElementById("quantity").value);
     fd.append("details", document.getElementById("details").value);
+    fd.append("lang", IBI18n.lang);
     if (file) fd.append("file", file);
 
     btn.disabled = true;
-    btn.textContent = "Sending…";
+    btn.textContent = ibT("Sending…");
     try {
       var res = await window.IBDB.functions.invoke("submit-quote", { body: fd });
       if (res.error) throw res.error;
@@ -180,7 +184,7 @@
       errorEl.style.display = "block";
     } finally {
       btn.disabled = false;
-      btn.textContent = "Request Quote";
+      btn.textContent = ibT("Request Quote");
     }
     return false;
   }

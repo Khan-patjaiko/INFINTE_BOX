@@ -74,7 +74,7 @@
   // Same-site pages only (e.g. "cart.html" when sent here from checkout) — never absolute/../ URLs.
   function nextTarget() {
     var next = new URLSearchParams(location.search).get("next");
-    return (next && /^(admin\/)?[a-zA-Z0-9_-]+\.html$/.test(next)) ? next : "account.html";
+    return (next && /^(admin\/)?[a-zA-Z0-9_-]+\.html$/.test(next)) ? (next.indexOf("admin/") === 0 ? IBI18n.root + next : next) : "account.html"; // admin lives at the root, also from /th/
   }
 
   IBAuth.getUser().then(function (user) { if (user) window.location.href = nextTarget(); });
@@ -90,7 +90,7 @@
       var res = await IBAuth.signInWithGoogle(nextTarget());
       if (res.error) throw res.error;
     } catch (err) {
-      errorEl.textContent = err && err.message ? err.message : "Google sign-in failed. Please try again.";
+      errorEl.textContent = err && err.message ? ibT(err.message) : ibT("Google sign-in failed. Please try again.");
       errorEl.style.display = "block";
       btn.disabled = false;
     }
@@ -106,7 +106,7 @@
     successEl.style.display = "none";
     errorEl.style.display = "none";
     btn.disabled = true;
-    btn.textContent = "Creating…";
+    btn.textContent = ibT("Creating…");
     try {
       var res = await IBAuth.signUp(
         document.getElementById("email").value,
@@ -121,15 +121,16 @@
       }
       // Email confirmation required.
       document.getElementById("signup-form").reset();
-      successEl.textContent = "Almost there — check your email to confirm your account, then log in" +
-        (nextTarget() === "cart.html" ? " to finish your order (your cart is saved on this device)." : ".");
+      successEl.textContent = nextTarget() === "cart.html"
+        ? ibT("Almost there — check your email to confirm your account, then log in to finish your order (your cart is saved on this device).")
+        : ibT("Almost there — check your email to confirm your account, then log in.");
       successEl.style.display = "block";
     } catch (err) {
-      errorEl.textContent = err && err.message ? err.message : "Couldn't create your account. Please try again.";
+      errorEl.textContent = err && err.message ? ibT(err.message) : ibT("Couldn't create your account. Please try again.");
       errorEl.style.display = "block";
     } finally {
       pw.dispatchEvent(new Event("input")); // re-checks rules; leaves the button disabled after a reset
-      btn.textContent = "Create account";
+      btn.textContent = ibT("Create account");
     }
     return false;
   }

@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">สินค้า — Infinite Box</title>
+<meta name="description" id="page-description" content="รายละเอียด สเปก และราคาของชิ้นงานพิมพ์ 3D จาก Infinite Box">
+<!-- No static canonical/og:url: each product sets its own (product.html?id=<slug>) once loaded. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Infinite Box">
+<meta property="og:title" content="สินค้า — Infinite Box">
+<meta property="og:description" content="รายละเอียด สเปก และราคาของชิ้นงานพิมพ์ 3D จาก Infinite Box">
+<meta property="og:image" content="https://infinite-box.co/assets/img/logo-dark.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css?v=19">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <div class="container">
+    <div class="product-detail" id="product-detail"></div>
+  </div>
+
+  <section class="section border-top">
+    <div class="container">
+      <div class="section-head">
+        <div><p class="eyebrow">สินค้าที่คุณอาจสนใจ</p><h2>สินค้าอื่น ๆ</h2></div>
+      </div>
+      <div class="product-grid" id="related-grid"></div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/i18n-th.js?v=19"></script>
+<script src="../assets/js/i18n.js?v=19"></script>
+<script src="../assets/js/config.js?v=19"></script>
+<script src="../assets/js/supabase-client.js?v=19"></script>
+<script src="../assets/js/products.js?v=19"></script>
+<script src="../assets/js/icons.js?v=19"></script>
+<script src="../assets/js/main.js?v=19"></script>
+<script src="../assets/js/auth.js?v=19"></script>
+<script src="../assets/js/partials.js?v=19"></script>
+<script>
+  (function () {
+    var detail = document.getElementById("product-detail");
+
+    function load() {
+      detail.innerHTML = '<p class="grid-status">' + ibT("Loading…") + '</p>';
+      loadProducts().then(function () {
+        if (!PRODUCTS.length) {
+          detail.innerHTML = '<p class="grid-status">' + ibT("No products available yet — <a href=\"custom.html\">request a custom part</a> instead.") + '</p>';
+          return;
+        }
+        var params = new URLSearchParams(location.search);
+        var id = params.get("id");
+        var p = id ? getProduct(id) : PRODUCTS[0];
+        if (!p) {
+          detail.innerHTML = '<div class="empty-state"><p>' + ibT("We couldn't find that product — it may have been removed.") + '</p>' +
+            '<a class="btn btn-primary" href="shop.html">' + ibT("Back to shop") + '</a></div>';
+          return;
+        }
+
+        document.getElementById("page-title").textContent = p.name + " — Infinite Box";
+        // Per-product canonical + description so search engines index each product separately.
+        var canonical = document.querySelector('link[rel="canonical"]') || document.head.appendChild(document.createElement("link"));
+        canonical.rel = "canonical";
+        var productPath = "product.html?id=" + encodeURIComponent(p.id);
+        canonical.href = "https://infinite-box.co/" + (IBI18n.lang === "th" ? "th/" : "") + productPath;
+        // Both language versions of this product point at each other (hreflang).
+        [["en", ""], ["th", "th/"], ["x-default", ""]].forEach(function (l) {
+          var alt = document.head.querySelector('link[rel="alternate"][hreflang="' + l[0] + '"]') || document.head.appendChild(document.createElement("link"));
+          alt.rel = "alternate"; alt.hreflang = l[0]; alt.href = "https://infinite-box.co/" + l[1] + productPath;
+        });
+        var summary = String(p.description || "").split(/\r?\n/).map(function (l) { return l.replace(/^-\s*/, "").trim(); }).filter(Boolean).join(" ");
+        if (summary) {
+          document.getElementById("page-description").setAttribute("content", summary.length > 155 ? summary.slice(0, 152) + "…" : summary);
+        }
+        // schema.org Product so Google can show price, stock and photo in results (rich results).
+        var offer = {
+          "@type": p.priceMin === p.priceMax ? "Offer" : "AggregateOffer",
+          url: canonical.href,
+          priceCurrency: "THB",
+          availability: "https://schema.org/" + (p.soldOut ? "OutOfStock" : "InStock"),
+          itemCondition: "https://schema.org/NewCondition",
+          seller: { "@type": "Organization", name: "Infinite Box" }
+        };
+        if (offer["@type"] === "Offer") { offer.price = p.priceMin.toFixed(2); }
+        else { offer.lowPrice = p.priceMin.toFixed(2); offer.highPrice = p.priceMax.toFixed(2); offer.offerCount = p.variants.length; }
+        var ld = document.getElementById("product-jsonld") || document.head.appendChild(document.createElement("script"));
+        ld.id = "product-jsonld";
+        ld.type = "application/ld+json";
+        ld.textContent = JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: p.name,
+          description: summary || undefined,
+          image: p.images.length ? p.images.map(function (u) { return new URL(u, "https://infinite-box.co/").href; }) : undefined,
+          sku: p.slug,
+          material: p.material || undefined,
+          category: p.category || undefined,
+          brand: { "@type": "Brand", name: "Infinite Box" },
+          offers: offer
+        });
+
+        // A spec value with several lines ("A\nB\nC") renders as a bullet list.
+        var listHtml = function (lines) {
+          return '<ul>' + lines.map(function (l) { return '<li>' + ibEscape(l) + '</li>'; }).join('') + '</ul>';
+        };
+        var specsHtml = Object.keys(p.specs).map(function (k) {
+          var lines = String(p.specs[k]).split(/\r?\n/).map(function (l) { return l.trim(); }).filter(Boolean);
+          var isList = lines.length > 1;
+          return '<div class="pd-meta-row' + (isList ? ' pd-meta-stack' : '') + '"><span>' + ibEscape(k) + '</span><span>' + (isList ? listHtml(lines) : ibEscape(lines[0] || '')) + '</span></div>';
+        }).join('');
+        // Description: plain lines stay as text; lines starting with "- " become bullets.
+        var descLines = String(p.description || '').split(/\r?\n/);
+        var descHtml = '', bullets = [];
+        var flush = function () { if (bullets.length) { descHtml += '<ul class="pd-desc-list">' + bullets.map(function (b) { return '<li>' + ibEscape(b) + '</li>'; }).join('') + '</ul>'; bullets = []; } };
+        descLines.forEach(function (line) {
+          var m = line.match(/^\s*[-•*]\s+(.*)$/);
+          if (m) { bullets.push(m[1]); } else { flush(); if (line.trim()) descHtml += (descHtml ? '<br>' : '') + ibEscape(line.trim()); }
+        });
+        flush();
+
+        // Option groups (Color, Slot type, …): one row of chips per group; the customer
+        // must pick a value in every group before Add to Cart works.
+        // A colour group is drawn as swatches instead of text buttons. A value may carry its
+        // own hex ("Sky blue #6ec6ff"); otherwise common colour names are recognised.
+        var NAMED_COLORS = {
+          black: "#111111", white: "#ffffff", grey: "#9ca3af", gray: "#9ca3af", silver: "#c0c4cc",
+          red: "#e11d48", orange: "#f97316", yellow: "#facc15", green: "#22c55e", blue: "#2563eb",
+          navy: "#1e3a5f", purple: "#8b5cf6", pink: "#f472b6", brown: "#78503c", beige: "#e3d5c0",
+          gold: "#d4af37", bronze: "#a97142", transparent: "#e5e7eb", clear: "#e5e7eb"
+        };
+        function swatchOf(value) {
+          var hex = String(value).match(/#([0-9a-f]{3}|[0-9a-f]{6})\b/i);
+          if (hex) return hex[0];
+          return NAMED_COLORS[String(value).trim().toLowerCase()] || null;
+        }
+        function valueLabel(value) {
+          return String(value).replace(/\s*#([0-9a-f]{3}|[0-9a-f]{6})\b/i, "").trim();
+        }
+        var optionsHtml = p.options.length ? '<div class="pd-options">' + p.options.map(function (g, gi) {
+          var swatches = g.values.every(function (v) { return swatchOf(v); });
+          return '<div class="pd-option' + (swatches ? ' is-swatch' : '') + '" data-group="' + gi + '">' +
+            '<p class="pd-option-name">' + ibEscape(ibT(g.name)) + '<span class="pd-option-pick"></span></p>' +
+            '<div class="pd-option-values" role="radiogroup" aria-label="' + ibEscape(ibT(g.name)) + '">' + g.values.map(function (v) {
+              var label = ibT(valueLabel(v));
+              return '<button type="button" class="' + (swatches ? 'pd-swatch' : 'pd-chip') + '" role="radio" aria-checked="false"' +
+                ' data-value="' + ibEscape(v) + '" data-label="' + ibEscape(label) + '"' +
+                (swatches ? ' title="' + ibEscape(label) + '" aria-label="' + ibEscape(label) + '"><span style="background:' + ibEscape(swatchOf(v)) + '"></span>'
+                          : '>' + ibEscape(label)) +
+                '</button>';
+            }).join('') + '</div></div>';
+        }).join('') + '</div>' : '';
+
+        // Gallery: main image with prev/next arrows and a thumbnail strip when there is more
+        // than one photo; falls back to the placeholder icon when there are none.
+        var galleryHtml;
+        if (p.images.length) {
+          galleryHtml =
+            '<div class="pd-gallery" id="pd-gallery">' +
+              '<div class="pd-image">' +
+                '<img id="pd-main" src="' + ibEscape(p.images[0]) + '" alt="' + ibEscape(p.name) + '">' +
+                (p.images.length > 1
+                  ? '<button type="button" class="pd-nav pd-prev" data-dir="-1" aria-label="' + ibT("Previous photo") + '">‹</button>' +
+                    '<button type="button" class="pd-nav pd-next" data-dir="1" aria-label="' + ibT("Next photo") + '">›</button>' +
+                    '<span class="pd-count" id="pd-count">1 / ' + p.images.length + '</span>'
+                  : '') +
+              '</div>' +
+              (p.images.length > 1
+                ? '<div class="pd-thumbs" role="tablist">' + p.images.map(function (src, i) {
+                    return '<button type="button" class="pd-thumb' + (i === 0 ? ' is-active' : '') + '" data-index="' + i + '" role="tab" aria-selected="' + (i === 0) + '" aria-label="' + ibT("Photo {n}", { n: i + 1 }) + '"><img src="' + ibEscape(src) + '" alt="" loading="lazy"></button>';
+                  }).join('') + '</div>'
+                : '') +
+            '</div>';
+        } else {
+          galleryHtml = '<div class="pd-image">' + productThumbHTML(p) + '</div>';
+        }
+
+        detail.innerHTML =
+          galleryHtml +
+          '<div class="pd-info">' +
+            '<p class="eyebrow">' + ibEscape(ibT(p.category)) + '</p>' +
+            '<h1>' + ibEscape(p.name) + '</h1>' +
+            '<p class="pd-price" id="pd-price">' + formatPriceRange(p) + '</p>' +
+            optionsHtml +
+            (p.soldOut
+              ? '<div class="pd-actions"><span class="btn btn-outline pd-sold-out" aria-disabled="true">' + ibT("Sold out") + '</span></div>' +
+                '<p class="form-note">' + ibT("This item is currently out of stock. <a href=\"custom.html\" style=\"text-decoration:underline;\">Request a custom order</a> or check back soon.") + '</p>'
+              : '<div class="pd-actions">' +
+                  '<div class="qty-input"><button type="button" data-qty="-1">−</button><input type="text" id="qty" value="1" readonly aria-label="' + ibT("Quantity") + '"><button type="button" data-qty="1">+</button></div>' +
+                  '<button class="btn btn-primary" id="add-to-cart-btn">' + ibT("Add to Cart") + '</button>' +
+                '</div>' +
+                '<p class="form-note pd-low-stock" id="pd-stock"' + (p.stock <= 5 && !p.variants.length ? '>' + ibT("Only {n} left in stock.", { n: p.stock }) : ' hidden>') + '</p>' +
+                '<p class="add-msg" id="add-msg">' + ibT("Added to cart.") + '</p>') +
+            // Shopee order: buy box first, then the description and specs.
+            '<div class="pd-details">' +
+              '<div class="pd-desc">' + descHtml + '</div>' +
+              '<div class="pd-meta">' + specsHtml + '</div>' +
+            '</div>' +
+          '</div>';
+
+        if (p.images.length > 1) {
+          var current = 0;
+          var mainImg = document.getElementById("pd-main");
+          var countEl = document.getElementById("pd-count");
+          var thumbs = document.querySelectorAll(".pd-thumb");
+          var show = function (i) {
+            current = (i + p.images.length) % p.images.length;
+            mainImg.src = p.images[current];
+            countEl.textContent = (current + 1) + " / " + p.images.length;
+            thumbs.forEach(function (t, j) {
+              t.classList.toggle("is-active", j === current);
+              t.setAttribute("aria-selected", j === current);
+            });
+          };
+          document.querySelectorAll(".pd-nav").forEach(function (b) {
+            b.addEventListener("click", function () { show(current + parseInt(b.dataset.dir, 10)); });
+          });
+          thumbs.forEach(function (t) {
+            t.addEventListener("click", function () { show(parseInt(t.dataset.index, 10)); });
+          });
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "ArrowLeft") show(current - 1);
+            if (e.key === "ArrowRight") show(current + 1);
+          });
+          // Swipe on touch devices.
+          var touchX = null;
+          var gal = document.getElementById("pd-gallery");
+          gal.addEventListener("touchstart", function (e) { touchX = e.touches[0].clientX; }, { passive: true });
+          gal.addEventListener("touchend", function (e) {
+            if (touchX === null) return;
+            var dx = e.changedTouches[0].clientX - touchX;
+            if (Math.abs(dx) > 40) show(current + (dx < 0 ? 1 : -1));
+            touchX = null;
+          });
+        }
+
+        var chosen = {};
+        var hasVariants = p.variants.length > 0;
+        // Stock for the current selection: the chosen variant's, or the product's (for a
+        // product with variants and an incomplete choice, the total until a variant is picked).
+        var currentVariant = function () {
+          return hasVariants && p.options.every(function (g) { return chosen[g.name]; }) ? findVariant(p, chosen) : null;
+        };
+        var currentStock = function () { var v = currentVariant(); return v ? v.stock : p.stock; };
+
+        var qtyInput = document.getElementById("qty");
+        document.querySelectorAll("[data-qty]").forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            // Clamp to what is actually in stock (the cart and server enforce this too).
+            var val = Math.min(Math.max(1, currentStock()), Math.max(1, parseInt(qtyInput.value, 10) + parseInt(btn.dataset.qty, 10)));
+            qtyInput.value = val;
+          });
+        });
+
+        // Variants: price, stock note, Add-to-cart state and unavailable chips follow the choice.
+        var refreshSelection = function () {
+          if (!hasVariants) return;
+          var v = currentVariant();
+          document.getElementById("pd-price").textContent = v ? formatPrice(v.price) : formatPriceRange(p);
+          var stockEl = document.getElementById("pd-stock");
+          var btn = document.getElementById("add-to-cart-btn");
+          if (stockEl) {
+            if (v && v.stock === 0) { stockEl.textContent = ibT("This option is sold out."); stockEl.hidden = false; }
+            else if (v && v.stock <= 5) { stockEl.textContent = ibT("Only {n} left in stock.", { n: v.stock }); stockEl.hidden = false; }
+            else stockEl.hidden = true;
+          }
+          if (btn) { btn.disabled = !!(v && v.stock === 0); btn.textContent = v && v.stock === 0 ? ibT("Sold out") : ibT("Add to Cart"); }
+          if (qtyInput && v && v.stock > 0 && parseInt(qtyInput.value, 10) > v.stock) qtyInput.value = v.stock;
+          // A value is unavailable when every variant matching it plus the other choices has no stock.
+          document.querySelectorAll('.pd-option').forEach(function (groupEl) {
+            var gname = p.options[parseInt(groupEl.dataset.group, 10)].name;
+            groupEl.querySelectorAll('.pd-chip, .pd-swatch').forEach(function (chip) {
+              var want = Object.assign({}, chosen); want[gname] = chip.dataset.value;
+              var ok = p.variants.some(function (x) {
+                return x.stock > 0 && Object.keys(want).every(function (k) { return String(x.options[k]) === String(want[k]); });
+              });
+              chip.classList.toggle('is-unavailable', !ok);
+            });
+          });
+        };
+        document.querySelectorAll('.pd-option').forEach(function (groupEl) {
+          var name = p.options[parseInt(groupEl.dataset.group, 10)].name;
+          var chips = groupEl.querySelectorAll('.pd-chip, .pd-swatch');
+          var pick = groupEl.querySelector('.pd-option-pick');
+          chips.forEach(function (chip) {
+            chip.addEventListener('click', function () {
+              chips.forEach(function (c) { c.classList.remove('is-selected'); c.setAttribute('aria-checked', 'false'); });
+              chip.classList.add('is-selected'); chip.setAttribute('aria-checked', 'true');
+              chosen[name] = chip.dataset.value;
+              pick.textContent = chip.dataset.label;
+              groupEl.classList.remove('is-missing');
+              refreshSelection();
+            });
+          });
+          if (chips.length === 1) chips[0].click(); // only one value → preselect it
+        });
+        refreshSelection();
+        var missingOptions = function () {
+          var missing = [];
+          document.querySelectorAll('.pd-option').forEach(function (groupEl) {
+            var name = p.options[parseInt(groupEl.dataset.group, 10)].name;
+            if (!chosen[name]) { missing.push(name); groupEl.classList.add('is-missing'); }
+          });
+          return missing;
+        };
+
+        var addBtn = document.getElementById("add-to-cart-btn");
+        if (addBtn) addBtn.addEventListener("click", function () {
+          var missing = missingOptions();
+          if (missing.length) {
+            document.querySelector('.pd-option.is-missing').scrollIntoView({ block: 'center', behavior: 'smooth' });
+            return;
+          }
+          IB.addToCart(p.id, parseInt(qtyInput.value, 10), chosen);
+          var msg = document.getElementById("add-msg");
+          msg.classList.add("show");
+          setTimeout(function () { msg.classList.remove("show"); }, 2500);
+        });
+
+        var related = PRODUCTS.filter(function (x) { return x.id !== p.id; }).slice(0, 3);
+        document.getElementById("related-grid").innerHTML = related.map(productCardHTML).join("");
+      }).catch(function () {
+        detail.innerHTML = loadErrorHTML(ibT("Couldn't load this product."));
+      });
+    }
+    ibOnRetry(detail, load);
+    load();
+  })();
+</script>
+</body>
+</html>

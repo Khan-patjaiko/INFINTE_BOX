@@ -10,6 +10,14 @@ function variantKey(options) {
   return JSON.stringify(Object.keys(o).sort().map(function (k) { return [k, String(o[k])]; }));
 }
 
+var TH = window.IBI18n && IBI18n.lang === "th";
+
+// Bundled photos are stored as relative paths (assets/img/products/…); resolve them from the
+// site root so they also load on /th/ pages. Storage URLs are already absolute.
+function _imgUrl(u) {
+  return u && window.IBI18n && !/^([a-z]+:|\/)/i.test(u) ? IBI18n.asset(u) : u;
+}
+
 function _mapProductRow(row) {
   // Per-combination price/stock/SKU (migration 0016); [] for products without options.
   var variants = (Array.isArray(row.variants) ? row.variants : []).filter(function (v) { return v && v.options; }).map(function (v) {
@@ -19,19 +27,21 @@ function _mapProductRow(row) {
   return {
     id: row.slug,          // public identifier used in URLs and the cart
     slug: row.slug,
-    name: row.name,
+    // Thai pages show the Thai name/description/specs when the product has them (migration 0020).
+    name: (TH && row.name_th) || row.name,
+    name_en: row.name,
     material: row.material,
     price: (row.price_cents || 0) / 100,
     price_cents: row.price_cents || 0,
     icon: row.icon_key,
     category: row.category,
-    description: row.description,
-    specs: row.specs || {},
+    description: (TH && row.description_th) || row.description,
+    specs: (TH && row.specs_th && Object.keys(row.specs_th).length ? row.specs_th : row.specs) || {},
     // Option groups the customer must choose from: [{name, values:[...]}] (may be empty).
     options: Array.isArray(row.options) ? row.options.filter(function (o) { return o && o.name && Array.isArray(o.values) && o.values.length; }) : [],
-    image: row.image_url || null,
+    image: _imgUrl(row.image_url) || null,
     // Gallery for product.html: image_url first, then the rest of products.images (no dupes).
-    images: [row.image_url].concat(Array.isArray(row.images) ? row.images : []).filter(function (u, i, a) { return u && a.indexOf(u) === i; }),
+    images: [row.image_url].concat(Array.isArray(row.images) ? row.images : []).filter(function (u, i, a) { return u && a.indexOf(u) === i; }).map(_imgUrl),
     variants: variants,
     priceMin: Math.min.apply(null, prices),
     priceMax: Math.max.apply(null, prices),
@@ -92,7 +102,7 @@ function loadCategories() {
 // inside their container and re-run their loader (see ibOnRetry).
 function loadErrorHTML(message) {
   return '<p class="grid-status">' + message +
-    ' <button type="button" class="btn btn-outline btn-sm" data-retry>Retry</button></p>';
+    ' <button type="button" class="btn btn-outline btn-sm" data-retry>' + ibT("Retry") + '</button></p>';
 }
 
 function ibOnRetry(container, fn) {
@@ -132,7 +142,7 @@ function productThumbHTML(p) {
 
 function productCardHTML(p) {
   return '<a class="product-card' + (p.soldOut ? " sold-out" : "") + '" href="product.html?id=' + encodeURIComponent(p.id) + '">' +
-    '<div class="product-thumb">' + productThumbHTML(p) + (p.soldOut ? '<span class="sold-out-badge">Sold out</span>' : "") + '</div>' +
+    '<div class="product-thumb">' + productThumbHTML(p) + (p.soldOut ? '<span class="sold-out-badge">' + ibT("Sold out") + '</span>' : "") + '</div>' +
     '<div class="product-body"><div class="product-row">' +
       '<div><p class="product-name">' + ibEscape(p.name) + '</p>' +
       '<span class="product-material">' + ibEscape(p.material) + '</span></div>' +

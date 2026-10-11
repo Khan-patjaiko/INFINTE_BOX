@@ -6,6 +6,9 @@
 <title>Contact — Infinite Box</title>
 <meta name="description" content="Get in touch with Infinite Box for quotes, order questions, or support.">
 <link rel="canonical" href="https://infinite-box.co/contact.html">
+<link rel="alternate" hreflang="en" href="https://infinite-box.co/contact.html">
+<link rel="alternate" hreflang="th" href="https://infinite-box.co/th/contact.html">
+<link rel="alternate" hreflang="x-default" href="https://infinite-box.co/contact.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Infinite Box">
 <meta property="og:title" content="Contact — Infinite Box">
@@ -94,7 +97,7 @@
     successEl.style.display = "none";
     errorEl.style.display = "none";
     btn.disabled = true;
-    btn.textContent = "Sending…";
+    btn.textContent = ibT("Sending…");
     try {
       // Goes through the submit-contact Edge Function so the owner gets an email alert.
       var res = await window.IBDB.functions.invoke("submit-contact", { body: {
@@ -112,7 +115,7 @@
       errorEl.style.display = "block";
     } finally {
       btn.disabled = false;
-      btn.textContent = "Send Message";
+      btn.textContent = ibT("Send Message");
     }
     return false;
   }

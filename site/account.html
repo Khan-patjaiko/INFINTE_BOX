@@ -84,23 +84,23 @@
     function optionsHTML(it) {
       var o = it.options || {};
       var keys = Object.keys(o);
-      return keys.length ? '<span class="order-line-options">' + keys.map(function (k) { return ibEscape(k) + ': ' + ibEscape(o[k]); }).join(' · ') + '</span>' : '';
+      return keys.length ? '<span class="order-line-options">' + keys.map(function (k) { return ibEscape(ibT(k)) + ': ' + ibEscape(ibT(o[k])); }).join(' · ') + '</span>' : '';
     }
     function money(cents) { return "฿" + ((cents || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
 
     function orderCardHTML(o) {
-      var date = new Date(o.created_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+      var date = new Date(o.created_at).toLocaleDateString(IBI18n.locale, { year: "numeric", month: "short", day: "numeric" });
       var items = (o.order_items || []).map(function (it) {
         return '<div class="order-line"><span>' + ibEscape(it.name) + ' × ' + it.qty + optionsHTML(it) + '</span><span>' + money(it.unit_price_cents * it.qty) + '</span></div>';
       }).join("");
       var status = (o.status || "pending").toLowerCase();
       return '<a class="order-card" href="order.html?id=' + encodeURIComponent(o.id) + '" style="display:block;text-decoration:none;color:inherit;">' +
         '<div class="order-card-head">' +
-          '<div><strong>Order ' + ibEscape(String(o.id).slice(0, 8)) + '</strong><br><span class="grid-status">' + date + '</span></div>' +
-          '<span class="order-status ' + status + '">' + ibEscape(status) + '</span>' +
+          '<div><strong>' + ibT("Order {id}", { id: ibEscape(String(o.id).slice(0, 8)) }) + '</strong><br><span class="grid-status">' + date + '</span></div>' +
+          '<span class="order-status ' + status + '">' + ibEscape(ibT(status)) + '</span>' +
         '</div>' +
         items +
-        '<div class="order-total"><span>Total</span><span>' + money(o.total_cents) + '</span></div>' +
+        '<div class="order-total"><span>' + ibT("Total") + '</span><span>' + money(o.total_cents) + '</span></div>' +
       '</a>';
     }
 
@@ -115,14 +115,14 @@
         var orders = res.data || [];
         if (!orders.length) {
           container.innerHTML =
-            '<div class="empty-state"><p>No orders yet.</p>' +
-            '<a class="btn btn-primary" href="shop.html">Start shopping</a></div>';
+            '<div class="empty-state"><p>' + ibT("No orders yet.") + '</p>' +
+            '<a class="btn btn-primary" href="shop.html">' + ibT("Start shopping") + '</a></div>';
           return;
         }
         container.innerHTML = orders.map(orderCardHTML).join("");
       } catch (e) {
         console.error("Failed to load orders", e);
-        container.innerHTML = '<p class="grid-status">Couldn\'t load your orders. Please refresh.</p>';
+        container.innerHTML = '<p class="grid-status">' + ibT("Couldn't load your orders. Please refresh.") + '</p>';
       }
     }
 
@@ -130,7 +130,7 @@
 
     function setGreeting(name) {
       var greeting = document.getElementById("account-greeting");
-      if (greeting) greeting.textContent = "Signed in as " + (name || currentUser.email);
+      if (greeting) greeting.textContent = ibT("Signed in as {name}", { name: name || currentUser.email });
     }
 
     // profiles row is the source of truth (RLS: own row only); user_metadata is the fallback.
@@ -159,7 +159,7 @@
       okEl.style.display = "none";
       errEl.style.display = "none";
       btn.disabled = true;
-      btn.textContent = "Saving…";
+      btn.textContent = ibT("Saving…");
       var fullName = document.getElementById("p-name").value.trim();
       var phone = document.getElementById("p-phone").value.trim();
       try {
@@ -175,11 +175,11 @@
         setTimeout(function () { okEl.style.display = "none"; }, 3000);
       } catch (err) {
         console.error("Profile save failed", err);
-        errEl.textContent = err && err.message ? err.message : "Couldn't save your details. Please try again.";
+        errEl.textContent = err && err.message ? ibT(err.message) : ibT("Couldn't save your details. Please try again.");
         errEl.style.display = "block";
       } finally {
         btn.disabled = false;
-        btn.textContent = "Save changes";
+        btn.textContent = ibT("Save changes");
       }
       return false;
     };

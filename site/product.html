@@ -50,18 +50,18 @@
     var detail = document.getElementById("product-detail");
 
     function load() {
-      detail.innerHTML = '<p class="grid-status">Loading…</p>';
+      detail.innerHTML = '<p class="grid-status">' + ibT("Loading…") + '</p>';
       loadProducts().then(function () {
         if (!PRODUCTS.length) {
-          detail.innerHTML = '<p class="grid-status">No products available yet — <a href="custom.html">request a custom part</a> instead.</p>';
+          detail.innerHTML = '<p class="grid-status">' + ibT("No products available yet — <a href=\"custom.html\">request a custom part</a> instead.") + '</p>';
           return;
         }
         var params = new URLSearchParams(location.search);
         var id = params.get("id");
         var p = id ? getProduct(id) : PRODUCTS[0];
         if (!p) {
-          detail.innerHTML = '<div class="empty-state"><p>We couldn\'t find that product — it may have been removed.</p>' +
-            '<a class="btn btn-primary" href="shop.html">Back to shop</a></div>';
+          detail.innerHTML = '<div class="empty-state"><p>' + ibT("We couldn't find that product — it may have been removed.") + '</p>' +
+            '<a class="btn btn-primary" href="shop.html">' + ibT("Back to shop") + '</a></div>';
           return;
         }
 
@@ -69,7 +69,13 @@
         // Per-product canonical + description so search engines index each product separately.
         var canonical = document.querySelector('link[rel="canonical"]') || document.head.appendChild(document.createElement("link"));
         canonical.rel = "canonical";
-        canonical.href = "https://infinite-box.co/product.html?id=" + encodeURIComponent(p.id);
+        var productPath = "product.html?id=" + encodeURIComponent(p.id);
+        canonical.href = "https://infinite-box.co/" + (IBI18n.lang === "th" ? "th/" : "") + productPath;
+        // Both language versions of this product point at each other (hreflang).
+        [["en", ""], ["th", "th/"], ["x-default", ""]].forEach(function (l) {
+          var alt = document.head.querySelector('link[rel="alternate"][hreflang="' + l[0] + '"]') || document.head.appendChild(document.createElement("link"));
+          alt.rel = "alternate"; alt.hreflang = l[0]; alt.href = "https://infinite-box.co/" + l[1] + productPath;
+        });
         var summary = String(p.description || "").split(/\r?\n/).map(function (l) { return l.replace(/^-\s*/, "").trim(); }).filter(Boolean).join(" ");
         if (summary) {
           document.getElementById("page-description").setAttribute("content", summary.length > 155 ? summary.slice(0, 152) + "…" : summary);
@@ -141,9 +147,9 @@
         var optionsHtml = p.options.length ? '<div class="pd-options">' + p.options.map(function (g, gi) {
           var swatches = g.values.every(function (v) { return swatchOf(v); });
           return '<div class="pd-option' + (swatches ? ' is-swatch' : '') + '" data-group="' + gi + '">' +
-            '<p class="pd-option-name">' + ibEscape(g.name) + '<span class="pd-option-pick"></span></p>' +
-            '<div class="pd-option-values" role="radiogroup" aria-label="' + ibEscape(g.name) + '">' + g.values.map(function (v) {
-              var label = valueLabel(v);
+            '<p class="pd-option-name">' + ibEscape(ibT(g.name)) + '<span class="pd-option-pick"></span></p>' +
+            '<div class="pd-option-values" role="radiogroup" aria-label="' + ibEscape(ibT(g.name)) + '">' + g.values.map(function (v) {
+              var label = ibT(valueLabel(v));
               return '<button type="button" class="' + (swatches ? 'pd-swatch' : 'pd-chip') + '" role="radio" aria-checked="false"' +
                 ' data-value="' + ibEscape(v) + '" data-label="' + ibEscape(label) + '"' +
                 (swatches ? ' title="' + ibEscape(label) + '" aria-label="' + ibEscape(label) + '"><span style="background:' + ibEscape(swatchOf(v)) + '"></span>'
@@ -161,14 +167,14 @@
               '<div class="pd-image">' +
                 '<img id="pd-main" src="' + ibEscape(p.images[0]) + '" alt="' + ibEscape(p.name) + '">' +
                 (p.images.length > 1
-                  ? '<button type="button" class="pd-nav pd-prev" data-dir="-1" aria-label="Previous photo">‹</button>' +
-                    '<button type="button" class="pd-nav pd-next" data-dir="1" aria-label="Next photo">›</button>' +
+                  ? '<button type="button" class="pd-nav pd-prev" data-dir="-1" aria-label="' + ibT("Previous photo") + '">‹</button>' +
+                    '<button type="button" class="pd-nav pd-next" data-dir="1" aria-label="' + ibT("Next photo") + '">›</button>' +
                     '<span class="pd-count" id="pd-count">1 / ' + p.images.length + '</span>'
                   : '') +
               '</div>' +
               (p.images.length > 1
                 ? '<div class="pd-thumbs" role="tablist">' + p.images.map(function (src, i) {
-                    return '<button type="button" class="pd-thumb' + (i === 0 ? ' is-active' : '') + '" data-index="' + i + '" role="tab" aria-selected="' + (i === 0) + '" aria-label="Photo ' + (i + 1) + '"><img src="' + ibEscape(src) + '" alt="" loading="lazy"></button>';
+                    return '<button type="button" class="pd-thumb' + (i === 0 ? ' is-active' : '') + '" data-index="' + i + '" role="tab" aria-selected="' + (i === 0) + '" aria-label="' + ibT("Photo {n}", { n: i + 1 }) + '"><img src="' + ibEscape(src) + '" alt="" loading="lazy"></button>';
                   }).join('') + '</div>'
                 : '') +
             '</div>';
@@ -179,19 +185,19 @@
         detail.innerHTML =
           galleryHtml +
           '<div class="pd-info">' +
-            '<p class="eyebrow">' + ibEscape(p.category) + '</p>' +
+            '<p class="eyebrow">' + ibEscape(ibT(p.category)) + '</p>' +
             '<h1>' + ibEscape(p.name) + '</h1>' +
             '<p class="pd-price" id="pd-price">' + formatPriceRange(p) + '</p>' +
             optionsHtml +
             (p.soldOut
-              ? '<div class="pd-actions"><span class="btn btn-outline pd-sold-out" aria-disabled="true">Sold out</span></div>' +
-                '<p class="form-note">This item is currently out of stock. <a href="custom.html" style="text-decoration:underline;">Request a custom order</a> or check back soon.</p>'
+              ? '<div class="pd-actions"><span class="btn btn-outline pd-sold-out" aria-disabled="true">' + ibT("Sold out") + '</span></div>' +
+                '<p class="form-note">' + ibT("This item is currently out of stock. <a href=\"custom.html\" style=\"text-decoration:underline;\">Request a custom order</a> or check back soon.") + '</p>'
               : '<div class="pd-actions">' +
-                  '<div class="qty-input"><button type="button" data-qty="-1">−</button><input type="text" id="qty" value="1" readonly aria-label="Quantity"><button type="button" data-qty="1">+</button></div>' +
-                  '<button class="btn btn-primary" id="add-to-cart-btn">Add to Cart</button>' +
+                  '<div class="qty-input"><button type="button" data-qty="-1">−</button><input type="text" id="qty" value="1" readonly aria-label="' + ibT("Quantity") + '"><button type="button" data-qty="1">+</button></div>' +
+                  '<button class="btn btn-primary" id="add-to-cart-btn">' + ibT("Add to Cart") + '</button>' +
                 '</div>' +
-                '<p class="form-note pd-low-stock" id="pd-stock"' + (p.stock <= 5 && !p.variants.length ? '>Only ' + p.stock + ' left in stock.' : ' hidden>') + '</p>' +
-                '<p class="add-msg" id="add-msg">Added to cart.</p>') +
+                '<p class="form-note pd-low-stock" id="pd-stock"' + (p.stock <= 5 && !p.variants.length ? '>' + ibT("Only {n} left in stock.", { n: p.stock }) : ' hidden>') + '</p>' +
+                '<p class="add-msg" id="add-msg">' + ibT("Added to cart.") + '</p>') +
             // Shopee order: buy box first, then the description and specs.
             '<div class="pd-details">' +
               '<div class="pd-desc">' + descHtml + '</div>' +
@@ -261,11 +267,11 @@
           var stockEl = document.getElementById("pd-stock");
           var btn = document.getElementById("add-to-cart-btn");
           if (stockEl) {
-            if (v && v.stock === 0) { stockEl.textContent = "This option is sold out."; stockEl.hidden = false; }
-            else if (v && v.stock <= 5) { stockEl.textContent = "Only " + v.stock + " left in stock."; stockEl.hidden = false; }
+            if (v && v.stock === 0) { stockEl.textContent = ibT("This option is sold out."); stockEl.hidden = false; }
+            else if (v && v.stock <= 5) { stockEl.textContent = ibT("Only {n} left in stock.", { n: v.stock }); stockEl.hidden = false; }
             else stockEl.hidden = true;
           }
-          if (btn) { btn.disabled = !!(v && v.stock === 0); btn.textContent = v && v.stock === 0 ? "Sold out" : "Add to Cart"; }
+          if (btn) { btn.disabled = !!(v && v.stock === 0); btn.textContent = v && v.stock === 0 ? ibT("Sold out") : ibT("Add to Cart"); }
           if (qtyInput && v && v.stock > 0 && parseInt(qtyInput.value, 10) > v.stock) qtyInput.value = v.stock;
           // A value is unavailable when every variant matching it plus the other choices has no stock.
           document.querySelectorAll('.pd-option').forEach(function (groupEl) {
@@ -321,7 +327,7 @@
         var related = PRODUCTS.filter(function (x) { return x.id !== p.id; }).slice(0, 3);
         document.getElementById("related-grid").innerHTML = related.map(productCardHTML).join("");
       }).catch(function () {
-        detail.innerHTML = loadErrorHTML("Couldn't load this product.");
+        detail.innerHTML = loadErrorHTML(ibT("Couldn't load this product."));
       });
     }
     ibOnRetry(detail, load);

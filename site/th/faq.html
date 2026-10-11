@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>คำถามที่พบบ่อย — Infinite Box</title>
+<meta name="description" content="คำถามที่พบบ่อยเกี่ยวกับวัสดุงานพิมพ์ 3D ระยะเวลาผลิต และงานสั่งทำของ Infinite Box">
+<link rel="canonical" href="https://infinite-box.co/th/faq.html">
+<link rel="alternate" hreflang="en" href="https://infinite-box.co/faq.html">
+<link rel="alternate" hreflang="th" href="https://infinite-box.co/th/faq.html">
+<link rel="alternate" hreflang="x-default" href="https://infinite-box.co/faq.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Infinite Box">
+<meta property="og:title" content="คำถามที่พบบ่อย — Infinite Box">
+<meta property="og:description" content="คำถามที่พบบ่อยเกี่ยวกับวัสดุงานพิมพ์ 3D ระยะเวลาผลิต และงานสั่งทำของ Infinite Box">
+<meta property="og:url" content="https://infinite-box.co/th/faq.html">
+<meta property="og:image" content="https://infinite-box.co/assets/img/logo-dark.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css?v=19">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">ช่วยเหลือ</p>
+      <h1>คำถามที่พบบ่อย</h1>
+      <p>หาคำตอบไม่เจอ? <a href="contact.html" style="color:hsl(var(--primary));">ติดต่อเรา</a> ได้โดยตรง</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container" style="max-width:800px;" id="faq-list"></div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/i18n-th.js?v=19"></script>
+<script src="../assets/js/i18n.js?v=19"></script>
+<script src="../assets/js/config.js?v=19"></script>
+<script src="../assets/js/supabase-client.js?v=19"></script>
+<script src="../assets/js/products.js?v=19"></script>
+<script src="../assets/js/main.js?v=19"></script>
+<script src="../assets/js/auth.js?v=19"></script>
+<script src="../assets/js/partials.js?v=19"></script>
+<script>
+  var FAQS = [
+    { q: ibT("What materials do you print with?"), a: ibT("We work with PLA+, PETG, ABS, Nylon, TPU, and standard resin. Not sure what fits your part? Tell us the use case in your custom order and we'll recommend one.") },
+    { q: ibT("How long does an order take?"), a: ibT("Most in-stock products and standard custom orders ship in 3–5 business days. Nylon and larger resin jobs may take 5–7 days.") },
+    { q: ibT("Is there a minimum order quantity?"), a: ibT("No. We print single parts and small batches alike — there's no minimum.") },
+    { q: ibT("What file formats do you accept for custom orders?"), a: ibT("STL, STEP, and OBJ are preferred. No file yet? Send a sketch, reference image, or written description and we'll help you get it print-ready.") },
+    { q: ibT("Do you ship internationally?"), a: ibT("Yes. We ship worldwide by DHL Express to the countries listed in the cart's Ship to menu. The fee depends on the destination and is shown before checkout. International delivery usually takes 7–21 business days after your item is made. Import duties and taxes are paid by the recipient. If your country isn't listed, contact us and we'll see what we can do.") },
+    { q: ibT("Can I get a sample before ordering in bulk?"), a: ibT("Absolutely — mention it in your custom order notes and we'll quote a single sample unit first.") },
+    { q: ibT("What if my part doesn't fit or fails?"), a: ibT("We stand behind our print quality. If a part is defective or doesn't match the agreed spec, contact us within 7 days of delivery for a reprint or refund.") }
+  ];
+
+  var list = document.getElementById("faq-list");
+  list.innerHTML = FAQS.map(function (item, i) {
+    return '<div class="faq-item" data-index="' + i + '">' +
+      '<button class="faq-q"><span>' + item.q + '</span><span class="plus">+</span></button>' +
+      '<div class="faq-a"><p>' + item.a + '</p></div>' +
+    '</div>';
+  }).join("");
+
+  list.addEventListener("click", function (e) {
+    var btn = e.target.closest(".faq-q");
+    if (!btn) return;
+    btn.parentElement.classList.toggle("open");
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>อุปกรณ์ภายในรถยนต์ พิมพ์ 3D — Infinite Box</title>
+<meta name="description" content="ที่วางแก้ว ช่องใส่ของคอนโซล และที่วางโทรศัพท์พิมพ์ 3D สำหรับ Mercedes-Benz W124 และ W201, BMW E90 และ Mazda ผลิตในประเทศไทย ส่งทั่วโลก">
+<link rel="canonical" href="https://infinite-box.co/th/shop.html">
+<link rel="alternate" hreflang="en" href="https://infinite-box.co/shop.html">
+<link rel="alternate" hreflang="th" href="https://infinite-box.co/th/shop.html">
+<link rel="alternate" hreflang="x-default" href="https://infinite-box.co/shop.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Infinite Box">
+<meta property="og:title" content="อุปกรณ์ภายในรถยนต์ พิมพ์ 3D — Infinite Box">
+<meta property="og:description" content="ที่วางแก้ว ช่องใส่ของคอนโซล และที่วางโทรศัพท์พิมพ์ 3D สำหรับ Mercedes-Benz W124 และ W201, BMW E90 และ Mazda ผลิตในประเทศไทย ส่งทั่วโลก">
+<meta property="og:url" content="https://infinite-box.co/th/shop.html">
+<meta property="og:image" content="https://infinite-box.co/assets/img/logo-dark.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css?v=19">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero shop-hero">
+    <div class="container">
+      <p class="eyebrow">แคตตาล็อก</p>
+      <h1>ร้านค้า</h1>
+      <p>ชิ้นงานพร้อมส่ง พิมพ์ตามคำสั่งซื้อ เลือกหมวดหมู่ หรือส่งแบบของคุณมาเพื่อขอใบเสนอราคา</p>
+      <div class="filter-bar" id="filter-bar" aria-label="หมวดหมู่สินค้า"></div>
+    </div>
+  </section>
+
+  <section class="section shop-section">
+    <div class="container">
+      <div class="product-grid" id="shop-product-grid"></div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/i18n-th.js?v=19"></script>
+<script src="../assets/js/i18n.js?v=19"></script>
+<script src="../assets/js/config.js?v=19"></script>
+<script src="../assets/js/supabase-client.js?v=19"></script>
+<script src="../assets/js/products.js?v=19"></script>
+<script src="../assets/js/icons.js?v=19"></script>
+<script src="../assets/js/main.js?v=19"></script>
+<script src="../assets/js/auth.js?v=19"></script>
+<script src="../assets/js/partials.js?v=19"></script>
+<script>
+  (function () {
+    var filterBar = document.getElementById("filter-bar");
+    var grid = document.getElementById("shop-product-grid");
+
+    function renderGrid(category) {
+      var items = category === "All" ? PRODUCTS : PRODUCTS.filter(function (p) { return p.category === category; });
+      grid.innerHTML = items.length
+        ? items.map(productCardHTML).join("")
+        : '<p class="grid-status">' + ibT("Nothing in this category yet — <a href=\"custom.html\">request a custom part</a> and we will print it.") + '</p>';
+    }
+
+    filterBar.addEventListener("click", function (e) {
+      var btn = e.target.closest(".filter-chip");
+      if (!btn) return;
+      filterBar.querySelectorAll(".filter-chip").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      renderGrid(btn.dataset.category);
+    });
+
+    function load() {
+      grid.innerHTML = '<p class="grid-status">' + ibT("Loading products…") + '</p>';
+      Promise.all([loadProducts(), loadCategories()]).then(function (r) {
+        // Every configured category is shown so customers can see the range; any category
+        // only present on a product is appended.
+        var ordered = r[1].slice();
+        PRODUCTS.forEach(function (p) { if (p.category && ordered.indexOf(p.category) === -1) ordered.push(p.category); });
+        var categories = ["All"].concat(ordered);
+        filterBar.innerHTML = categories.map(function (c, i) {
+          return '<button class="filter-chip' + (i === 0 ? ' active' : '') + '" data-category="' + ibEscape(c) + '">' + ibEscape(ibT(c)) + '</button>';
+        }).join("");
+
+        renderGrid("All");
+      }).catch(function () {
+        grid.innerHTML = loadErrorHTML(ibT("Couldn't load products."));
+      });
+    }
+    ibOnRetry(grid, load);
+    load();
+  })();
+</script>
+</body>
+</html>

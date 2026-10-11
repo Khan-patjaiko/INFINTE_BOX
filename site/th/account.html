@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>บัญชีของฉัน — Infinite Box</title>
+<meta name="description" content="บัญชี Infinite Box ของคุณ: ข้อมูลส่วนตัวและประวัติคำสั่งซื้อ">
+<meta name="robots" content="noindex">
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css?v=19">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">บัญชีของฉัน</p>
+      <div class="account-head">
+        <h1>บัญชีของฉัน</h1>
+        <button class="btn btn-outline" id="logout-btn">ออกจากระบบ</button>
+      </div>
+      <p id="account-greeting"></p>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:32px;padding-bottom:0;">
+    <div class="container">
+      <p class="eyebrow">ข้อมูลส่วนตัว</p>
+      <h2 style="margin-bottom:24px;">ข้อมูลของคุณ</h2>
+      <form class="form-grid two-col" id="profile-form" onsubmit="return handleProfileSave(event)">
+        <div class="field">
+          <label for="p-name">ชื่อ-นามสกุล</label>
+          <input type="text" id="p-name" autocomplete="name" maxlength="120">
+        </div>
+        <div class="field">
+          <label for="p-phone">เบอร์โทรศัพท์</label>
+          <input type="tel" id="p-phone" autocomplete="tel" maxlength="40">
+        </div>
+        <div class="field">
+          <label for="p-email">อีเมล</label>
+          <input type="email" id="p-email" disabled>
+        </div>
+        <div class="field" style="justify-content:flex-end;">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:auto;">
+            <button class="btn btn-primary" type="submit" id="profile-submit">บันทึกการเปลี่ยนแปลง</button>
+            <a href="reset-password.html" class="form-note" style="margin:0;">เปลี่ยนรหัสผ่าน</a>
+          </div>
+        </div>
+        <p class="form-note" id="profile-success" style="display:none;color:hsl(var(--success));grid-column:1 / -1;">บันทึกแล้ว</p>
+        <p class="form-note" id="profile-error" style="display:none;color:hsl(var(--destructive));grid-column:1 / -1;"></p>
+      </form>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:48px;">
+    <div class="container">
+      <p class="eyebrow">ประวัติคำสั่งซื้อ</p>
+      <h2 style="margin-bottom:32px;">คำสั่งซื้อของคุณ</h2>
+      <div id="orders-container"><p class="grid-status">กำลังโหลดคำสั่งซื้อ…</p></div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/i18n-th.js?v=19"></script>
+<script src="../assets/js/i18n.js?v=19"></script>
+<script src="../assets/js/config.js?v=19"></script>
+<script src="../assets/js/supabase-client.js?v=19"></script>
+<script src="../assets/js/products.js?v=19"></script>
+<script src="../assets/js/main.js?v=19"></script>
+<script src="../assets/js/auth.js?v=19"></script>
+<script src="../assets/js/partials.js?v=19"></script>
+<script>
+  (function () {
+    document.addEventListener("DOMContentLoaded", function () {
+      var btn = document.getElementById("logout-btn");
+      if (btn) btn.addEventListener("click", function () { IBAuth.signOut(); });
+    });
+
+    // "Color: Black · Slot type: 4 slot" under an order line, when the customer chose options.
+    function optionsHTML(it) {
+      var o = it.options || {};
+      var keys = Object.keys(o);
+      return keys.length ? '<span class="order-line-options">' + keys.map(function (k) { return ibEscape(ibT(k)) + ': ' + ibEscape(ibT(o[k])); }).join(' · ') + '</span>' : '';
+    }
+    function money(cents) { return "฿" + ((cents || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+
+    function orderCardHTML(o) {
+      var date = new Date(o.created_at).toLocaleDateString(IBI18n.locale, { year: "numeric", month: "short", day: "numeric" });
+      var items = (o.order_items || []).map(function (it) {
+        return '<div class="order-line"><span>' + ibEscape(it.name) + ' × ' + it.qty + optionsHTML(it) + '</span><span>' + money(it.unit_price_cents * it.qty) + '</span></div>';
+      }).join("");
+      var status = (o.status || "pending").toLowerCase();
+      return '<a class="order-card" href="order.html?id=' + encodeURIComponent(o.id) + '" style="display:block;text-decoration:none;color:inherit;">' +
+        '<div class="order-card-head">' +
+          '<div><strong>' + ibT("Order {id}", { id: ibEscape(String(o.id).slice(0, 8)) }) + '</strong><br><span class="grid-status">' + date + '</span></div>' +
+          '<span class="order-status ' + status + '">' + ibEscape(ibT(status)) + '</span>' +
+        '</div>' +
+        items +
+        '<div class="order-total"><span>' + ibT("Total") + '</span><span>' + money(o.total_cents) + '</span></div>' +
+      '</a>';
+    }
+
+    async function loadOrders() {
+      var container = document.getElementById("orders-container");
+      try {
+        var res = await window.IBDB
+          .from("orders")
+          .select("*, order_items(*)")
+          .order("created_at", { ascending: false });
+        if (res.error) throw res.error;
+        var orders = res.data || [];
+        if (!orders.length) {
+          container.innerHTML =
+            '<div class="empty-state"><p>' + ibT("No orders yet.") + '</p>' +
+            '<a class="btn btn-primary" href="shop.html">' + ibT("Start shopping") + '</a></div>';
+          return;
+        }
+        container.innerHTML = orders.map(orderCardHTML).join("");
+      } catch (e) {
+        console.error("Failed to load orders", e);
+        container.innerHTML = '<p class="grid-status">' + ibT("Couldn't load your orders. Please refresh.") + '</p>';
+      }
+    }
+
+    var currentUser = null;
+
+    function setGreeting(name) {
+      var greeting = document.getElementById("account-greeting");
+      if (greeting) greeting.textContent = ibT("Signed in as {name}", { name: name || currentUser.email });
+    }
+
+    // profiles row is the source of truth (RLS: own row only); user_metadata is the fallback.
+    async function loadProfile(user) {
+      document.getElementById("p-email").value = user.email || "";
+      var metaName = (user.user_metadata && user.user_metadata.full_name) || "";
+      document.getElementById("p-name").value = metaName;
+      try {
+        var res = await window.IBDB.from("profiles").select("full_name, phone").eq("id", user.id).maybeSingle();
+        if (res.error) throw res.error;
+        if (res.data) {
+          document.getElementById("p-name").value = res.data.full_name || metaName;
+          document.getElementById("p-phone").value = res.data.phone || "";
+          setGreeting(res.data.full_name || metaName);
+        }
+      } catch (e) {
+        console.error("Failed to load profile", e);
+      }
+    }
+
+    window.handleProfileSave = async function (e) {
+      e.preventDefault();
+      var btn = document.getElementById("profile-submit");
+      var okEl = document.getElementById("profile-success");
+      var errEl = document.getElementById("profile-error");
+      okEl.style.display = "none";
+      errEl.style.display = "none";
+      btn.disabled = true;
+      btn.textContent = ibT("Saving…");
+      var fullName = document.getElementById("p-name").value.trim();
+      var phone = document.getElementById("p-phone").value.trim();
+      try {
+        var res = await window.IBDB.from("profiles")
+          .update({ full_name: fullName || null, phone: phone || null })
+          .eq("id", currentUser.id);
+        if (res.error) throw res.error;
+        // Keep auth metadata in sync so the greeting/header agree everywhere.
+        var meta = await window.IBDB.auth.updateUser({ data: { full_name: fullName } });
+        if (meta.error) console.warn("user_metadata not updated", meta.error);
+        setGreeting(fullName);
+        okEl.style.display = "block";
+        setTimeout(function () { okEl.style.display = "none"; }, 3000);
+      } catch (err) {
+        console.error("Profile save failed", err);
+        errEl.textContent = err && err.message ? ibT(err.message) : ibT("Couldn't save your details. Please try again.");
+        errEl.style.display = "block";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = ibT("Save changes");
+      }
+      return false;
+    };
+
+    IBAuth.requireUser().then(function (user) {
+      if (!user) return; // requireUser already redirected
+      currentUser = user;
+      setGreeting((user.user_metadata && user.user_metadata.full_name) || "");
+      loadProfile(user);
+      loadOrders();
+    });
+  })();
+</script>
+</body>
+</html>

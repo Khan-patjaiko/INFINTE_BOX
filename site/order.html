@@ -44,7 +44,7 @@
     function optionsHTML(it) {
       var o = it.options || {};
       var keys = Object.keys(o);
-      return keys.length ? '<span class="order-line-options">' + keys.map(function (k) { return ibEscape(k) + ': ' + ibEscape(o[k]); }).join(' · ') + '</span>' : '';
+      return keys.length ? '<span class="order-line-options">' + keys.map(function (k) { return ibEscape(ibT(k)) + ': ' + ibEscape(ibT(o[k])); }).join(' · ') + '</span>' : '';
     }
     function money(cents) { return "฿" + ((cents || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
 
@@ -52,44 +52,44 @@
       if (!a) return "";
       var lines = [a.name, a.line1, a.line2, [a.city, a.state, a.postal_code].filter(Boolean).join(", "), a.country, a.phone]
         .filter(Boolean).map(ibEscape);
-      return '<div class="order-address"><strong>Shipping to</strong><br>' + lines.join("<br>") + "</div>";
+      return '<div class="order-address"><strong>' + ibT("Shipping to") + '</strong><br>' + lines.join("<br>") + "</div>";
     }
 
     function orderHTML(o) {
-      var date = new Date(o.created_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+      var date = new Date(o.created_at).toLocaleDateString(IBI18n.locale, { year: "numeric", month: "short", day: "numeric" });
       var status = (o.status || "pending").toLowerCase();
       var statusCopy = {
-        pending: "We're waiting on payment confirmation for this order.",
-        paid: "Payment received — your order is in our print queue.",
-        fulfilled: "Your order has shipped.",
-        cancelled: "This order was cancelled."
+        pending: ibT("We're waiting on payment confirmation for this order."),
+        paid: ibT("Payment received — your order is in our print queue."),
+        fulfilled: ibT("Your order has shipped."),
+        cancelled: ibT("This order was cancelled.")
       }[status] || "";
       var items = (o.order_items || []).map(function (it) {
         return '<div class="order-line"><span>' + ibEscape(it.name) + " × " + it.qty + optionsHTML(it) + "</span><span>" + money(it.unit_price_cents * it.qty) + "</span></div>";
       }).join("");
 
-      document.getElementById("order-heading").textContent = "Order " + String(o.id).slice(0, 8);
+      document.getElementById("order-heading").textContent = ibT("Order {id}", { id: String(o.id).slice(0, 8) });
       document.getElementById("order-sub").textContent = date + (o.email ? " · " + o.email : "");
 
       return '<div class="order-card">' +
         '<div class="order-card-head">' +
-          "<div><strong>Status</strong></div>" +
-          '<span class="order-status ' + status + '">' + ibEscape(status) + "</span>" +
+          "<div><strong>" + ibT("Status") + "</strong></div>" +
+          '<span class="order-status ' + status + '">' + ibEscape(ibT(status)) + "</span>" +
         "</div>" +
         (statusCopy ? '<p class="grid-status" style="margin-bottom:16px;">' + ibEscape(statusCopy) + "</p>" : "") +
         items +
-        '<div class="order-total"><span>Total</span><span>' + money(o.total_cents) + "</span></div>" +
+        '<div class="order-total"><span>' + ibT("Total") + '</span><span>' + money(o.total_cents) + "</span></div>" +
       "</div>" +
       addressHTML(o.shipping_address) +
       '<div class="btn-row" style="margin-top:24px;">' +
-        '<a class="btn btn-outline" href="shop.html">Continue shopping</a>' +
+        '<a class="btn btn-outline" href="shop.html">' + ibT("Continue shopping") + '</a>' +
       "</div>";
     }
 
     function showError(message) {
       document.getElementById("order-container").innerHTML =
         '<div class="empty-state"><p>' + ibEscape(message) + "</p>" +
-        '<a class="btn btn-primary" href="shop.html">Back to shop</a></div>';
+        '<a class="btn btn-primary" href="shop.html">' + ibT("Back to shop") + '</a></div>';
     }
 
     async function load() {
@@ -97,7 +97,7 @@
       var params = new URLSearchParams(location.search);
       var id = params.get("id");
       var sessionId = params.get("session_id");
-      if (!id && !sessionId) { showError("No order specified."); return; }
+      if (!id && !sessionId) { showError(ibT("No order specified.")); return; }
 
       try {
         var res = await window.IBDB.functions.invoke("get-order", {
@@ -108,7 +108,7 @@
         container.innerHTML = orderHTML(res.data.order);
       } catch (e) {
         console.error("Failed to load order", e);
-        showError("We couldn't find that order. If you just checked out, give it a moment and refresh.");
+        showError(ibT("We couldn't find that order. If you just checked out, give it a moment and refresh."));
       }
     }
 

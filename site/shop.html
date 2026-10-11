@@ -6,6 +6,9 @@
 <title>Shop Car Interior Parts — Infinite Box</title>
 <meta name="description" content="3D printed cup holders, console inserts and phone mounts for Mercedes-Benz W124 and W201, BMW E90 and Mazda. Made in Thailand, shipped worldwide.">
 <link rel="canonical" href="https://infinite-box.co/shop.html">
+<link rel="alternate" hreflang="en" href="https://infinite-box.co/shop.html">
+<link rel="alternate" hreflang="th" href="https://infinite-box.co/th/shop.html">
+<link rel="alternate" hreflang="x-default" href="https://infinite-box.co/shop.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Infinite Box">
 <meta property="og:title" content="Shop Car Interior Parts — Infinite Box">
@@ -57,7 +60,7 @@
       var items = category === "All" ? PRODUCTS : PRODUCTS.filter(function (p) { return p.category === category; });
       grid.innerHTML = items.length
         ? items.map(productCardHTML).join("")
-        : '<p class="grid-status">Nothing in this category yet — <a href="custom.html">request a custom part</a> and we will print it.</p>';
+        : '<p class="grid-status">' + ibT("Nothing in this category yet — <a href=\"custom.html\">request a custom part</a> and we will print it.") + '</p>';
     }
 
     filterBar.addEventListener("click", function (e) {
@@ -69,7 +72,7 @@
     });
 
     function load() {
-      grid.innerHTML = '<p class="grid-status">Loading products…</p>';
+      grid.innerHTML = '<p class="grid-status">' + ibT("Loading products…") + '</p>';
       Promise.all([loadProducts(), loadCategories()]).then(function (r) {
         // Every configured category is shown so customers can see the range; any category
         // only present on a product is appended.
@@ -77,12 +80,12 @@
         PRODUCTS.forEach(function (p) { if (p.category && ordered.indexOf(p.category) === -1) ordered.push(p.category); });
         var categories = ["All"].concat(ordered);
         filterBar.innerHTML = categories.map(function (c, i) {
-          return '<button class="filter-chip' + (i === 0 ? ' active' : '') + '" data-category="' + ibEscape(c) + '">' + ibEscape(c) + '</button>';
+          return '<button class="filter-chip' + (i === 0 ? ' active' : '') + '" data-category="' + ibEscape(c) + '">' + ibEscape(ibT(c)) + '</button>';
         }).join("");
 
         renderGrid("All");
       }).catch(function () {
-        grid.innerHTML = loadErrorHTML("Couldn't load products.");
+        grid.innerHTML = loadErrorHTML(ibT("Couldn't load products."));
       });
     }
     ibOnRetry(grid, load);

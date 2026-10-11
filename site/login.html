@@ -64,7 +64,7 @@
     var params = new URLSearchParams(location.search);
     var next = params.get("next");
     // Same-site pages only: "account.html" or "admin/orders.html" — never absolute/../ URLs.
-    return (next && /^(admin\/)?[a-zA-Z0-9_-]+\.html$/.test(next)) ? next : "account.html";
+    return (next && /^(admin\/)?[a-zA-Z0-9_-]+\.html$/.test(next)) ? (next.indexOf("admin/") === 0 ? IBI18n.root + next : next) : "account.html"; // admin lives at the root, also from /th/
   }
 
   // If already signed in, skip the form.
@@ -84,7 +84,7 @@
       var res = await IBAuth.signInWithGoogle(nextTarget());
       if (res.error) throw res.error;
     } catch (err) {
-      errorEl.textContent = err && err.message ? err.message : "Google sign-in failed. Please try again.";
+      errorEl.textContent = err && err.message ? ibT(err.message) : ibT("Google sign-in failed. Please try again.");
       errorEl.style.display = "block";
       btn.disabled = false;
     }
@@ -96,7 +96,7 @@
     var errorEl = document.getElementById("login-error");
     errorEl.style.display = "none";
     btn.disabled = true;
-    btn.textContent = "Logging in…";
+    btn.textContent = ibT("Logging in…");
     try {
       var res = await IBAuth.signIn(
         document.getElementById("email").value,
@@ -105,10 +105,10 @@
       if (res.error) throw res.error;
       window.location.href = nextTarget();
     } catch (err) {
-      errorEl.textContent = err && err.message ? err.message : "Login failed. Check your details and try again.";
+      errorEl.textContent = err && err.message ? ibT(err.message) : ibT("Login failed. Check your details and try again.");
       errorEl.style.display = "block";
       btn.disabled = false;
-      btn.textContent = "Log in";
+      btn.textContent = ibT("Log in");
     }
     return false;
   }

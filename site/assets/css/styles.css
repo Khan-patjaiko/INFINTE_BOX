@@ -1183,3 +1183,9 @@ button { font-family: inherit; cursor: pointer; }
   .cat-count-word { display: none; }
   .cat-btn { width: 28px; }
 }
+
+/* ---------- Thai pages (/th/) ---------- */
+/* Letter-spacing pulls Thai vowel and tone marks away from their consonants; Thai text also
+   needs a little more line height than the Latin type scale. The wordmark stays as designed. */
+html[lang="th"] body *:not(.wordmark) { letter-spacing: normal; }
+html[lang="th"] body { line-height: 1.7; }

@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>รับออกแบบและสั่งทำชิ้นงาน 3D — Infinite Box</title>
+<meta name="description" content="ส่งแบบ ภาพสเก็ตช์ หรือไอเดียของคุณให้ Infinite Box แล้วรับใบเสนอราคางานปริ้น 3D ตามสั่ง โดยปกติภายใน 2 วันทำการ">
+<link rel="canonical" href="https://infinite-box.co/th/custom.html">
+<link rel="alternate" hreflang="en" href="https://infinite-box.co/custom.html">
+<link rel="alternate" hreflang="th" href="https://infinite-box.co/th/custom.html">
+<link rel="alternate" hreflang="x-default" href="https://infinite-box.co/custom.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Infinite Box">
+<meta property="og:title" content="รับออกแบบและสั่งทำชิ้นงาน 3D — Infinite Box">
+<meta property="og:description" content="ส่งแบบ ภาพสเก็ตช์ หรือไอเดียของคุณให้ Infinite Box แล้วรับใบเสนอราคางานปริ้น 3D ตามสั่ง โดยปกติภายใน 2 วันทำการ">
+<meta property="og:url" content="https://infinite-box.co/th/custom.html">
+<meta property="og:image" content="https://infinite-box.co/assets/img/logo-dark.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css?v=19">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <p class="eyebrow">สั่งทำพิเศษ</p>
+      <h1>มีแบบแล้ว? ให้เราพิมพ์ให้</h1>
+      <p>อัปโหลดไฟล์และบอกสิ่งที่คุณต้องการ แล้วเราจะแจ้งราคาและระยะเวลาผลิตกลับไป โดยปกติภายใน 2 วันทำการ</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div style="display:grid;grid-template-columns:1fr;gap:64px;" id="custom-layout">
+        <form class="form-grid" id="custom-form" onsubmit="return handleCustomSubmit(event)">
+          <label class="field-file" id="file-drop" for="design-file">
+            <p style="margin-bottom:8px;font-weight:600;color:hsl(var(--foreground));">ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</p>
+            <p>STL, STEP, OBJ หรือรูปภาพ — ไม่เกิน 50MB</p>
+            <p class="field-file-name" id="file-name" aria-live="polite"></p>
+            <input type="file" id="design-file" class="visually-hidden">
+          </label>
+
+          <div class="form-grid two-col">
+            <div class="field">
+              <label for="material">วัสดุที่ต้องการ</label>
+              <select id="material">
+                <option>PLA+</option>
+                <option>PETG</option>
+                <option>ABS</option>
+                <option>Nylon</option>
+                <option>TPU</option>
+                <option>เรซิน</option>
+                <option>ไม่แน่ใจ — ช่วยแนะนำ</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="quantity">จำนวน</label>
+              <input type="number" id="quantity" min="1" value="1">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="details">รายละเอียดงาน</label>
+            <textarea id="details" placeholder="ขนาด ค่าความคลาดเคลื่อน การใช้งาน ผิวงาน กำหนดส่ง..."></textarea>
+          </div>
+
+          <div class="form-grid two-col">
+            <div class="field">
+              <label for="name">ชื่อ</label>
+              <input type="text" id="name" required>
+            </div>
+            <div class="field">
+              <label for="email">อีเมล</label>
+              <input type="email" id="email" required>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-block" type="submit" id="custom-submit">ขอใบเสนอราคา</button>
+          <p class="form-note" id="form-success" style="display:none;color:hsl(var(--success));">ขอบคุณ — เราได้รับคำขอของคุณแล้ว จะส่งใบเสนอราคาทางอีเมล โดยปกติภายใน 2 วันทำการ</p>
+          <p class="form-note" id="form-error" style="display:none;color:hsl(var(--destructive));">ขออภัย ส่งคำขอไม่สำเร็จ กรุณาลองอีกครั้ง</p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="section border-top" style="background:hsl(var(--muted));">
+    <div class="container">
+      <p class="eyebrow">ขั้นตอนการสั่งทำ</p>
+      <h2 style="margin-bottom:64px;">จากไฟล์สู่ชิ้นงานจริง</h2>
+      <div class="diff-grid">
+        <div class="diff-card">
+          <p class="diff-number">01</p>
+          <h3>ส่งแบบของคุณ</h3>
+          <p>อัปโหลดไฟล์ 3D หรือเล่าไอเดียของคุณ แล้วเราจะช่วยเตรียมงานให้พร้อมพิมพ์</p>
+        </div>
+        <div class="diff-card">
+          <p class="diff-number">02</p>
+          <h3>รับใบเสนอราคา</h3>
+          <p>เราตรวจสอบวัสดุ รูปทรง และจำนวน แล้วแจ้งราคาและระยะเวลาผลิต โดยปกติภายใน 2 วันทำการ</p>
+        </div>
+        <div class="diff-card">
+          <p class="diff-number">03</p>
+          <h3>เราพิมพ์และจัดส่ง</h3>
+          <p>เมื่อคุณอนุมัติ ชิ้นงานจะเข้าสู่การผลิตและจัดส่งได้เร็วสุดภายใน 3 วันทำการ</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div id="footer-placeholder"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/i18n-th.js?v=19"></script>
+<script src="../assets/js/i18n.js?v=19"></script>
+<script src="../assets/js/config.js?v=19"></script>
+<script src="../assets/js/supabase-client.js?v=19"></script>
+<script src="../assets/js/products.js?v=19"></script>
+<script src="../assets/js/main.js?v=19"></script>
+<script src="../assets/js/auth.js?v=19"></script>
+<script src="../assets/js/partials.js?v=19"></script>
+<script>
+  // Drop zone: click opens the picker (label), drag-and-drop fills the same input, name shows below.
+  (function () {
+    var drop = document.getElementById("file-drop");
+    var input = document.getElementById("design-file");
+    var nameEl = document.getElementById("file-name");
+    function showName() {
+      var f = input.files[0];
+      var size = f && (f.size < 1048576 ? Math.max(1, Math.round(f.size / 1024)) + " KB" : (f.size / 1048576).toFixed(1) + " MB");
+      nameEl.textContent = f ? ibT("Selected: {name} ({size})", { name: f.name, size: size }) : "";
+      drop.classList.toggle("has-file", !!f);
+    }
+    input.addEventListener("change", showName);
+    ["dragenter", "dragover"].forEach(function (t) {
+      drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add("is-dragover"); });
+    });
+    ["dragleave", "drop"].forEach(function (t) {
+      drop.addEventListener(t, function () { drop.classList.remove("is-dragover"); });
+    });
+    drop.addEventListener("drop", function (e) {
+      e.preventDefault();
+      if (e.dataTransfer.files.length) { input.files = e.dataTransfer.files; showName(); }
+    });
+    document.getElementById("custom-form").addEventListener("reset", function () { setTimeout(showName); });
+  })();
+
+  async function handleCustomSubmit(e) {
+    e.preventDefault();
+    var btn = document.getElementById("custom-submit");
+    var successEl = document.getElementById("form-success");
+    var errorEl = document.getElementById("form-error");
+    successEl.style.display = "none";
+    errorEl.style.display = "none";
+
+    var fileInput = document.getElementById("design-file");
+    var file = fileInput.files[0];
+    if (file && file.size > 50 * 1024 * 1024) {
+      errorEl.textContent = ibT("That file is larger than 50MB. Please upload a smaller file.");
+      errorEl.style.display = "block";
+      return false;
+    }
+
+    var fd = new FormData();
+    fd.append("name", document.getElementById("name").value);
+    fd.append("email", document.getElementById("email").value);
+    fd.append("material", document.getElementById("material").value);
+    fd.append("quantity", document.getElementById("quantity").value);
+    fd.append("details", document.getElementById("details").value);
+    fd.append("lang", IBI18n.lang);
+    if (file) fd.append("file", file);
+
+    btn.disabled = true;
+    btn.textContent = ibT("Sending…");
+    try {
+      var res = await window.IBDB.functions.invoke("submit-quote", { body: fd });
+      if (res.error) throw res.error;
+      document.getElementById("custom-form").reset();
+      successEl.style.display = "block";
+    } catch (err) {
+      console.error("Quote submit failed", err);
+      errorEl.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.textContent = ibT("Request Quote");
+    }
+    return false;
+  }
+</script>
+</body>
+</html>
