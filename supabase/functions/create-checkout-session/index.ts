@@ -30,6 +30,10 @@ const DEFAULT_FREE_SHIPPING_FROM_CENTS = 80000;
 // customer picked in the cart.
 const HOME_COUNTRY = "TH";
 
+// Customer-facing text in the shopper's language (cart.html sends lang: "en" | "th").
+type Lang = "en" | "th";
+const t = (lang: Lang, en: string, th: string) => (lang === "th" ? th : en);
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -42,8 +46,9 @@ Deno.serve(async (req) => {
   });
 
   try {
-    const { items, origin, ship_to } = await req.json();
-    if (!Array.isArray(items) || items.length === 0) return json({ error: "Cart is empty" }, 400);
+    const { items, origin, ship_to, lang: rawLang } = await req.json();
+    const lang: Lang = rawLang === "th" ? "th" : "en";
+    if (!Array.isArray(items) || items.length === 0) return json({ error: t(lang, "Cart is empty", "ตะกร้าว่างอยู่") }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
@@ -67,7 +72,7 @@ Deno.serve(async (req) => {
       const zone = mapSetting("intl_country_zones")[shipTo];
       const fee = zone == null ? undefined : mapSetting("intl_zone_fees")[String(zone)];
       if (!/^[A-Z]{2}$/.test(shipTo) || !Number.isInteger(fee) || (fee as number) < 0) {
-        return json({ error: "Sorry, we don't ship to that country yet. Please contact us for a quote." }, 400);
+        return json({ error: t(lang, "Sorry, we don't ship to that country yet. Please contact us for a quote.", "ขออภัย ยังไม่สามารถจัดส่งไปประเทศนี้ได้ กรุณาติดต่อเราเพื่อขอใบเสนอราคา") }, 400);
       }
       intlFeeCents = fee as number;
     }
@@ -87,7 +92,7 @@ Deno.serve(async (req) => {
         userEmail = data.user.email ?? null;
       }
     }
-    if (!userId || !userEmail) return json({ error: "Please log in to check out." }, 401);
+    if (!userId || !userEmail) return json({ error: t(lang, "Please log in to check out.", "กรุณาเข้าสู่ระบบเพื่อชำระเงิน") }, 401);
 
     // Authoritative price lookup by slug (never trust client prices).
     const slugs = items.map((i: { id: string }) => i.id);
@@ -103,7 +108,7 @@ Deno.serve(async (req) => {
 
     type OptionGroup = { name: string; values: string[] };
     type Variant = { options: Record<string, string>; price_cents: number; stock: number; sku?: string | null };
-    type ProductRow = { id: string; slug: string; name: string; price_cents: number; stock: number; options?: OptionGroup[]; variants?: Variant[] };
+    type ProductRow = { id: string; slug: string; name: string; name_th?: string | null; price_cents: number; stock: number; options?: OptionGroup[]; variants?: Variant[] };
     // Same key shape as IB.normOptions in main.js: sorted keys, string values.
     const optKey = (o: Record<string, string>) => JSON.stringify(Object.keys(o).sort().map((k) => [k, String(o[k])]));
 
@@ -111,6 +116,8 @@ Deno.serve(async (req) => {
     //    defines (anything else the client sent is dropped); products with variants
     //    (migration 0016) take price, stock and SKU from the matching variant.
     type Line = { p: ProductRow; qty: number; options: Record<string, string>; variant: Variant | null; stockKey: string };
+    // Name shown to the customer (Stripe page, receipt, order history): Thai when they shop in Thai.
+    const nameOf = (p: ProductRow) => (lang === "th" && p.name_th) || p.name;
     const lines: Line[] = [];
     for (const i of items) {
       const p = bySlug.get(i.id) as ProductRow | undefined;
@@ -121,14 +128,14 @@ Deno.serve(async (req) => {
       const options: Record<string, string> = {};
       for (const g of groups) {
         const v = String(sent[g.name] ?? "");
-        if (!g.values.includes(v)) return json({ error: `Please choose ${g.name} for ${p.name}.` }, 400);
+        if (!g.values.includes(v)) return json({ error: t(lang, `Please choose ${g.name} for ${nameOf(p)}.`, `กรุณาเลือก ${g.name} ของ ${nameOf(p)}`) }, 400);
         options[g.name] = v;
       }
       const variants = Array.isArray(p.variants) ? p.variants : [];
       let variant: Variant | null = null;
       if (variants.length) {
         variant = variants.find((v) => optKey(v.options || {}) === optKey(options)) ?? null;
-        if (!variant) return json({ error: `That option of ${p.name} is no longer available. Please update your cart.` }, 400);
+        if (!variant) return json({ error: t(lang, `That option of ${nameOf(p)} is no longer available. Please update your cart.`, `ตัวเลือกนี้ของ ${nameOf(p)} ไม่มีจำหน่ายแล้ว กรุณาแก้ไขตะกร้า`) }, 400);
       }
       lines.push({ p, qty, options, variant, stockKey: variant ? p.id + "|" + optKey(options) : p.id });
     }
@@ -143,8 +150,8 @@ Deno.serve(async (req) => {
       const stock = l.variant ? (l.variant.stock ?? 0) : (l.p.stock ?? 0);
       if ((qtyByKey.get(l.stockKey) ?? 0) > stock) {
         overStock.add(l.stockKey);
-        const label = l.variant ? `${l.p.name} (${Object.values(l.options).join(" / ")})` : l.p.name;
-        soldOut.push(stock > 0 ? `${label} (only ${stock} left)` : `${label} (sold out)`);
+        const label = l.variant ? `${nameOf(l.p)} (${Object.values(l.options).join(" / ")})` : nameOf(l.p);
+        soldOut.push(stock > 0 ? t(lang, `${label} (only ${stock} left)`, `${label} (เหลือ ${stock} ชิ้น)`) : t(lang, `${label} (sold out)`, `${label} (สินค้าหมด)`));
       }
     }
 
@@ -160,13 +167,15 @@ Deno.serve(async (req) => {
         price_data: {
           currency: CURRENCY,
           unit_amount: unit,
-          product_data: { name: p.name, ...(optionText ? { description: optionText } : {}), metadata: { slug: p.slug, ...options } },
+          product_data: { name: nameOf(p), ...(optionText ? { description: optionText } : {}), metadata: { slug: p.slug, ...options } },
         },
       });
-      orderItems.push({ product_id: p.id, name: p.name, unit_price_cents: unit, qty, options, sku: l.variant?.sku || null });
+      orderItems.push({ product_id: p.id, name: nameOf(p), unit_price_cents: unit, qty, options, sku: l.variant?.sku || null });
     }
-    if (soldOut.length) return json({ error: "Not enough stock: " + soldOut.join(", ") + ". Please update your cart.", sold_out: soldOut }, 409);
-    if (lineItems.length === 0) return json({ error: "No valid items in cart" }, 400);
+    if (soldOut.length) {
+      return json({ error: t(lang, "Not enough stock: ", "สินค้ามีไม่พอ: ") + soldOut.join(", ") + t(lang, ". Please update your cart.", " กรุณาแก้ไขตะกร้า"), sold_out: soldOut }, 409);
+    }
+    if (lineItems.length === 0) return json({ error: t(lang, "No valid items in cart", "ไม่มีสินค้าที่สั่งซื้อได้ในตะกร้า") }, 400);
 
     const shippingCents = intlFeeCents ??
       (freeShippingFromCents > 0 && subtotal >= freeShippingFromCents ? 0 : flatShippingCents);
@@ -180,6 +189,7 @@ Deno.serve(async (req) => {
       shipping_cents: shippingCents,
       total_cents: total,
       ship_country: shipTo,
+      lang,
     }).select().single();
     if (oErr) throw oErr;
 
@@ -187,9 +197,11 @@ Deno.serve(async (req) => {
       .insert(orderItems.map((oi) => ({ ...oi, order_id: order.id })));
     if (iErr) throw iErr;
 
-    const baseUrl = (typeof origin === "string" && origin.startsWith("http")) ? origin : SUPABASE_URL;
+    // Return pages in the shopper's language: /th/success.html for Thai.
+    const baseUrl = ((typeof origin === "string" && origin.startsWith("http")) ? origin : SUPABASE_URL) + (lang === "th" ? "/th" : "");
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      locale: lang,
       line_items: lineItems as never,
       customer_email: userEmail,
       // Shipping shown as a proper shipping line; the address is collected in the chosen
@@ -197,8 +209,8 @@ Deno.serve(async (req) => {
       shipping_options: [{
         shipping_rate_data: {
           type: "fixed_amount",
-          display_name: intlFeeCents != null ? "DHL Express (duties paid by recipient)"
-            : shippingCents === 0 ? "Free shipping" : "Standard shipping",
+          display_name: intlFeeCents != null ? t(lang, "DHL Express (duties paid by recipient)", "DHL Express (ผู้รับชำระภาษีนำเข้า)")
+            : shippingCents === 0 ? t(lang, "Free shipping", "จัดส่งฟรี") : t(lang, "Standard shipping", "จัดส่งแบบมาตรฐาน"),
           fixed_amount: { amount: shippingCents, currency: CURRENCY },
         },
       }],

@@ -30,6 +30,8 @@ Deno.serve(async (req) => {
     const quantity = parseInt(String(form.get("quantity") ?? "1"), 10) || 1;
     const details = String(form.get("details") ?? "");
     const file = form.get("file");
+    // Language of the page the request came from (migration 0020): the acknowledgement uses it.
+    const lang = form.get("lang") === "th" ? "th" : "en";
 
     if (!name || !email) return json({ error: "Name and email are required" }, 400);
 
@@ -68,6 +70,7 @@ Deno.serve(async (req) => {
       quantity,
       details,
       file_url: fileUrl,
+      lang,
     }).select("id").single();
     if (error) throw error;
 
@@ -80,13 +83,30 @@ Deno.serve(async (req) => {
       ["Quantity", esc(String(quantity))],
       ["Design file", fileUrl ? "attached (download from admin)" : "none"],
       ["Details", nl2br(details || "—")],
+      ["Language", lang === "th" ? "Thai" : "English"],
+    ]);
+    const summaryTh = kv([
+      ["ชื่อ", esc(name)],
+      ["อีเมล", esc(email)],
+      ["วัสดุ", esc(material || "—")],
+      ["จำนวน", esc(String(quantity))],
+      ["ไฟล์งาน", fileUrl ? "แนบแล้ว" : "ไม่มี"],
+      ["รายละเอียด", nl2br(details || "—")],
     ]);
     await sendOwnerAlert({
       subject: `New custom quote request ${id8} from ${name}`,
       replyTo: email,
       html: layout(`New quote request ${id8}`, summary + button(`${SITE_URL}/admin/quotes.html`, "Open in admin")),
     });
-    await sendEmail({
+    await sendEmail(lang === "th" ? {
+      to: email,
+      subject: "เราได้รับคำขอสั่งทำของคุณแล้ว — Infinite Box",
+      replyTo: OWNER_EMAIL ?? undefined,
+      html: layout(`ขอบคุณ คุณ${name}`, `
+        <p style="margin:0 0 8px;font-size:15px;">เราได้รับคำขอสั่งทำของคุณแล้ว (เลขอ้างอิง <strong>${id8}</strong>) เราจะตรวจสอบและส่งใบเสนอราคากลับไป โดยปกติภายใน 2 วันทำการ</p>
+        ${summaryTh}
+        <p style="margin:16px 0 0;font-size:13px;color:#78716c;">ต้องการเพิ่มเติมข้อมูล? ตอบกลับอีเมลนี้ได้เลย</p>`),
+    } : {
       to: email,
       subject: "We received your custom order request — Infinite Box",
       replyTo: OWNER_EMAIL ?? undefined,

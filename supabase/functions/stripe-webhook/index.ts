@@ -107,28 +107,45 @@ async function sendOrderEmails(
   // International orders (ship_country other than TH, migration 0019) go by DHL Express and
   // the recipient pays import duties.
   const intl = !!order.ship_country && order.ship_country !== "TH";
-  const summary = `<table role="presentation" cellspacing="0" cellpadding="0" style="width:100%;font-size:14px;border-top:1px solid #e7e5e4;margin-top:12px;">
+  // The customer's receipt is in the language they shopped in (orders.lang, migration 0020);
+  // the owner alert stays in English.
+  const customerLang = order.lang === "th" ? "th" : "en";
+  const summaryFor = (lang: "en" | "th") => {
+    const L = (en: string, th: string) => (lang === "th" ? th : en);
+    return `<table role="presentation" cellspacing="0" cellpadding="0" style="width:100%;font-size:14px;border-top:1px solid #e7e5e4;margin-top:12px;">
     ${itemRows}
-    <tr><td style="padding:6px 0;border-top:1px solid #e7e5e4;color:#78716c;">Subtotal</td><td style="padding:6px 0;border-top:1px solid #e7e5e4;text-align:right;">${money(order.subtotal_cents as number)}</td></tr>
-    <tr><td style="padding:6px 0;color:#78716c;">Shipping${intl ? " (DHL Express)" : ""}</td><td style="padding:6px 0;text-align:right;">${money(order.shipping_cents as number)}</td></tr>
-    <tr><td style="padding:8px 0;font-weight:700;border-top:1px solid #e7e5e4;">Total</td><td style="padding:8px 0;font-weight:700;text-align:right;border-top:1px solid #e7e5e4;">${total}</td></tr>
+    <tr><td style="padding:6px 0;border-top:1px solid #e7e5e4;color:#78716c;">${L("Subtotal", "ยอดรวมสินค้า")}</td><td style="padding:6px 0;border-top:1px solid #e7e5e4;text-align:right;">${money(order.subtotal_cents as number)}</td></tr>
+    <tr><td style="padding:6px 0;color:#78716c;">${L("Shipping", "ค่าจัดส่ง")}${intl ? " (DHL Express)" : ""}</td><td style="padding:6px 0;text-align:right;">${money(order.shipping_cents as number)}</td></tr>
+    <tr><td style="padding:8px 0;font-weight:700;border-top:1px solid #e7e5e4;">${L("Total", "ยอดรวม")}</td><td style="padding:8px 0;font-weight:700;text-align:right;border-top:1px solid #e7e5e4;">${total}</td></tr>
   </table>`;
+  };
   const addr = addressLines(order.shipping_address as Record<string, unknown> | null);
-  const addrBlock = (addr ? `<p style="margin:16px 0 4px;color:#78716c;font-size:14px;">Shipping to</p><p style="margin:0;font-size:14px;">${addr}</p>` : "") +
-    (intl ? `<p style="margin:8px 0 0;font-size:13px;color:#78716c;">Import duties and taxes, if any, are paid by the recipient on delivery.</p>` : "");
+  const addrBlockFor = (lang: "en" | "th") => {
+    const L = (en: string, th: string) => (lang === "th" ? th : en);
+    return (addr ? `<p style="margin:16px 0 4px;color:#78716c;font-size:14px;">${L("Shipping to", "ที่อยู่จัดส่ง")}</p><p style="margin:0;font-size:14px;">${addr}</p>` : "") +
+      (intl ? `<p style="margin:8px 0 0;font-size:13px;color:#78716c;">${L("Import duties and taxes, if any, are paid by the recipient on delivery.", "ภาษีและอากรขาเข้า (ถ้ามี) ผู้รับเป็นผู้ชำระเมื่อได้รับสินค้า")}</p>` : "");
+  };
 
   const email = String(order.email ?? "");
   if (email && email !== "guest@pending") {
+    const th = customerLang === "th";
+    const site = th ? `${SITE_URL}/th` : SITE_URL;
     const link = order.stripe_session_id
-      ? `${SITE_URL}/order.html?session_id=${encodeURIComponent(String(order.stripe_session_id))}`
-      : `${SITE_URL}/order.html?id=${encodeURIComponent(String(order.id))}`;
+      ? `${site}/order.html?session_id=${encodeURIComponent(String(order.stripe_session_id))}`
+      : `${site}/order.html?id=${encodeURIComponent(String(order.id))}`;
     await sendEmail({
       to: email,
-      subject: `Order ${id8} confirmed — Infinite Box`,
+      subject: th ? `ยืนยันคำสั่งซื้อ ${id8} — Infinite Box` : `Order ${id8} confirmed — Infinite Box`,
       replyTo: OWNER_EMAIL ?? undefined,
-      html: layout(`Thanks for your order`, `
+      html: th
+        ? layout(`ขอบคุณสำหรับคำสั่งซื้อ`, `
+        <p style="margin:0 0 8px;font-size:15px;">เราได้รับชำระเงินสำหรับคำสั่งซื้อ <strong>${id8}</strong> แล้ว และจะเริ่มพิมพ์งานเร็ว ๆ นี้ เราจะแจ้งอีกครั้งเมื่อจัดส่งสินค้า</p>
+        ${summaryFor("th")}${addrBlockFor("th")}
+        ${button(link, "ดูคำสั่งซื้อของคุณ")}
+        <p style="margin:16px 0 0;font-size:13px;color:#78716c;">มีคำถาม? ตอบกลับอีเมลนี้ หรือเขียนถึง hello@infinite-box.co</p>`)
+        : layout(`Thanks for your order`, `
         <p style="margin:0 0 8px;font-size:15px;">We've received your payment for order <strong>${id8}</strong> and will start printing shortly. You'll hear from us again when it ships.</p>
-        ${summary}${addrBlock}
+        ${summaryFor("en")}${addrBlockFor("en")}
         ${button(link, "View your order")}
         <p style="margin:16px 0 0;font-size:13px;color:#78716c;">Questions? Reply to this email or write to hello@infinite-box.co.</p>`),
     });
@@ -138,8 +155,8 @@ async function sendOrderEmails(
     subject: `New order ${id8} · ${total}`,
     replyTo: email && email !== "guest@pending" ? email : undefined,
     html: layout(`New paid order ${id8}`, `
-      ${kv([["Customer", esc(email)], ["Order id", esc(String(order.id))], ["Stripe PI", esc(String(order.stripe_payment_intent ?? ""))]])}
-      ${summary}${addrBlock}
+      ${kv([["Customer", esc(email)], ["Order id", esc(String(order.id))], ["Stripe PI", esc(String(order.stripe_payment_intent ?? ""))], ["Language", customerLang === "th" ? "Thai" : "English"]])}
+      ${summaryFor("en")}${addrBlockFor("en")}
       ${button(`${SITE_URL}/admin/orders.html`, "Open in admin")}`),
   });
 }
