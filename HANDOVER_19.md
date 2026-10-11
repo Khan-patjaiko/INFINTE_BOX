@@ -62,7 +62,7 @@ Session #19. Started from Handover #18. Focus:
 - The `deployed` tag is at `06750be`.
 
 Still to do:
-- ~~Owner: Search Console sitemap resubmit~~ **done, Success**. (A first attempt showed "invalid sitemap"; the file was valid. The sitemap box takes `https://infinite-box.co/sitemap.xml`, and page URLs go in URL Inspection.)
+- ~~Owner: Search Console sitemap resubmit~~ **done, Success**; owner also requested indexing for `/th/`. (A first attempt showed "invalid sitemap"; the file was valid. The sitemap box takes `https://infinite-box.co/sitemap.xml`, and page URLs go in URL Inspection.)
 - **Edge Functions:** step 3 below.
 
 Original steps:
