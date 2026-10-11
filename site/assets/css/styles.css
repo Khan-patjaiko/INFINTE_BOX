@@ -539,7 +539,14 @@ button { font-family: inherit; cursor: pointer; }
   background: hsl(var(--border));
 }
 @media (min-width: 768px) { .diff-grid { grid-template-columns: 1fr 1fr 1fr; } }
-.diff-card { background: hsl(var(--muted)); padding: 32px; }
+/* Text lines up with the section heading: no outer indent, only side padding between columns. */
+.diff-card { background: hsl(var(--muted)); padding: 24px 0; }
+.diff-card:first-child { padding-top: 0; }
+@media (min-width: 768px) {
+  .diff-card { padding: 4px 32px; }
+  .diff-card:first-child { padding-left: 0; }
+  .diff-card:last-child { padding-right: 0; }
+}
 .diff-number {
   font-size: 36px;
   font-weight: 700;
