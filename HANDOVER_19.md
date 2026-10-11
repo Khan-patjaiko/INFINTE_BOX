@@ -25,6 +25,16 @@ Session #19. Started from Handover #18. Focus:
 | 8 | — | Owner approved: migration 0020 applied; Thai name/description/specs saved for the 4 products |
 | 9 | (this) | Handover #19, PROJECT_PLAN Phase 16 |
 
+### Owner tweaks after the main build
+
+| Commit | Change |
+|---|---|
+| `fd760eb` `79c1964` `7545379` | Kept in English on the Thai site: footer brand lines, the home hero eyebrow and the About "Design. Development. Fabrication." heading. A `th.json` entry whose value equals the English text keeps it English |
+| `56ec5dd` | Thai headings: line-height 1.4 (tone marks were touching the next line) |
+| `72fdded` `45aad94` | Numbered-card sections (Home, About, Custom): smaller heading gap; cards line up with the heading, no outer padding |
+| `6d9476c` | Home strip: "ABS, PETG & more" removed |
+| `f6699bd` | Home card 02 is now **Full service, start to finish** (reverse engineering, design, development, fabrication, testing), EN + TH |
+
 ## How the Thai site works (read before editing pages)
 
 - **Edit only the English pages** in `site/`. Then run:
