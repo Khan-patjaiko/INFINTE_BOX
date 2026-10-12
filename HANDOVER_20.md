@@ -18,6 +18,8 @@ Session #20. Started from Handover #19. Focus: **Admin → Visitors tab with vis
 | 3 | `a18f3d1` | **Automatic sitemap**: `site/sitemap.php` serves the pages in `sitemap.xml`, with its product entries replaced by the live active products (en + th alternates). If Supabase can't be reached it serves `sitemap.xml` as is. `.htaccess` rewrites `/sitemap.xml` to it. Checked in Node (no PHP locally): 16 pages + 4 products × 2 = 24 URLs, same as today |
 | 4 | `de4c061` `4004a64` | Owner touch-ups: flag emoji per country (Twemoji flag font from jsDelivr, so Windows shows flags), full country names, Countries panel sized to its content on desktop |
 | 5 | (this) | Handover #20, PROJECT_PLAN Phase 17 |
+| 6 | `11100b5` | Admin → Products: Description boxes (EN + TH) 12 rows / 280px tall |
+| 7 | (next) | **Migration 0022** (applied live): `products.weight_grams` (0–100,000, null = not entered). Admin → Products has **Gross weight (g, packed)** next to Material; admin only, not shown to customers |
 
 Tests: 3 fake US/JP visits were inserted to check flags and layout, then deleted (twice), along with the one preview visit. Supabase security advisor: only the known Pro-only leaked-password warning.
 

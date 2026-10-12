@@ -45,6 +45,7 @@
     <div class="field" id="fld-price"><label for="f-price">Price (THB)</label><input type="number" id="f-price" min="0" step="0.01" required placeholder="e.g. 399"></div>
     <div class="field"><label for="f-category">Category</label><input type="text" id="f-category" list="category-list"><datalist id="category-list"></datalist></div>
     <div class="field"><label for="f-material">Material</label><input type="text" id="f-material" placeholder="e.g. PETG"></div>
+    <div class="field"><label for="f-weight">Gross weight <span class="muted">(g, packed)</span></label><input type="number" id="f-weight" min="0" max="100000" step="1" inputmode="numeric" placeholder="e.g. 250"></div>
     <div class="field span-2"><label for="f-description">Description</label><textarea id="f-description" rows="12" style="min-height:280px;"></textarea></div>
     <div class="field span-2"><label for="f-specs">Specs <span class="muted">(one per line, <code>Label: value</code>; separate list items with <code> | </code>)</span></label><textarea id="f-specs" rows="5" style="min-height:110px;font-size:13px;" placeholder="Material: PETG&#10;Layer height: 0.2mm&#10;Lead time: 3-5 days"></textarea></div>
     <div class="field span-2 th-fields-head"><p class="muted" style="margin:8px 0 0;">Thai version <span lang="th">(ภาษาไทย)</span>: shown on the Thai site (/th/). Leave empty to show the English text there.</p></div>
@@ -276,6 +277,7 @@
       $("f-price").value = p ? (p.price_cents / 100).toFixed(2) : "";
       $("f-category").value = p ? (p.category || "") : "";
       $("f-material").value = p ? (p.material || "") : "";
+      $("f-weight").value = p && p.weight_grams != null ? p.weight_grams : "";
       $("f-description").value = p ? (p.description || "") : "";
       $("f-specs").value = p ? specsToText(p.specs) : "";
       $("f-name-th").value = p ? (p.name_th || "") : "";
@@ -357,6 +359,8 @@
         if (!(price >= 0)) return showError("Enter a valid price.");
         if (!(stock >= 0)) return showError("Stock must be 0 or more.");
       }
+      var weight = $("f-weight").value;
+      if (weight !== "" && !(Number(weight) >= 0 && Number(weight) <= 100000)) return showError("Gross weight must be 0–100,000 g.");
       if (gallery.some(function (g) { return g.file && g.file.size > 5 * 1024 * 1024; })) return showError("Each photo must be 5 MB or smaller.");
 
       var btn = $("d-save");
@@ -369,6 +373,7 @@
           price_cents: Math.round(price * 100),
           category: $("f-category").value.trim() || null,
           material: $("f-material").value.trim() || null,
+          weight_grams: weight === "" ? null : Math.round(Number(weight)),
           description: $("f-description").value.trim() || null,
           specs: textToSpecs($("f-specs").value),
           // Thai version (migration 0020); empty = the Thai site falls back to the English text.
