@@ -16,7 +16,8 @@
     font-display: swap;
   }
   .flag { font-family: "Twemoji Country Flags", var(--font-sans); margin-right: 8px; }
-  #countries .an-bar-row { grid-template-columns: minmax(150px, 40%) 1fr auto; }
+  #countries .an-bar-row { grid-template-columns: 180px 1fr auto; }
+  .an-grid.an-grid-top { align-items: start; }
 </style>
 </head>
 <body>
@@ -54,7 +55,7 @@
         <div class="an-tip" id="visit-tip" hidden></div>
       </div>
 
-      <div class="an-grid">
+      <div class="an-grid an-grid-top">
         <div class="an-panel">
           <div class="an-panel-head"><h3>Countries</h3><p class="muted">visitors</p></div>
           <div class="an-bars" id="countries"><p class="muted">Loading…</p></div>
