@@ -7,6 +7,17 @@
 <title>Visitors — Infinite Box Admin</title>
 <link rel="icon" href="../assets/img/icon-dark.png">
 <link rel="stylesheet" href="../assets/css/styles.css?v=20">
+<style>
+  /* Windows has no flag emoji; this font covers only the flag letters (regional indicators). */
+  @font-face {
+    font-family: "Twemoji Country Flags";
+    unicode-range: U+1F1E6-1F1FF, U+1F3F4, U+E0062-E007F;
+    src: url("https://cdn.jsdelivr.net/npm/country-flag-emoji-polyfill@0.1.8/dist/TwemojiCountryFlags.woff2") format("woff2");
+    font-display: swap;
+  }
+  .flag { font-family: "Twemoji Country Flags", var(--font-sans); margin-right: 8px; }
+  #countries .an-bar-row { grid-template-columns: minmax(150px, 40%) 1fr auto; }
+</style>
 </head>
 <body>
 
@@ -110,6 +121,12 @@
       try { return (regionNames && regionNames.of(code)) || code; } catch (e) { return code; }
     }
 
+    // "TH" → 🇹🇭 (two regional-indicator letters); "??" (not recorded) → 🌐
+    function flagEmoji(code) {
+      if (!/^[A-Z]{2}$/.test(code)) return "\u{1F310}";
+      return String.fromCodePoint(0x1F1E6 + code.charCodeAt(0) - 65, 0x1F1E6 + code.charCodeAt(1) - 65);
+    }
+
     // "th/product.html" → "Product (TH)", "index.html" → "Home"
     function pageName(path) {
       var th = path.indexOf("th/") === 0, file = th ? path.slice(3) : path;
@@ -121,7 +138,7 @@
       if (!rows.length) { el.innerHTML = '<p class="muted">' + (empty || "No data yet.") + '</p>'; return; }
       var max = Math.max.apply(null, rows.map(function (r) { return r.value; }).concat([1]));
       el.innerHTML = rows.map(function (r) {
-        return '<div class="an-bar-row"><span class="an-bar-label" title="' + ibEscape(r.label) + '">' + ibEscape(r.label) + '</span>' +
+        return '<div class="an-bar-row"><span class="an-bar-label" title="' + ibEscape(r.label) + '">' + (r.flag ? '<span class="flag" aria-hidden="true">' + r.flag + '</span>' : '') + ibEscape(r.label) + '</span>' +
           '<span class="an-bar-track"><span class="an-bar-fill" style="width:' + (r.value / max * 100) + '%"></span></span>' +
           '<span class="an-bar-value">' + num(r.value) + (total != null ? ' <span class="muted">' + pct(r.value, total) + '</span>' : '') + '</span></div>';
       }).join("");
@@ -180,7 +197,7 @@
 
       var visitors = s.period.visitors;
       barRows(document.getElementById("countries"), s.countries.map(function (c) {
-        return { label: countryName(c.code) + (c.code !== "??" ? " · " + c.code : ""), value: c.visitors };
+        return { flag: flagEmoji(c.code), label: countryName(c.code), value: c.visitors };
       }), visitors, "No visitors in this range.");
 
       var lg = s.langs;
