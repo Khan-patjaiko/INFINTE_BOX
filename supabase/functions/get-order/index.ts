@@ -27,6 +27,7 @@ function pickOrder(o: Record<string, unknown>) {
     shipping_cents: o.shipping_cents,
     total_cents: o.total_cents,
     shipping_address: o.shipping_address,
+    payment_method: o.payment_method,
     created_at: o.created_at,
     order_items: o.order_items,
   };
