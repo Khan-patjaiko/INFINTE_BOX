@@ -28,7 +28,16 @@ Tests: 3 fake US/JP visits were inserted to check flags and layout, then deleted
 - "Where visitors came from" counts only visitors tracked since 0021; `direct` = no outside referrer.
 - Admin browsers still opt out (`ib-no-track`).
 
-## Deploy (owner, not done yet)
+## Deploy
+
+**Done 2026-10-12:**
+- The owner uploaded the files below.
+- Claude verified the live files are identical to local.
+- `https://infinite-box.co/sitemap.xml` is served by `sitemap.php`: valid XML, 24 URLs (8 product URLs from the database).
+- A live visit to `/th/shop.html` was saved as `country=TH`, `lang=th`, `path=th/shop.html`; the test visit was deleted.
+- Search Console needs no resubmit (same URL count).
+
+What was uploaded:
 
 Upload these to `public_html` (zip extract with Overwrite, or File Manager):
 - `admin/` (new `visitors.html`; `index.html` changed)
@@ -44,10 +53,9 @@ After the upload, Claude checks that `https://infinite-box.co/sitemap.xml` retur
 
 ## Open items
 
-1. **Upload** (above) + post-upload checks.
-2. Deploy the 3 Edge Functions (Thai checkout + emails) + Thai `4242` test — still not approved.
-3. Owner proofreads `i18n/th.json` and the product Thai text.
-4. Carried over:
+1. Deploy the 3 Edge Functions (Thai checkout + emails) + Thai `4242` test — still not approved.
+2. Owner proofreads `i18n/th.json` and the product Thai text.
+3. Carried over:
    - Rich Results Test;
    - email spam re-check;
    - orphan Storage image;
@@ -57,7 +65,7 @@ After the upload, Claude checks that `https://infinite-box.co/sitemap.xml` retur
 
 ## Next session (#21) options
 
-1. Post-upload checks + Edge Functions deploy / Thai test checkout.
+1. Edge Functions deploy / Thai test checkout.
 2. Services pages in both languages (รับปริ้น 3D, รับออกแบบชิ้นงาน, reverse engineering).
 3. Thai Privacy/Terms (lawyer review advised).
 4. Prerender product pages for crawlers.
