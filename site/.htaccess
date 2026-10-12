@@ -5,3 +5,6 @@ RewriteEngine On
 RewriteCond %{HTTPS} off [OR]
 RewriteCond %{HTTP_HOST} ^www\. [NC]
 RewriteRule ^ https://infinite-box.co%{REQUEST_URI} [L,R=301]
+
+# Automatic sitemap: sitemap.php serves sitemap.xml's pages plus the live active products.
+RewriteRule ^sitemap\.xml$ sitemap.php [L]
