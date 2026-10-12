@@ -7,7 +7,7 @@
 <meta name="description" content="ตรวจสอบสินค้าในตะกร้าและชำระเงินอย่างปลอดภัยผ่าน Stripe">
 <meta name="robots" content="noindex">
 <link rel="icon" href="../assets/img/icon-dark.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20">
+<link rel="stylesheet" href="../assets/css/styles.css?v=21">
 </head>
 <body>
 
@@ -29,15 +29,15 @@
 <div id="footer-placeholder"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
-<script src="../assets/js/i18n-th.js?v=20"></script>
-<script src="../assets/js/i18n.js?v=20"></script>
-<script src="../assets/js/config.js?v=20"></script>
-<script src="../assets/js/supabase-client.js?v=20"></script>
-<script src="../assets/js/products.js?v=20"></script>
-<script src="../assets/js/icons.js?v=20"></script>
-<script src="../assets/js/main.js?v=20"></script>
-<script src="../assets/js/auth.js?v=20"></script>
-<script src="../assets/js/partials.js?v=20"></script>
+<script src="../assets/js/i18n-th.js?v=21"></script>
+<script src="../assets/js/i18n.js?v=21"></script>
+<script src="../assets/js/config.js?v=21"></script>
+<script src="../assets/js/supabase-client.js?v=21"></script>
+<script src="../assets/js/products.js?v=21"></script>
+<script src="../assets/js/icons.js?v=21"></script>
+<script src="../assets/js/main.js?v=21"></script>
+<script src="../assets/js/auth.js?v=21"></script>
+<script src="../assets/js/partials.js?v=21"></script>
 <script>
   (function () {
     var container = document.getElementById("cart-container");
@@ -52,12 +52,16 @@
       var cart = IB.getCart();
       if (!cart.length) return;
       if (!(await IBAuth.getUser())) return goLogin();
-      btn.disabled = true;
+      // "card" or "promptpay" (data-pay on the button); both buttons wait while one runs.
+      var payMethod = btn.dataset.pay === "promptpay" ? "promptpay" : "card";
+      var label = btn.textContent;
+      var buttons = container.querySelectorAll("[data-pay]");
+      buttons.forEach(function (b) { b.disabled = true; });
       btn.textContent = ibT("Redirecting to secure checkout…");
       window.IB.track("checkout_start");
       try {
         var res = await window.IBDB.functions.invoke("create-checkout-session", {
-          body: { items: cart, origin: location.origin, ship_to: shipTo, lang: IBI18n.lang }
+          body: { items: cart, origin: location.origin, ship_to: shipTo, lang: IBI18n.lang, pay_method: payMethod }
         });
         if (res.error) {
           // Session expired between page load and click → server says 401.
@@ -78,8 +82,8 @@
             if (body && body.error) { message = body.error; stockProblem = !!body.sold_out; }
           }
         } catch (ignore) {}
-        btn.disabled = false;
-        btn.textContent = ibT("Checkout");
+        buttons.forEach(function (b) { b.disabled = false; });
+        btn.textContent = label;
         if (stockProblem) {
           // Re-fetch products so the cart re-renders with current stock, then show the note.
           _productsPromise = null;
@@ -173,8 +177,15 @@
           (intl ? '<p class="cart-duties-note">' + ibT("Import duties and taxes, if any, are paid by the recipient on delivery.") + '</p>' : '') +
           '<div class="cart-summary-row total"><span>' + ibT("Total") + '</span><span>' + formatPrice(total) + '</span></div>' +
           (blocked
-            ? '<button class="btn btn-primary btn-block mt-16" id="checkout-btn" disabled title="' + ibT("Remove sold-out items first") + '">' + ibT("Checkout") + '</button>'
-            : '<button class="btn btn-primary btn-block mt-16" id="checkout-btn">' + (signedIn ? ibT("Checkout") : ibT("Log in to check out")) + '</button>') +
+            ? '<button class="btn btn-primary btn-block mt-16" disabled title="' + ibT("Remove sold-out items first") + '">' + ibT("Checkout") + '</button>'
+            : !signedIn
+              ? '<button class="btn btn-primary btn-block mt-16" data-pay="card">' + ibT("Log in to check out") + '</button>'
+              // Thai delivery: PromptPay QR (Thai bank apps) or card. Abroad: card only.
+              : !intl
+                ? '<button class="btn btn-primary btn-block mt-16" data-pay="promptpay">' + ibT("Pay with PromptPay QR") + '</button>' +
+                  '<button class="btn btn-outline btn-block mt-8" data-pay="card">' + ibT("Pay by card") + '</button>' +
+                  '<p class="form-note" style="margin:8px 0 0;text-align:center;">' + ibT("PromptPay: scan the QR with any Thai bank app. Card includes Apple Pay and Google Pay.") + '</p>'
+                : '<button class="btn btn-primary btn-block mt-16" data-pay="card">' + ibT("Checkout") + '</button>') +
           (signedIn ? '' : '<p class="form-note" style="margin:8px 0 0;text-align:center;">' + ibT("Orders are tied to your account so you can track them. New here? <a href=\"signup.html?next=cart.html\">Create an account</a> — your cart will be waiting.") + '</p>') +
           '<a class="btn btn-outline btn-block mt-16" href="custom.html">' + ibT("Need a custom quote instead?") + '</a>' +
           '<p class="form-note" id="checkout-error" style="display:none;color:hsl(var(--destructive));">' + ibT("Sorry, checkout couldn't start. Please try again.") + '</p>' +
@@ -207,10 +218,9 @@
         if (sel) sel.focus();
       });
 
-      var checkoutBtn = document.getElementById("checkout-btn");
-      if (checkoutBtn && !checkoutBtn.disabled) {
-        checkoutBtn.addEventListener("click", function () { startCheckout(checkoutBtn); });
-      }
+      container.querySelectorAll("[data-pay]").forEach(function (btn) {
+        btn.addEventListener("click", function () { startCheckout(btn); });
+      });
     }
 
     // Shipping comes from store_settings (same rows create-checkout-session uses):
