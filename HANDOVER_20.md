@@ -23,6 +23,31 @@ Session #20. Started from Handover #19. Focus: **Admin → Visitors tab with vis
 
 Tests: 3 fake US/JP visits were inserted to check flags and layout, then deleted (twice), along with the one preview visit. Supabase security advisor: only the known Pro-only leaked-password warning.
 
+## Stripe LIVE (2026-10-12)
+
+**The store now takes real card payments.**
+
+| Step | Result |
+|---|---|
+| Functions deployed (test mode first) | `create-checkout-session` v17: Thai checkout; **cards only** via `payment_method_types: ["card"]` (Apple/Google Pay included) |
+| | `stripe-webhook` v14: Thai receipt; marks paid only when `payment_status` isn't unpaid, or on `async_payment_succeeded`; `async_payment_failed` cancels |
+| | `submit-quote` v8: Thai acknowledgement |
+| Thai test checkout (4242, `/th/cart.html`) | paid, `lang=th`, Thai product name, Thai receipt + owner alert, stock 3→2. Deleted, stock restored |
+| Owner: Stripe live account | activated |
+| | statement descriptor `INFINITE-BOX.CO` (short `INFINITE`) |
+| | Public details: Infinite Box / hello@infinite-box.co / website |
+| | Stripe's own "Successful payments" receipt is required by Thai law (can't be turned off), so buyers get Stripe's receipt + ours |
+| Owner: live secret key | "Full access except sensitive operations" (132 permissions), named "Infinite Box – Supabase", saved as `STRIPE_SECRET_KEY` in Supabase |
+| Owner: live webhook | scope "Your account", 4 events (completed, expired, async_payment_succeeded, async_payment_failed) → `…/functions/v1/stripe-webhook`; signing secret saved as `STRIPE_WEBHOOK_SECRET` |
+| Real purchase | ฿309 BMW E90 on the owner's own card: `cs_live_` session, webhook 200, order paid, receipt + alert sent, stock 3→2 |
+| | **Refunded** in Stripe (confirmed from the owner's screenshot); order deleted, stock restored to 3 |
+
+- **To test again without real money:**
+  1. Switch to the Stripe **sandbox**.
+  2. Put the sandbox `sk_test` / `whsec` back into the two Supabase secrets.
+  3. Test, then switch both secrets back to the live values.
+- **PromptPay** is on in the Stripe Dashboard but blocked by the code (cards only). It is planned as a separate payment method next session.
+
 ## How visitor stats work now
 
 - Country = Cloudflare's guess from the visitor's connection, set server-side (the browser can't fake it). VPN users show the VPN's country.
@@ -67,7 +92,8 @@ After the upload, Claude checks that `https://infinite-box.co/sitemap.xml` retur
 
 ## Next session (#21) options
 
-1. Edge Functions deploy / Thai test checkout.
+1. PromptPay as a separate payment method for Thai customers.
+1b. Upload `th/success.html` (Thai thank-you wording) if not done yet.
 2. Services pages in both languages (รับปริ้น 3D, รับออกแบบชิ้นงาน, reverse engineering).
 3. Thai Privacy/Terms (lawyer review advised).
 4. Prerender product pages for crawlers.
