@@ -268,7 +268,7 @@ Owner decision: separate indexable Thai pages under `/th/`, chosen with an EN | 
 - [x] Cart: Pay with PromptPay QR + Pay by card (Thailand), card only abroad; receiver note (STRIPE PAYMENTS (THAILAND) LTD); FAQ + terms; order page + admin drawer show the method
 - [x] Sandbox tests (paid, expired, card) + real live PromptPay purchase, refunded, cleaned up
 - [x] Receiver-note files uploaded and verified live (bold; owner's EN/TH wording)
-- [ ] Owner: delete the old live restricted key in Stripe (replaced by a new one this session)
+- [x] Owner deleted the old live restricted key; only "Infinite Box – Supabase 2" remains
 
 ### Backlog / ideas (not scheduled)
 - Product search.

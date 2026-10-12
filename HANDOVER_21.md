@@ -55,7 +55,7 @@ Sandbox tip: Stripe's PromptPay "Simulate scan" opens a new tab, which Claude's 
 - PromptPay ignores the statement descriptor: the bank app shows **STRIPE PAYMENTS (THAILAND) LTD**. The cart says so.
 - PromptPay works only for Thai banks and THB; the code offers it only for Thai delivery.
 - PromptPay confirms instantly (`checkout.session.completed` arrives paid). The webhook (v14+) also handles `async_payment_succeeded` / `async_payment_failed`.
-- **To test again without real money:** sandbox `sk_test` / `whsec` into the two Supabase secrets, test, then back to live. The live key is now the **new** restricted key; the owner should delete the old "Infinite Box – Supabase" key in Stripe if not done yet.
+- **To test again without real money:** sandbox `sk_test` / `whsec` into the two Supabase secrets, test, then back to live. The live key is now the **new** restricted key; the old "Infinite Box – Supabase" key was deleted by the owner; only "Infinite Box – Supabase 2" remains.
 
 ## Deploy
 
@@ -65,9 +65,8 @@ Sandbox tip: Stripe's PromptPay "Simulate scan" opens a new tab, which Claude's 
 
 ## Open items
 
-1. Owner: delete the old live restricted key ("Infinite Box – Supabase") in Stripe.
-2. Owner proofreads `i18n/th.json` (new: payment strings) and the product Thai text.
-3. Carried over:
+1. Owner proofreads `i18n/th.json` (new: payment strings) and the product Thai text.
+2. Carried over:
    - Rich Results Test;
    - email spam re-check;
    - orphan Storage image;
