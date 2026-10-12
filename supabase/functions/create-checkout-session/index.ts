@@ -201,6 +201,9 @@ Deno.serve(async (req) => {
     const baseUrl = ((typeof origin === "string" && origin.startsWith("http")) ? origin : SUPABASE_URL) + (lang === "th" ? "/th" : "");
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
+      // Cards only (Apple Pay / Google Pay included), whatever the Stripe Dashboard enables.
+      // PromptPay is planned as a separate payment method.
+      payment_method_types: ["card"],
       locale: lang,
       line_items: lineItems as never,
       customer_email: userEmail,
