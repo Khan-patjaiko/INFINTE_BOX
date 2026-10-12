@@ -5,6 +5,7 @@
 (function () {
   var PAGES = [
     { href: "index.html", label: "Overview" },
+    { href: "visitors.html", label: "Visitors" },
     { href: "orders.html", label: "Orders" },
     { href: "quotes.html", label: "Quotes" },
     { href: "messages.html", label: "Messages" },

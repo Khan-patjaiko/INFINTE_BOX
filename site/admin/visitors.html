@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Visitors — Infinite Box Admin</title>
+<link rel="icon" href="../assets/img/icon-dark.png">
+<link rel="stylesheet" href="../assets/css/styles.css?v=20">
+</head>
+<body>
+
+<div id="header-placeholder"></div>
+
+<main>
+  <section class="admin-page">
+    <div class="container">
+      <div class="admin-head">
+        <div>
+          <p class="eyebrow">Admin</p>
+          <h1>Visitors</h1>
+        </div>
+        <p class="grid-status">Anonymous counts · your own visits on this browser aren't counted</p>
+      </div>
+
+      <div class="admin-toolbar" id="range">
+        <button type="button" class="filter-chip" data-days="7">7 days</button>
+        <button type="button" class="filter-chip active" data-days="30">30 days</button>
+        <button type="button" class="filter-chip" data-days="90">90 days</button>
+      </div>
+
+      <div class="stat-grid" id="visit-stats">
+        <div class="stat-card"><p class="stat-label">Today</p><p class="stat-value">–</p><p class="stat-sub">visitors</p></div>
+        <div class="stat-card"><p class="stat-label">Last 7 days</p><p class="stat-value">–</p><p class="stat-sub">visitors</p></div>
+        <div class="stat-card"><p class="stat-label" data-range-label="Last {n} days">Last 30 days</p><p class="stat-value">–</p><p class="stat-sub">visitors</p></div>
+        <div class="stat-card"><p class="stat-label" data-range-label="Page views ({n}d)">Page views (30d)</p><p class="stat-value">–</p><p class="stat-sub">pages opened</p></div>
+      </div>
+
+      <div class="an-panel">
+        <div class="an-panel-head"><h3>Visitors per day</h3><p class="muted" id="visit-range"></p></div>
+        <div class="an-chart" id="visit-chart" role="img" aria-label="Visitors per day"></div>
+        <div class="an-axis" id="visit-axis"></div>
+        <div class="an-tip" id="visit-tip" hidden></div>
+      </div>
+
+      <div class="an-grid">
+        <div class="an-panel">
+          <div class="an-panel-head"><h3>Countries</h3><p class="muted">visitors</p></div>
+          <div class="an-bars" id="countries"><p class="muted">Loading…</p></div>
+        </div>
+        <div class="an-panel">
+          <div class="an-panel-head"><h3>Language</h3><p class="muted">site version viewed</p></div>
+          <div class="an-bars" id="langs"><p class="muted">Loading…</p></div>
+          <div class="an-panel-head" style="margin-top:var(--space-4);"><h3>Devices</h3></div>
+          <div class="an-bars" id="devices"><p class="muted">Loading…</p></div>
+        </div>
+      </div>
+
+      <div class="an-grid">
+        <div class="an-panel">
+          <div class="an-panel-head"><h3>Top products</h3></div>
+          <table class="an-table">
+            <thead><tr><th>Product</th><th class="num">Views</th><th class="num">Visitors</th><th class="num" title="Times added to cart">In cart</th></tr></thead>
+            <tbody id="top-products"><tr><td colspan="4" class="muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="an-panel">
+          <div class="an-panel-head"><h3>Sales funnel</h3><p class="muted">visitors</p></div>
+          <div class="an-bars" id="funnel"><p class="muted">Loading…</p></div>
+        </div>
+      </div>
+
+      <div class="an-grid">
+        <div class="an-panel">
+          <div class="an-panel-head"><h3>Top pages</h3></div>
+          <table class="an-table">
+            <thead><tr><th>Page</th><th class="num">Views</th><th class="num">Visitors</th></tr></thead>
+            <tbody id="pages"><tr><td colspan="3" class="muted">Loading…</td></tr></tbody>
+          </table>
+        </div>
+        <div class="an-panel">
+          <div class="an-panel-head"><h3>Where visitors came from</h3><p class="muted">since 12 Oct 2026</p></div>
+          <div class="an-bars" id="referrers"><p class="muted">Loading…</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
+<script src="../assets/js/i18n.js?v=20"></script>
+<script src="../assets/js/config.js?v=20"></script>
+<script src="../assets/js/supabase-client.js?v=20"></script>
+<script src="../assets/js/products.js?v=20"></script>
+<script src="../assets/js/auth.js?v=20"></script>
+<script src="../assets/js/admin.js?v=20"></script>
+<script>
+  (function () {
+    var A = window.IBAdmin;
+    var daily = [];
+    var regionNames = window.Intl && Intl.DisplayNames ? new Intl.DisplayNames(["en"], { type: "region" }) : null;
+
+    // ---- Visitor stats (site_events via admin_site_stats, migrations 0017/0021) ----
+    function num(n) { return Number(n || 0).toLocaleString("en-US"); }
+    function pct(part, whole) { return whole ? Math.round(part / whole * 100) + "%" : "–"; }
+    function shortDay(iso) { return new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" }); }
+
+    function countryName(code) {
+      if (code === "??") return "Not recorded";
+      try { return (regionNames && regionNames.of(code)) || code; } catch (e) { return code; }
+    }
+
+    // "th/product.html" → "Product (TH)", "index.html" → "Home"
+    function pageName(path) {
+      var th = path.indexOf("th/") === 0, file = th ? path.slice(3) : path;
+      var name = file === "index.html" ? "Home" : file.replace(/\.html$/, "").replace(/-/g, " ");
+      return name.charAt(0).toUpperCase() + name.slice(1) + (th ? " (TH)" : "");
+    }
+
+    function barRows(el, rows, total, empty) {
+      if (!rows.length) { el.innerHTML = '<p class="muted">' + (empty || "No data yet.") + '</p>'; return; }
+      var max = Math.max.apply(null, rows.map(function (r) { return r.value; }).concat([1]));
+      el.innerHTML = rows.map(function (r) {
+        return '<div class="an-bar-row"><span class="an-bar-label" title="' + ibEscape(r.label) + '">' + ibEscape(r.label) + '</span>' +
+          '<span class="an-bar-track"><span class="an-bar-fill" style="width:' + (r.value / max * 100) + '%"></span></span>' +
+          '<span class="an-bar-value">' + num(r.value) + (total != null ? ' <span class="muted">' + pct(r.value, total) + '</span>' : '') + '</span></div>';
+      }).join("");
+    }
+
+    function renderChart() {
+      var chart = document.getElementById("visit-chart");
+      var max = Math.max.apply(null, daily.map(function (d) { return d.visitors; }).concat([1]));
+      chart.innerHTML = daily.map(function (d, i) {
+        var h = d.visitors ? Math.max(3, d.visitors / max * 100) : 0;
+        return '<button type="button" class="an-col" data-i="' + i + '" aria-label="' + shortDay(d.day) + ': ' + d.visitors + ' visitors, ' + d.views + ' page views">' +
+          '<span class="an-col-bar" style="height:' + h + '%"></span></button>';
+      }).join("");
+      chart.setAttribute("aria-label", "Visitors per day, last " + daily.length + " days");
+      var n = daily.length;
+      document.getElementById("visit-axis").innerHTML =
+        '<span>' + shortDay(daily[0].day) + '</span><span>' + shortDay(daily[Math.floor(n / 2)].day) + '</span><span>' + shortDay(daily[n - 1].day) + '</span>';
+      document.getElementById("visit-range").textContent = "peak " + num(max) + " / day";
+    }
+
+    (function chartTips() {
+      var chart = document.getElementById("visit-chart");
+      var tip = document.getElementById("visit-tip");
+      function show(e) {
+        var col = e.target.closest(".an-col");
+        if (!col) return;
+        var d = daily[col.dataset.i];
+        tip.innerHTML = '<strong>' + shortDay(d.day) + '</strong><br>' + num(d.visitors) + ' visitors · ' + num(d.views) + ' views';
+        tip.hidden = false;
+        var box = chart.getBoundingClientRect(), c = col.getBoundingClientRect();
+        tip.style.left = Math.min(Math.max(c.left - box.left + c.width / 2, 70), box.width - 70) + "px";
+      }
+      chart.addEventListener("mouseover", show);
+      chart.addEventListener("focusin", show);
+      chart.addEventListener("mouseleave", function () { tip.hidden = true; });
+      chart.addEventListener("focusout", function () { tip.hidden = true; });
+    })();
+
+    async function loadVisits(days) {
+      var res = await window.IBDB.rpc("admin_site_stats", { p_days: days });
+      if (res.error) throw res.error;
+      var s = res.data;
+      document.querySelectorAll("[data-range-label]").forEach(function (el) {
+        el.textContent = el.dataset.rangeLabel.replace("{n}", s.days);
+      });
+      var cards = document.querySelectorAll("#visit-stats .stat-card");
+      [[s.today, cards[0]], [s.week, cards[1]], [s.period, cards[2]]].forEach(function (p) {
+        p[1].querySelector(".stat-value").textContent = num(p[0].visitors);
+        p[1].querySelector(".stat-sub").textContent = "visitors · " + num(p[0].views) + " page views";
+      });
+      cards[3].querySelector(".stat-value").textContent = num(s.period.views);
+      cards[3].querySelector(".stat-sub").textContent = s.period.visitors ? (s.period.views / s.period.visitors).toFixed(1) + " pages per visitor" : "pages opened";
+
+      daily = s.daily;
+      renderChart();
+
+      var visitors = s.period.visitors;
+      barRows(document.getElementById("countries"), s.countries.map(function (c) {
+        return { label: countryName(c.code) + (c.code !== "??" ? " · " + c.code : ""), value: c.visitors };
+      }), visitors, "No visitors in this range.");
+
+      var lg = s.langs;
+      barRows(document.getElementById("langs"), [
+        { label: "English", value: lg.en || 0 },
+        { label: "Thai", value: lg.th || 0 }
+      ].concat(lg.unknown ? [{ label: "Not recorded", value: lg.unknown }] : []), visitors);
+
+      var dv = s.devices;
+      barRows(document.getElementById("devices"), [
+        { label: "Phone", value: dv.mobile || 0 },
+        { label: "Tablet", value: dv.tablet || 0 },
+        { label: "Desktop", value: dv.desktop || 0 }
+      ], visitors);
+
+      var tb = document.getElementById("top-products");
+      tb.innerHTML = s.top_products.length ? s.top_products.map(function (p) {
+        return '<tr><td><a href="../product.html?id=' + encodeURIComponent(p.slug) + '" target="_blank" rel="noopener">' + ibEscape(p.name) + '</a></td>' +
+          '<td class="num">' + num(p.views) + '</td><td class="num">' + num(p.visitors) + '</td><td class="num">' + num(p.carts) + '</td></tr>';
+      }).join("") : '<tr><td colspan="4" class="muted">No product views yet.</td></tr>';
+
+      var f = s.funnel;
+      barRows(document.getElementById("funnel"), [
+        { label: "Visited the site", value: f.visitors },
+        { label: "Viewed a product", value: f.product_viewers },
+        { label: "Added to cart", value: f.add_to_cart },
+        { label: "Started checkout", value: f.checkout },
+        { label: "Paid orders", value: f.paid_orders }
+      ], f.visitors);
+
+      var pb = document.getElementById("pages");
+      pb.innerHTML = s.pages.length ? s.pages.map(function (p) {
+        return '<tr><td><a href="../' + ibEscape(p.path) + '" target="_blank" rel="noopener">' + ibEscape(pageName(p.path)) + '</a></td>' +
+          '<td class="num">' + num(p.views) + '</td><td class="num">' + num(p.visitors) + '</td></tr>';
+      }).join("") : '<tr><td colspan="3" class="muted">No page views yet.</td></tr>';
+
+      var refTotal = s.referrers.reduce(function (t, r) { return t + r.visitors; }, 0);
+      barRows(document.getElementById("referrers"), s.referrers.map(function (r) {
+        return { label: r.host === "direct" ? "Direct / typed address" : r.host, value: r.visitors };
+      }), refTotal, "No visitors recorded since this was added.");
+    }
+
+    function showError(e) {
+      console.error("Visitor stats failed", e);
+      A.toast("Couldn't load visitor stats.", true);
+      document.getElementById("visit-chart").innerHTML = '<p class="muted">Couldn\'t load visitor stats — refresh to try again.</p>';
+    }
+
+    A.requireAdmin().then(function (user) {
+      if (!user) return;
+      var range = document.getElementById("range");
+      range.addEventListener("click", function (e) {
+        var btn = e.target.closest(".filter-chip");
+        if (!btn || btn.classList.contains("active")) return;
+        range.querySelectorAll(".filter-chip").forEach(function (b) { b.classList.toggle("active", b === btn); });
+        loadVisits(Number(btn.dataset.days)).catch(showError);
+      });
+      loadVisits(30).catch(showError);
+    });
+  })();
+</script>
+</body>
+</html>

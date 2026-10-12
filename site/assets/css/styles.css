@@ -1051,7 +1051,7 @@ button { font-family: inherit; cursor: pointer; }
 .an-table a:hover { color: hsl(var(--primary)); }
 .an-bars { display: flex; flex-direction: column; gap: 10px; }
 .an-bar-row { display: grid; grid-template-columns: 130px 1fr auto; align-items: center; gap: 12px; font-size: 13px; }
-.an-bar-label { color: hsl(var(--muted-foreground)); }
+.an-bar-label { color: hsl(var(--muted-foreground)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .an-bar-track { height: 8px; background: hsl(var(--muted)); border-radius: 4px; overflow: hidden; }
 .an-bar-fill { display: block; height: 100%; background: hsl(var(--primary)); border-radius: 4px; }
 .an-bar-value { min-width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
