@@ -121,6 +121,8 @@
           '<dt>Placed</dt><dd>' + A.date(o.created_at, true) + '</dd>' +
           '<dt>Customer</dt><dd><a href="mailto:' + ibEscape(o.email) + '">' + ibEscape(o.email) + '</a>' + (o.user_id ? "" : ' <span class="muted">(guest)</span>') + '</dd>' +
           '<dt>Order id</dt><dd class="muted" style="font-size:12px;">' + ibEscape(o.id) + '</dd>' +
+          // payment_method (migration 0023): the cart button the customer used; empty on older orders.
+          '<dt>Payment</dt><dd>' + (o.payment_method === "promptpay" ? "PromptPay (QR)" : o.payment_method === "card" ? "Card" : '<span class="muted">—</span>') + '</dd>' +
           '<dt>Stripe</dt><dd class="muted" style="font-size:12px;">' + ibEscape(o.stripe_payment_intent || o.stripe_session_id || "—") + '</dd>' +
           (intl ? '<dt>Destination</dt><dd>' + ibEscape(countryName(o.ship_country)) + ' · DHL Express <span class="muted">(duties paid by recipient)</span></dd>' : '') +
           '<dt>Ship to</dt><dd>' + addressHTML(o.shipping_address) + '</dd>' +

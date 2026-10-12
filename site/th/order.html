@@ -7,7 +7,7 @@
 <meta name="description" content="สถานะและรายละเอียดคำสั่งซื้อ Infinite Box ของคุณ">
 <meta name="robots" content="noindex">
 <link rel="icon" href="../assets/img/icon-dark.png">
-<link rel="stylesheet" href="../assets/css/styles.css?v=20">
+<link rel="stylesheet" href="../assets/css/styles.css?v=21">
 </head>
 <body>
 
@@ -32,14 +32,14 @@
 <div id="footer-placeholder"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"></script>
-<script src="../assets/js/i18n-th.js?v=20"></script>
-<script src="../assets/js/i18n.js?v=20"></script>
-<script src="../assets/js/config.js?v=20"></script>
-<script src="../assets/js/supabase-client.js?v=20"></script>
-<script src="../assets/js/products.js?v=20"></script>
-<script src="../assets/js/main.js?v=20"></script>
-<script src="../assets/js/auth.js?v=20"></script>
-<script src="../assets/js/partials.js?v=20"></script>
+<script src="../assets/js/i18n-th.js?v=21"></script>
+<script src="../assets/js/i18n.js?v=21"></script>
+<script src="../assets/js/config.js?v=21"></script>
+<script src="../assets/js/supabase-client.js?v=21"></script>
+<script src="../assets/js/products.js?v=21"></script>
+<script src="../assets/js/main.js?v=21"></script>
+<script src="../assets/js/auth.js?v=21"></script>
+<script src="../assets/js/partials.js?v=21"></script>
 <script>
   (function () {
     function optionsHTML(it) {
@@ -80,6 +80,9 @@
         (statusCopy ? '<p class="grid-status" style="margin-bottom:16px;">' + ibEscape(statusCopy) + "</p>" : "") +
         items +
         '<div class="order-total"><span>' + ibT("Total") + '</span><span>' + money(o.total_cents) + "</span></div>" +
+        // payment_method (migration 0023), shown once the payment went through.
+        ((status === "paid" || status === "fulfilled") && (o.payment_method === "promptpay" || o.payment_method === "card")
+          ? '<p class="grid-status" style="margin:8px 0 0;text-align:right;">' + ibT("Paid by {method}", { method: o.payment_method === "promptpay" ? ibT("PromptPay (QR)") : ibT("card") }) + "</p>" : "") +
       "</div>" +
       addressHTML(o.shipping_address) +
       '<div class="btn-row" style="margin-top:24px;">' +
