@@ -89,6 +89,7 @@ window.IB_TH = {
   "Pay with PromptPay QR": "ชำระด้วย QR พร้อมเพย์",
   "Pay by card": "ชำระด้วยบัตร",
   "PromptPay: scan the QR with any Thai bank app. Card includes Apple Pay and Google Pay.": "พร้อมเพย์: สแกน QR ด้วยแอปธนาคารใดก็ได้ การชำระด้วยบัตรรองรับ Apple Pay และ Google Pay",
+  "With PromptPay, your bank app shows the receiver as STRIPE PAYMENTS (THAILAND) LTD, not INFINITE-BOX.CO, because Stripe is our secure payment gateway.": "เมื่อชำระด้วยพร้อมเพย์ แอปธนาคารจะแสดงชื่อผู้รับเงินเป็น STRIPE PAYMENTS (THAILAND) LTD ไม่ใช่ INFINITE-BOX.CO เนื่องจากเราใช้ Stripe เป็นระบบรับชำระเงินที่ปลอดภัย",
   "Paid by {method}": "ชำระด้วย{method}",
   "PromptPay (QR)": "พร้อมเพย์ (QR)",
   "card": "บัตร",
