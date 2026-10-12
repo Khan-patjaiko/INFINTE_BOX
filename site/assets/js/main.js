@@ -83,9 +83,17 @@
     });
   }
 
-  // Anonymous visit stats for Admin → Overview (site_events, migration 0017): a random
-  // browser id, the page, the product slug, device class. No IP, cookie or account link.
+  // Anonymous visit stats for Admin → Visitors (site_events, migrations 0017/0021): a random
+  // browser id, the page, the product slug, device class, page language and the outside site
+  // that sent the visitor. The server adds the country (Cloudflare). No IP, cookie or account link.
   // Admins' own browsers opt out (admin.js sets ib-no-track); automated browsers are skipped.
+  function referrerHost() {
+    try {
+      var host = document.referrer ? new URL(document.referrer).hostname.replace(/^www\./, "") : "";
+      return host && host !== location.hostname.replace(/^www\./, "") ? host.slice(0, 100) : "";
+    } catch (e) { return ""; }
+  }
+
   function track(event, productSlug) {
     try {
       if (!window.IBDB || navigator.webdriver || localStorage.getItem("ib-no-track")) return;
@@ -96,10 +104,13 @@
         localStorage.setItem("ib-vid", vid);
       }
       var w = window.innerWidth;
+      var lang = window.IBI18n && window.IBI18n.lang === "th" ? "th" : "en";
       window.IBDB.from("site_events").insert({
         visitor_id: vid,
         event: event,
-        path: (location.pathname.split("/").pop() || "index.html").slice(0, 200),
+        path: ((lang === "th" ? "th/" : "") + (location.pathname.split("/").pop() || "index.html")).slice(0, 200),
+        lang: lang,
+        referrer_host: event === "page_view" ? referrerHost() : "",
         product_slug: productSlug ? String(productSlug).slice(0, 120) : null,
         device: w < 768 ? "mobile" : w < 1024 ? "tablet" : "desktop"
       }).then(function (r) { if (r.error) console.warn("Visit stat not saved:", r.error.message); });
