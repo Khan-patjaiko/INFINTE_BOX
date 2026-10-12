@@ -36,7 +36,13 @@ Deno.serve(async (req) => {
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
   try {
-    if (event.type === "checkout.session.completed") {
+    // Paid = checkout completed with the money confirmed (cards), or a delayed method
+    // (bank transfer, QR) confirmed later via async_payment_succeeded. A completed session
+    // that is still "unpaid" stays pending until that second event.
+    const paidEvent = event.type === "checkout.session.async_payment_succeeded" ||
+      (event.type === "checkout.session.completed" &&
+        (event.data.object as Stripe.Checkout.Session).payment_status !== "unpaid");
+    if (paidEvent) {
       const session = event.data.object as Stripe.Checkout.Session;
       const orderId = session.metadata?.order_id ?? session.client_reference_id;
       if (orderId) {
@@ -68,7 +74,7 @@ Deno.serve(async (req) => {
 
         if (paidRows && paidRows.length) await sendOrderEmails(admin, paidRows[0]);
       }
-    } else if (event.type === "checkout.session.expired") {
+    } else if (event.type === "checkout.session.expired" || event.type === "checkout.session.async_payment_failed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const orderId = session.metadata?.order_id ?? session.client_reference_id;
       if (orderId) {
