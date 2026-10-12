@@ -61,17 +61,13 @@ Sandbox tip: Stripe's PromptPay "Simulate scan" opens a new tab, which Claude's 
 
 **Uploaded by the owner and verified identical to local:** `cart.html`, `faq.html`, `order.html`, `terms.html`, `th/cart.html`, `th/faq.html`, `th/order.html`, `assets/js/i18n-th.js`, `admin/orders.html`.
 
-**Still to upload** (the receiver note, commit `8e65278`):
-- `cart.html`
-- `th/cart.html`
-- `assets/js/i18n-th.js`
+**Receiver note** (`8e65278`, then owner's edits `ef4ba08` bold + Thai "แทน", `a408ed8` English "because we use Stripe as our secure payment gateway", `14cbcd4` Thai ends "เนื่องจากเราใช้ Stripe เป็นระบบรับชำระเงิน"): `cart.html`, `th/cart.html`, `assets/js/i18n-th.js` uploaded and verified identical to local.
 
 ## Open items
 
-1. Upload the 3 files above.
-2. Owner: delete the old live restricted key ("Infinite Box – Supabase") in Stripe.
-3. Owner proofreads `i18n/th.json` (new: payment strings) and the product Thai text.
-4. Carried over:
+1. Owner: delete the old live restricted key ("Infinite Box – Supabase") in Stripe.
+2. Owner proofreads `i18n/th.json` (new: payment strings) and the product Thai text.
+3. Carried over:
    - Rich Results Test;
    - email spam re-check;
    - orphan Storage image;

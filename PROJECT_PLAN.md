@@ -267,7 +267,7 @@ Owner decision: separate indexable Thai pages under `/th/`, chosen with an EN | 
 - [x] Checkout v20 `pay_method` (PromptPay only for Thai delivery); webhook v17 "Paid by" on receipt + alert; get-order v8 returns it
 - [x] Cart: Pay with PromptPay QR + Pay by card (Thailand), card only abroad; receiver note (STRIPE PAYMENTS (THAILAND) LTD); FAQ + terms; order page + admin drawer show the method
 - [x] Sandbox tests (paid, expired, card) + real live PromptPay purchase, refunded, cleaned up
-- [ ] Upload the receiver-note files (`cart.html`, `th/cart.html`, `assets/js/i18n-th.js`)
+- [x] Receiver-note files uploaded and verified live (bold; owner's EN/TH wording)
 - [ ] Owner: delete the old live restricted key in Stripe (replaced by a new one this session)
 
 ### Backlog / ideas (not scheduled)
