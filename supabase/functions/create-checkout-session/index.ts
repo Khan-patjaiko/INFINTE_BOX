@@ -46,8 +46,10 @@ Deno.serve(async (req) => {
   });
 
   try {
-    const { items, origin, ship_to, lang: rawLang } = await req.json();
+    const { items, origin, ship_to, lang: rawLang, pay_method } = await req.json();
     const lang: Lang = rawLang === "th" ? "th" : "en";
+    // The cart offers two buttons for Thai deliveries: card (default) or PromptPay QR.
+    const payMethod: "card" | "promptpay" = pay_method === "promptpay" ? "promptpay" : "card";
     if (!Array.isArray(items) || items.length === 0) return json({ error: t(lang, "Cart is empty", "ตะกร้าว่างอยู่") }, 400);
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -75,6 +77,10 @@ Deno.serve(async (req) => {
         return json({ error: t(lang, "Sorry, we don't ship to that country yet. Please contact us for a quote.", "ขออภัย ยังไม่สามารถจัดส่งไปประเทศนี้ได้ กรุณาติดต่อเราเพื่อขอใบเสนอราคา") }, 400);
       }
       intlFeeCents = fee as number;
+    }
+    // PromptPay is a Thai bank-app QR (THB, Thai banks only), so it's offered for Thai delivery.
+    if (payMethod === "promptpay" && shipTo !== HOME_COUNTRY) {
+      return json({ error: t(lang, "PromptPay is available for delivery in Thailand only. Please pay by card.", "ชำระด้วยพร้อมเพย์ได้เฉพาะการจัดส่งในประเทศไทย กรุณาชำระด้วยบัตร") }, 400);
     }
 
     // Checkout requires a signed-in customer (no guest orders): every order is tied to
@@ -190,6 +196,7 @@ Deno.serve(async (req) => {
       total_cents: total,
       ship_country: shipTo,
       lang,
+      payment_method: payMethod,
     }).select().single();
     if (oErr) throw oErr;
 
@@ -201,9 +208,9 @@ Deno.serve(async (req) => {
     const baseUrl = ((typeof origin === "string" && origin.startsWith("http")) ? origin : SUPABASE_URL) + (lang === "th" ? "/th" : "");
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
-      // Cards only (Apple Pay / Google Pay included), whatever the Stripe Dashboard enables.
-      // PromptPay is planned as a separate payment method.
-      payment_method_types: ["card"],
+      // Exactly the method the customer picked in the cart, whatever the Stripe Dashboard
+      // enables: card (Apple Pay / Google Pay included) or PromptPay QR.
+      payment_method_types: [payMethod],
       locale: lang,
       line_items: lineItems as never,
       customer_email: userEmail,

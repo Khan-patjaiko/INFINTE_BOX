@@ -116,6 +116,10 @@ async function sendOrderEmails(
   // The customer's receipt is in the language they shopped in (orders.lang, migration 0020);
   // the owner alert stays in English.
   const customerLang = order.lang === "th" ? "th" : "en";
+  // The method picked in the cart (orders.payment_method, migration 0023); null on older orders.
+  const paidBy = (lang: "en" | "th") =>
+    order.payment_method === "promptpay" ? (lang === "th" ? "พร้อมเพย์ (QR)" : "PromptPay (QR)")
+      : order.payment_method === "card" ? (lang === "th" ? "บัตร" : "Card") : "";
   const summaryFor = (lang: "en" | "th") => {
     const L = (en: string, th: string) => (lang === "th" ? th : en);
     return `<table role="presentation" cellspacing="0" cellpadding="0" style="width:100%;font-size:14px;border-top:1px solid #e7e5e4;margin-top:12px;">
@@ -123,6 +127,7 @@ async function sendOrderEmails(
     <tr><td style="padding:6px 0;border-top:1px solid #e7e5e4;color:#78716c;">${L("Subtotal", "ยอดรวมสินค้า")}</td><td style="padding:6px 0;border-top:1px solid #e7e5e4;text-align:right;">${money(order.subtotal_cents as number)}</td></tr>
     <tr><td style="padding:6px 0;color:#78716c;">${L("Shipping", "ค่าจัดส่ง")}${intl ? " (DHL Express)" : ""}</td><td style="padding:6px 0;text-align:right;">${money(order.shipping_cents as number)}</td></tr>
     <tr><td style="padding:8px 0;font-weight:700;border-top:1px solid #e7e5e4;">${L("Total", "ยอดรวม")}</td><td style="padding:8px 0;font-weight:700;text-align:right;border-top:1px solid #e7e5e4;">${total}</td></tr>
+    ${paidBy(lang) ? `<tr><td style="padding:6px 0;color:#78716c;">${L("Paid by", "ชำระโดย")}</td><td style="padding:6px 0;text-align:right;">${paidBy(lang)}</td></tr>` : ""}
   </table>`;
   };
   const addr = addressLines(order.shipping_address as Record<string, unknown> | null);
