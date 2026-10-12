@@ -185,7 +185,7 @@
                 ? '<button class="btn btn-primary btn-block mt-16" data-pay="promptpay">' + ibT("Pay with PromptPay QR") + '</button>' +
                   '<button class="btn btn-outline btn-block mt-8" data-pay="card">' + ibT("Pay by card") + '</button>' +
                   // PromptPay ignores our statement descriptor: bank apps name Stripe as the receiver.
-                  '<p class="form-note" style="margin:8px 0 0;text-align:center;font-weight:700;">' + ibT("With PromptPay, your bank app shows the receiver as STRIPE PAYMENTS (THAILAND) LTD, not INFINITE-BOX.CO, because Stripe is our secure payment gateway.") + '</p>' +
+                  '<p class="form-note" style="margin:8px 0 0;text-align:center;font-weight:700;">' + ibT("With PromptPay, your bank app shows the receiver as STRIPE PAYMENTS (THAILAND) LTD, not INFINITE-BOX.CO, because we use Stripe as our secure payment gateway.") + '</p>' +
                   '<p class="form-note" style="margin:8px 0 0;text-align:center;">' + ibT("PromptPay: scan the QR with any Thai bank app. Card includes Apple Pay and Google Pay.") + '</p>'
                 : '<button class="btn btn-primary btn-block mt-16" data-pay="card">' + ibT("Checkout") + '</button>') +
           (signedIn ? '' : '<p class="form-note" style="margin:8px 0 0;text-align:center;">' + ibT("Orders are tied to your account so you can track them. New here? <a href=\"signup.html?next=cart.html\">Create an account</a> — your cart will be waiting.") + '</p>') +
